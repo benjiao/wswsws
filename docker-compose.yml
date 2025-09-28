@@ -23,7 +23,7 @@ services:
       POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
       POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
     volumes:
-      - ${WSWSWS_DATA}:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   migrate:
     build: api/
@@ -41,3 +41,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${WSWSWS_DATA}
