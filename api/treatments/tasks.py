@@ -19,11 +19,9 @@ def generate_treatment_instances(schedule_id):
 
     logger.info(f"Generating treatment instances for schedule ID {schedule_id}")
 
-    # Clear existing pending instances within the schedule interval
+    # Clear existing pending instances
     TreatmentInstance.objects.filter(
         treatment_schedule=schedule,
-        scheduled_time__gte=schedule.start_date,
-        scheduled_time__lte=schedule.end_date,
         status=1 # Pending
     ).delete()
 
