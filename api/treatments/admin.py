@@ -3,6 +3,7 @@ from unfold.admin import ModelAdmin
 
 # Register your models here.
 from .models import TreatmentSchedule, TreatmentInstance
+from unfold.contrib.filters.admin import RangeDateFilter, RangeDateTimeFilter
 
 @admin.register(TreatmentSchedule)
 class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the changelist
@@ -13,14 +14,13 @@ class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the change
     list_filter_submit = True
 
     list_filter = (
-        ('start_date', admin.DateFieldListFilter),
-        ('end_date', admin.DateFieldListFilter),
+        ('start_date', RangeDateFilter),
+        ('end_date', RangeDateFilter),
         'frequency',
         'interval',
         'dosage',
         'unit',
     )
-
 
     # name is better served by a search box than a list filter
     search_fields = ['patient__name']
@@ -49,7 +49,7 @@ class TreatmentInstanceAdmin(ModelAdmin):
     list_filter_submit = True
 
     list_filter = (
-        ('scheduled_time', admin.DateFieldListFilter),
+        ('scheduled_time', RangeDateTimeFilter),
         'status',
     )
 
