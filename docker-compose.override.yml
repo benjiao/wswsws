@@ -2,3 +2,9 @@ services:
   api:
     volumes:
       - ./api:/app
+  celery-worker:
+    volumes:
+      - ./api:/app  # use override in prod as discussed
+  celery-beat:
+    volumes:
+      - ./api:/app  # use override in prod as discussed

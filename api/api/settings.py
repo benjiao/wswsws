@@ -28,7 +28,6 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.environ.get("WSWSWS_ALLOWED_HOSTS", "localhost").split(",")
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -182,3 +181,15 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+UNFOLD = {
+    "SITE_TITLE": "Wswsws Admin Site",
+    "SITE_HEADER": "Admin",
+}
+
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6379/1')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = os.environ.get("WSWSWS_TIMEZONE", "UTC")

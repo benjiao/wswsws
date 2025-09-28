@@ -23,5 +23,14 @@ class TreatmentSchedule(models.Model):
 
 class TreatmentInstance(models.Model):
     treatment_schedule = models.ForeignKey(TreatmentSchedule, on_delete=models.CASCADE, related_name='instances')
-    datetime = models.DateTimeField()
-    status = models.CharField(max_length=10, choices=[('pending', 'Pending'), ('given', 'Given'), ('skipped', 'Skipped')])
+    scheduled_time = models.DateTimeField()
+    STATUS_CHOICES = [
+        (1, 'Pending'),
+        (2, 'Given'),
+        (3, 'Skipped'),
+    ]
+    status = models.IntegerField(
+        choices=STATUS_CHOICES,
+        blank=True,
+        default=1)
+        
