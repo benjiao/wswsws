@@ -1,0 +1,7 @@
+asgiref==3.9.2
+Django==5.2.6
+sqlparse==0.5.3
+djangorestframework==3.15.2
+psycopg2-binary==2.9.7
+django-cors-headers==4.3.1
+django-unfold==0.66.0

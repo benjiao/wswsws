@@ -1,0 +1,47 @@
+services:
+  api:
+    build: api/
+    command: bash -c "python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      WSWSWS_POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
+      WSWSWS_POSTGRES_DB_TEST: ${WSWSWS_POSTGRES_DB_TEST}
+      WSWSWS_POSTGRES_HOST: ${WSWSWS_POSTGRES_HOST}
+      WSWSWS_POSTGRES_PORT: ${WSWSWS_POSTGRES_PORT}
+      WSWSWS_POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
+      WSWSWS_POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG} 
+      WSWSWS_ALLOWED_HOSTS: ${WSWSWS_ALLOWED_HOSTS}
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  migrate:
+    build: api/
+    command: python manage.py migrate --noinput
+    depends_on:
+      - db
+    volumes:
+      - ./api:/app
+    environment:
+      WSWSWS_POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
+      WSWSWS_POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
+      WSWSWS_POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
+      WSWSWS_POSTGRES_HOST: ${WSWSWS_POSTGRES_HOST}
+      WSWSWS_POSTGRES_PORT: ${WSWSWS_POSTGRES_PORT}
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+
+volumes:
+  postgres_data:

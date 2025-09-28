@@ -1,0 +1,61 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.env
+*.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+*.pot
+*.py[cod]
+db.sqlite3
+media/
+staticfiles/
+local_settings.py
+
+# Docker
+*.pid
+*.seed
+*.db
+*.sqlite3
+*.sqlite
+*.log
+*.bak
+*.swp
+.dockerignore
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Test and build folders
+build/
+dist/
+tmp/
+*.tmp
+
+# Other
+*.~ 
+*.orig
