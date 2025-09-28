@@ -23,7 +23,7 @@ services:
       POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
       POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ${WSWSWS_DATA}:/var/lib/postgresql/data
 
   migrate:
     build: api/
@@ -38,6 +38,3 @@ services:
       WSWSWS_POSTGRES_PORT: ${WSWSWS_POSTGRES_PORT}
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
-
-volumes:
-  postgres_data:
