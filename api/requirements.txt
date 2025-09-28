@@ -3,6 +3,7 @@ celery==5.5.3
 Django==5.2.6
 django-celery-beat==2.8.1
 django-cors-headers==4.3.1
+django-filter==25.1
 django-unfold==0.66.0
 djangorestframework==3.15.2
 sqlparse==0.5.3

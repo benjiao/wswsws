@@ -18,11 +18,20 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+# Import viewsets
+from patients.views import PatientViewSet
+from treatments.views import TreatmentScheduleViewSet, TreatmentInstanceViewSet
+from inventory.views import MedicineViewSet
+
 admin.site.site_header = "wswsws admin"
 admin.site.site_title = "wswsws admin"
 admin.site.index_title = "🐱 wswsws..."
 
 router = DefaultRouter()
+router.register(r'patients', PatientViewSet)
+router.register(r'treatment-schedules', TreatmentScheduleViewSet)
+router.register(r'treatment-instances', TreatmentInstanceViewSet)
+router.register(r'medicines', MedicineViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
