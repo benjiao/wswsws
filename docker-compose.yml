@@ -16,6 +16,7 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG} 
       WSWSWS_ALLOWED_HOSTS: ${WSWSWS_ALLOWED_HOSTS}
+      WSWSWS_TIMEZONE: ${WSWSWS_TIMEZONE}
     restart: unless-stopped
   db:
     image: postgres:latest
