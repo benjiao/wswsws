@@ -171,6 +171,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8080",  # Vue default
     "http://127.0.0.1:8080",
+    "http://wswsws.benjiao.net",
+    "https://wswsws.benjiao.net"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
