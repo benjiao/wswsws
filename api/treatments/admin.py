@@ -5,8 +5,31 @@ from unfold.admin import ModelAdmin
 from .models import TreatmentSchedule, TreatmentInstance
 
 @admin.register(TreatmentSchedule)
-class TreatmentScheduleAdmin(ModelAdmin):
-    list_display = ["patient", "start_date", "end_date", "frequency", "interval", "dosage", "unit"]
+class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the changelist
+    list_display = ["patient", "medicine", "start_date", "end_date", "frequency", "interval", "dosage", "unit"]
+    list_editable = ["start_date", "end_date", "frequency", "interval", "dosage", "unit"]
+
+    # show a submit button for filters (unfold contrib)
+    list_filter_submit = True
+
+    list_filter = (
+        ('start_date', admin.DateFieldListFilter),
+        ('end_date', admin.DateFieldListFilter),
+        'frequency',
+        'interval',
+        'dosage',
+        'unit',
+    )
+
+
+    # name is better served by a search box than a list filter
+    search_fields = ['patient__name']
+
+    # paging and ordering
+    list_per_page = 25
+    ordering = ['start_date']
+
+
 
 # admin.site.register(TreatmentScheduleAdmin)
 admin.site.register(TreatmentInstance)

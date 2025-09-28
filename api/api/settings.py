@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
     # wswsws apps
     'patients',
+    'inventory',
     'treatments',
 
     # Third party apps
