@@ -165,6 +165,11 @@ REST_FRAMEWORK = {
     ],
 }
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = [
+    "https://wswsws.benjiao.net",
+]
+
 # CORS settings (for frontend integration)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React default
