@@ -16,6 +16,7 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG} 
       WSWSWS_ALLOWED_HOSTS: ${WSWSWS_ALLOWED_HOSTS}
+    restart: unless-stopped
   db:
     image: postgres:latest
     environment:
@@ -24,6 +25,7 @@ services:
       POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   migrate:
     build: api/
