@@ -3,7 +3,7 @@ services:
     build: api/
     command: bash -c "python manage.py runserver 0.0.0.0:8000"
     ports:
-      - "8000:8000"
+      - "${WSWSWS_API_PORT}:8000"
     depends_on:
       - db
     environment:
@@ -32,6 +32,7 @@ services:
     command: python manage.py migrate --noinput
     depends_on:
       - db
+      - api
     environment:
       WSWSWS_POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
       WSWSWS_POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
