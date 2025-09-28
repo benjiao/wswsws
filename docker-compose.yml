@@ -68,6 +68,12 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A api status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   celery-beat:
     build: api/
@@ -86,6 +92,12 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A api status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   postgres_data:
