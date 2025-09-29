@@ -73,6 +73,8 @@ def dashboard_callback(request, context):
     filtered_out_of_stock = Medicine.objects.filter(stock_status=0, id__in=mapped_medicine_ids)
     context["out_of_stock_medicines"] = list(filtered_out_of_stock.values("id", "name", "stock_status"))
 
+    filtered_low_in_stock = Medicine.objects.filter(stock_status=1, id__in=mapped_medicine_ids)
+    context["low_in_stock_medicines"] = list(filtered_low_in_stock.values("id", "name", "stock_status"))
     context.update(
         {
             # "navigation": [
@@ -101,30 +103,30 @@ def dashboard_callback(request, context):
             #         "link": "#",
             #     },
             # ],
-            "kpi": [
-                {
-                    "title": "Product A Performance",
-                    "metric": "$1,234.56",
-                    "footer": mark_safe(
-                        '<strong class="text-green-600 font-medium">+3.14%</strong>&nbsp;progress from last week'
-                    ),
-                    "chart": json.dumps({"labels": [WEEKDAYS[day % 7] for day in range(1, 28)], "datasets": [{"data": average, "borderColor": "#9333ea"}]}),
-                },
-                {
-                    "title": "Product B Performance",
-                    "metric": "$1,234.56",
-                    "footer": mark_safe(
-                        '<strong class="text-green-600 font-medium">+3.14%</strong>&nbsp;progress from last week'
-                    ),
-                },
-                {
-                    "title": "Product C Performance",
-                    "metric": "$1,234.56",
-                    "footer": mark_safe(
-                        '<strong class="text-green-600 font-medium">+3.14%</strong>&nbsp;progress from last week'
-                    ),
-                },
-            ],
+            # "kpi": [
+            #     {
+            #         "title": "Product A Performance",
+            #         "metric": "$1,234.56",
+            #         "footer": mark_safe(
+            #             '<strong class="text-green-600 font-medium">+3.14%</strong>&nbsp;progress from last week'
+            #         ),
+            #         "chart": json.dumps({"labels": [WEEKDAYS[day % 7] for day in range(1, 28)], "datasets": [{"data": average, "borderColor": "#9333ea"}]}),
+            #     },
+            #     {
+            #         "title": "Product B Performance",
+            #         "metric": "$1,234.56",
+            #         "footer": mark_safe(
+            #             '<strong class="text-green-600 font-medium">+3.14%</strong>&nbsp;progress from last week'
+            #         ),
+            #     },
+            #     {
+            #         "title": "Product C Performance",
+            #         "metric": "$1,234.56",
+            #         "footer": mark_safe(
+            #             '<strong class="text-green-600 font-medium">+3.14%</strong>&nbsp;progress from last week'
+            #         ),
+            #     },
+            # ],
             "progress": [
                 {
                     "title": "Treatments Given Today",
