@@ -4,8 +4,11 @@ import random
 import json
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
-from treatments.models import TreatmentInstance
 from django.utils import timezone
+
+from treatments.models import TreatmentSchedule
+from treatments.models import TreatmentInstance
+from inventory.models import Medicine
 
 
 def dashboard_callback(request, context):
@@ -55,10 +58,21 @@ def dashboard_callback(request, context):
             "given": given,
             "skipped": skipped,
         })
-
     context["treatments_stats_28_days"] = treatments_stats_28_days
 
-    print([stat["pending"] for stat in treatments_stats_28_days])
+
+    # Get medicine IDs that are mapped to any pending TreatmentSchedule in the future
+    mapped_medicine_ids = set(
+        TreatmentInstance.objects.filter(
+            status=1,
+            scheduled_time__gt=timezone.now()
+        ).values_list("treatment_schedule__medicine_id", flat=True)
+    )
+
+    # Filter out_of_stock_medicines to only those mapped to a TreatmentSchedule
+    filtered_out_of_stock = Medicine.objects.filter(stock_status=0, id__in=mapped_medicine_ids)
+    context["out_of_stock_medicines"] = list(filtered_out_of_stock.values("id", "name", "stock_status"))
+
     context.update(
         {
             # "navigation": [
