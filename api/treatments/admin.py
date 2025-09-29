@@ -94,6 +94,15 @@ class TreatmentInstanceAdmin(ModelAdmin):
         "status"
     ]
 
+    def get_patient_sort_key(obj):
+        return obj.treatment_schedule.patient.name if obj.treatment_schedule and obj.treatment_schedule.patient else ''
+
+    def get_medicine_sort_key(obj):
+        return obj.treatment_schedule.medicine if obj.treatment_schedule else ''
+
+    get_patient.admin_order_field = 'treatment_schedule__patient__name'
+    get_medicine.admin_order_field = 'treatment_schedule__medicine'
+
     list_editable = ["status"]
 
     # show a submit button for filters (unfold contrib)
