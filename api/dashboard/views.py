@@ -154,19 +154,22 @@ def dashboard_callback(request, context):
                             "backgroundColor": "#f59e42",
                         },
                     ],
-                    "options": {
-                        "responsive": True,
-                        "plugins": {
-                            "legend": {
-                                "position": "top"
-                            }
-                        },
-                        "scales": {
-                            "y": {
-                                "stacked": True
+                        "options": {
+                            "responsive": True,
+                            "plugins": {
+                                "legend": {
+                                    "position": "top"
+                                }
+                            },
+                            "scales": {
+                                "x": {
+                                    "stacked": True  # Enable stacking on X axis
+                                },
+                                "y": {
+                                    "stacked": True  # Enable stacking on Y axis
+                                }
                             }
                         }
-                    }
                 }
             ),
             "performance": [
