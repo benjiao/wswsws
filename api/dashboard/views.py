@@ -27,16 +27,38 @@ def dashboard_callback(request, context):
 
     # Example: Replace with actual query logic as needed
     today = timezone.localdate()
-    treatments_total = TreatmentInstance.objects.filter(scheduled_time=today).count()
-    treatments_pending = TreatmentInstance.objects.filter(status=1, scheduled_time=today).count()
-    treatments_given = TreatmentInstance.objects.filter(status=2, scheduled_time=today).count()
-    treatments_skipped = TreatmentInstance.objects.filter(status=3, scheduled_time=today).count()
+    treatments_total = TreatmentInstance.objects.filter(scheduled_time__date=today).count()
+    treatments_pending = TreatmentInstance.objects.filter(status=1, scheduled_time__date=today).count()
+    treatments_given = TreatmentInstance.objects.filter(status=2, scheduled_time__date=today).count()
+    treatments_skipped = TreatmentInstance.objects.filter(status=3, scheduled_time__date=today).count()
 
     context["treatments_today"] = {
         "pending": treatments_pending,
         "given": treatments_given,
         "skipped": treatments_skipped,
     }
+
+    past_28_days = [timezone.localdate() - timezone.timedelta(days=i) for i in range(27, -1, -1)]
+    treatments_stats_28_days = []
+
+    for day in past_28_days:
+        total = TreatmentInstance.objects.filter(
+            scheduled_time__date=day
+        ).count()
+        pending = TreatmentInstance.objects.filter(status=1, scheduled_time__date=day).count()
+        given = TreatmentInstance.objects.filter(status=2, scheduled_time__date=day).count()
+        skipped = TreatmentInstance.objects.filter(status=3, scheduled_time__date=day).count()
+        treatments_stats_28_days.append({
+            "date": day.strftime("%b %d"),  # e.g., 'Jun 10'
+            "total": total,
+            "pending": pending,
+            "given": given,
+            "skipped": skipped,
+        })
+
+    context["treatments_stats_28_days"] = treatments_stats_28_days
+
+    print([stat["pending"] for stat in treatments_stats_28_days])
     context.update(
         {
             # "navigation": [
@@ -94,38 +116,26 @@ def dashboard_callback(request, context):
                     "title": "Treatments Given Today",
                     "description": f"{treatments_given} of {treatments_total}",
                     "value": treatments_given / treatments_total * 100 if treatments_total != 0 else 0,
-                },
-                {
-                    "title": "Treatments Given Today",
-                    "description": f"{treatments_given} of {treatments_total}",
-                    "value": treatments_given / treatments_total * 100 if treatments_total != 0 else 0,
-                },
-                {
-                    "title": "Treatments Given Today",
-                    "description": f"{treatments_given} of {treatments_total}",
-                    "value": treatments_given / treatments_total * 100 if treatments_total != 0 else 0,
-                },
+                }
             ],
             "chart": json.dumps(
                 {
-                    "labels": [WEEKDAYS[day % 7] for day in range(1, 28)],
+                    "labels": [stat["date"] for stat in treatments_stats_28_days],
                     "datasets": [
                         {
-                            "label": "Example 1",
-                            "type": "line",
-                            "data": average,
-                            "backgroundColor": "#f0abfc",
-                            "borderColor": "#f0abfc",
+                            "label": "Treatments Given",
+                            "data": [stat["given"] for stat in treatments_stats_28_days],
+                            "backgroundColor": "#26ff79",
                         },
                         {
-                            "label": "Example 2",
-                            "data": positive,
-                            "backgroundColor": "#9333ea",
+                            "label": "Treatments Pending",
+                            "data": [stat["pending"] for stat in treatments_stats_28_days],
+                            "backgroundColor": "#c0c0c0",
                         },
                         {
-                            "label": "Example 3",
-                            "data": negative,
-                            "backgroundColor": "#f43f5e",
+                            "label": "Treatments Skipped",
+                            "data": [-stat["skipped"] for stat in treatments_stats_28_days],
+                            "backgroundColor": "#f59e42",
                         },
                     ],
                 }
