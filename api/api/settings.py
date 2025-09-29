@@ -70,7 +70,7 @@ ROOT_URLCONF = 'api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -186,6 +186,7 @@ CORS_ALLOW_CREDENTIALS = True
 UNFOLD = {
     "SITE_TITLE": "Wswsws Admin Site",
     "SITE_HEADER": "Admin",
+    "DASHBOARD_CALLBACK": "dashboard.views.dashboard_callback",
 }
 
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
