@@ -19,28 +19,38 @@
 
     {% component "unfold/components/container.html" %}
         {% component "unfold/components/flex.html" with class="gap-8 mb-8 flex-col lg:flex-row" %}
-            {% if out_of_stock_medicines %}
-                {% component "unfold/components/card.html" with col=1 class="lg:w-1/4" title="⚠️ Out of Stock" %}
-                    <ul class="list-disc pl-6">
-                        {% for medicine in out_of_stock_medicines %}
-                            <li>{{ medicine.name }}</li>
-                        {% empty %}
-                            <li>No medicines are out of stock.</li>
-                        {% endfor %}
-                    </ul>
+            {% component "unfold/components/card.html" with class="lg:w-1/5" label=label footer=stats.footer %}
+                {% component "unfold/components/text.html" %}
+                    Currently sick
                 {% endcomponent %}
-            {% endif %}
-            {% if low_in_stock_medicines %}
-                {% component "unfold/components/card.html" with col=1 class="lg:w-1/4" title="Order Soon" %}
-                    <ul class="list-disc pl-6">
-                        {% for medicine in low_in_stock_medicines %}
-                            <li>{{ medicine.name }}</li>
-                        {% empty %}
-                            <li>No medicines are low in stock.</li>
-                        {% endfor %}
-                    </ul>
+
+                {% component "unfold/components/title.html" %}
+                    5
                 {% endcomponent %}
-            {% endif %}
+            {% endcomponent %}
+
+            {% trans "Within next 3 months" as label %}
+            {% component "unfold/components/card.html" with class="lg:w-1/5" label=label footer=stats.footer %}
+                {% component "unfold/components/text.html" %}
+                    Due for vaccines
+                {% endcomponent %}
+
+                {% component "unfold/components/title.html" %}
+                    10
+                {% endcomponent %}
+            {% endcomponent %}
+
+            {% trans "At least 6 months old" as label %}
+            {% component "unfold/components/card.html" with class="lg:w-1/5" label=label footer=stats.footer %}
+                {% component "unfold/components/text.html" %}
+                    For spay/neuter
+                {% endcomponent %}
+
+                {% component "unfold/components/title.html" %}
+                    5
+                {% endcomponent %}
+            {% endcomponent %}
+
         {% endcomponent %}
 
         {% trans "Treatment stats in last 28 days" as title %}
@@ -74,5 +84,32 @@
                 {% endfor %}
             {% endcomponent %}
         {% endcomponent %}
+
+
+        {% component "unfold/components/flex.html" with class="gap-8 mb-8 flex-col lg:flex-row" %}
+            {% if out_of_stock_medicines %}
+                {% component "unfold/components/card.html" with col=1 class="lg:w-1/4" title="⚠️ Out of Stock" %}
+                    <ul class="list-disc pl-6">
+                        {% for medicine in out_of_stock_medicines %}
+                            <li>{{ medicine.name }}</li>
+                        {% empty %}
+                            <li>No medicines are out of stock.</li>
+                        {% endfor %}
+                    </ul>
+                {% endcomponent %}
+            {% endif %}
+            {% if low_in_stock_medicines %}
+                {% component "unfold/components/card.html" with col=1 class="lg:w-1/4" title="Order Soon" %}
+                    <ul class="list-disc pl-6">
+                        {% for medicine in low_in_stock_medicines %}
+                            <li>{{ medicine.name }}</li>
+                        {% empty %}
+                            <li>No medicines are low in stock.</li>
+                        {% endfor %}
+                    </ul>
+                {% endcomponent %}
+            {% endif %}
+        {% endcomponent %}
+
     {% endcomponent %}
 {% endblock %}
