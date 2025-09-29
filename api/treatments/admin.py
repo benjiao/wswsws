@@ -68,8 +68,7 @@ class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the change
 
 @admin.register(TreatmentInstance)
 class TreatmentInstanceAdmin(ModelAdmin):
-    list_display = ["treatment_schedule__patient", "treatment_schedule__medicine", "scheduled_time", "status"]
-    
+
     def get_patient(self, obj):
         return obj.treatment_schedule.patient
     get_patient.short_description = "Patient"
@@ -78,7 +77,23 @@ class TreatmentInstanceAdmin(ModelAdmin):
         return obj.treatment_schedule.medicine
     get_medicine.short_description = "Medicine"
 
-    list_display = ["get_patient", "get_medicine", "scheduled_time", "status"]
+    def get_dosage(self, obj):
+        return obj.treatment_schedule.dosage
+    get_dosage.short_description = "Dosage"
+
+    def get_unit(self, obj):
+        return obj.treatment_schedule.unit
+    get_unit.short_description = "Unit"
+
+    list_display = [
+        "get_patient",
+        "get_medicine",
+        "get_dosage",
+        "get_unit",
+        "scheduled_time",
+        "status"
+    ]
+
     list_editable = ["status"]
 
     # show a submit button for filters (unfold contrib)
