@@ -31,9 +31,9 @@ def dashboard_callback(request, context):
     # Example: Replace with actual query logic as needed
     today = timezone.localdate()
     treatments_total = TreatmentInstance.objects.filter(scheduled_time__date=today).count()
-    treatments_pending = TreatmentInstance.objects.filter(status=1, scheduled_time__date=today).count()
-    treatments_given = TreatmentInstance.objects.filter(status=2, scheduled_time__date=today).count()
-    treatments_skipped = TreatmentInstance.objects.filter(status=3, scheduled_time__date=today).count()
+    treatments_pending = TreatmentInstance.objects.filter(status=TreatmentInstance.STATUS_PENDING, scheduled_time__date=today).count()
+    treatments_given = TreatmentInstance.objects.filter(status=TreatmentInstance.STATUS_GIVEN, scheduled_time__date=today).count()
+    treatments_skipped = TreatmentInstance.objects.filter(status=TreatmentInstance.STATUS_SKIPPED, scheduled_time__date=today).count()
 
     context["treatments_today"] = {
         "pending": treatments_pending,
@@ -48,9 +48,9 @@ def dashboard_callback(request, context):
         total = TreatmentInstance.objects.filter(
             scheduled_time__date=day
         ).count()
-        pending = TreatmentInstance.objects.filter(status=1, scheduled_time__date=day).count()
-        given = TreatmentInstance.objects.filter(status=2, scheduled_time__date=day).count()
-        skipped = TreatmentInstance.objects.filter(status=3, scheduled_time__date=day).count()
+        pending = TreatmentInstance.objects.filter(status=TreatmentInstance.STATUS_PENDING, scheduled_time__date=day).count()
+        given = TreatmentInstance.objects.filter(status=TreatmentInstance.STATUS_GIVEN, scheduled_time__date=day).count()
+        skipped = TreatmentInstance.objects.filter(status=TreatmentInstance.STATUS_SKIPPED, scheduled_time__date=day).count()
         treatments_stats_28_days.append({
             "date": day.strftime("%b %d"),  # e.g., 'Jun 10'
             "total": total,
@@ -64,16 +64,16 @@ def dashboard_callback(request, context):
     # Get medicine IDs that are mapped to any pending TreatmentSchedule in the future
     mapped_medicine_ids = set(
         TreatmentInstance.objects.filter(
-            status=1,
+            status=TreatmentInstance.STATUS_PENDING,
             scheduled_time__gt=timezone.now()
         ).values_list("treatment_schedule__medicine_id", flat=True)
     )
 
     # Filter out_of_stock_medicines to only those mapped to a TreatmentSchedule
-    filtered_out_of_stock = Medicine.objects.filter(stock_status=0, id__in=mapped_medicine_ids)
+    filtered_out_of_stock = Medicine.objects.filter(stock_status=Medicine.OUT_OF_STOCK, id__in=mapped_medicine_ids)
     context["out_of_stock_medicines"] = list(filtered_out_of_stock.values("id", "name", "stock_status"))
 
-    filtered_low_in_stock = Medicine.objects.filter(stock_status=1, id__in=mapped_medicine_ids)
+    filtered_low_in_stock = Medicine.objects.filter(stock_status=Medicine.LOW_STOCK, id__in=mapped_medicine_ids)
     context["low_in_stock_medicines"] = list(filtered_low_in_stock.values("id", "name", "stock_status"))
     context.update(
         {

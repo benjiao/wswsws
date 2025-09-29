@@ -22,7 +22,7 @@ def generate_treatment_instances(schedule_id):
     # Clear existing pending instances
     TreatmentInstance.objects.filter(
         treatment_schedule=schedule,
-        status=1 # Pending
+        status=TreatmentInstance.STATUS_PENDING # Pending
     ).delete()
 
     # Handle DAILY interval

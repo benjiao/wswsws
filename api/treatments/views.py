@@ -80,7 +80,7 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def pending(self, request):
         """Get all pending treatment instances"""
-        pending_instances = self.get_queryset().filter(status=1)
+        pending_instances = self.get_queryset().filter(status=TreatmentInstance.STATUS_PENDING)
         page = self.paginate_queryset(pending_instances)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -94,7 +94,7 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         today = timezone.now().date()
         due_today = self.get_queryset().filter(
             scheduled_time__date=today,
-            status=1  # Pending
+            status=TreatmentInstance.STATUS_PENDING
         )
         serializer = self.get_serializer(due_today, many=True)
         return Response(serializer.data)
