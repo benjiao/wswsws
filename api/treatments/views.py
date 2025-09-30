@@ -51,7 +51,8 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
 
 class TreatmentInstanceViewSet(viewsets.ModelViewSet):
     queryset = TreatmentInstance.objects.select_related(
-        'treatment_schedule__patient', 'treatment_schedule__medicine'
+        'treatment_schedule__patient',
+        'treatment_schedule__medicine'
     )
     serializer_class = TreatmentInstanceSerializer
 
@@ -60,12 +61,20 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         'status',
         'treatment_schedule__patient',
         'treatment_schedule__medicine',
-        'scheduled_time',  # Allows filtering by exact datetime or date
+        'scheduled_time',
     ]
     search_fields = [
         'treatment_schedule__patient__name',
         'treatment_schedule__medicine__name']
-    ordering_fields = ['scheduled_time']
+
+    ordering_fields = [
+        'scheduled_time',
+        'status',
+        'treatment_schedule__patient__name',
+        'treatment_schedule__medicine__name',
+        'created_at',
+        'updated_at',]
+
     ordering = ['scheduled_time']
         
     def get_queryset(self):
@@ -83,7 +92,40 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
                 # Return empty queryset for invalid dates
                 queryset = queryset.none()
         
+        # Apply ordering from URL parameter if provided
+        ordering = self.get_ordering()
+        if ordering:
+            queryset = queryset.order_by(*ordering)
+        
         return queryset
+
+    def get_ordering(self):
+        """
+        Get ordering from URL parameter or use default.
+        Supports multiple fields and descending order with '-' prefix.
+        """
+        ordering_param = self.request.query_params.get('ordering', None)
+        
+        logger.debug(f"Ordering parameter: {ordering_param}")
+        if ordering_param:
+            # Split by comma for multiple fields
+            ordering_fields = [field.strip() for field in ordering_param.split(',')]
+            
+            # Validate ordering fields
+            valid_fields = []
+            for field in ordering_fields:
+                # Remove '-' prefix for validation
+                field_name = field.lstrip('-')
+                
+                # Check if field is in allowed ordering_fields
+                if field_name in self.ordering_fields:
+                    valid_fields.append(field)
+                else:
+                    logger.warning(f"Invalid ordering field: {field_name}")
+            
+            return valid_fields if valid_fields else self.ordering
+        
+        return self.ordering
 
     def paginate_queryset(self, queryset):
         """
