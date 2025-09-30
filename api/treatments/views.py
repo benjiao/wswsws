@@ -311,9 +311,48 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
                 defaults=self._get_default_times(session_type)
             )
             sessions.append(session)
-        
+                
         serializer = self.get_serializer(sessions, many=True)
         return Response(serializer.data)
+    
+
+    @action(detail=False, methods=['get'], url_path='(?P<session_date>[^/.]+)/(?P<session_type>[^/.]+)')
+    def get_sessions_by_date_and_type(self, request, session_date=None, session_type=None):
+        """
+        Fetch a TreatmentInstance by session_date and session_type_display.
+        Expects URL: treatment-schedule/<session_date>/<session_type>/
+        """
+
+        if session_date == "today":
+            session_date = timezone.localtime(timezone.now()).date().strftime('%Y-%m-%d')
+        if session_date == "tomorrow":
+            session_date = (timezone.localtime(timezone.now()).date() + timezone.timedelta(days=1)).strftime('%Y-%m-%d')
+        if session_date == "yesterday":
+            session_date = (timezone.localtime(timezone.now()).date() - timezone.timedelta(days=1)).strftime('%Y-%m-%d')
+
+        if not session_date or not session_type:
+            return Response({'error': 'session_date and session_type are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            date_obj = datetime.strptime(session_date, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({'error': 'Invalid session_date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        session = TreatmentSession.objects.filter(
+            session_date=date_obj,
+            session_type=session_type
+        ).first()
+
+        if not session:
+            return Response({'error': 'No matching TreatmentSession found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        instances = session.instances.select_related(
+            'treatment_schedule__patient', 'treatment_schedule__medicine'
+        ).order_by('scheduled_time')
+        instance_serializer = TreatmentInstanceSerializer(instances, many=True)
+        session_data = self.get_serializer(session).data
+        session_data['instances'] = instance_serializer.data
+        return Response(session_data)
 
     def _get_default_times(self, session_type):
         """Get default start and end times for session type"""

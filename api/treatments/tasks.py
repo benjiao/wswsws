@@ -56,3 +56,19 @@ def generate_treatment_sessions():
         t.save()
     
     return True
+
+@shared_task
+def generate_treatment_session(instance_id):
+    try:
+        t = TreatmentInstance.objects.get(id=instance_id)
+    except TreatmentInstance.DoesNotExist:
+        return False
+
+    if t.treatment_session is None:
+        session = TreatmentSession.get_session_for_time(t.scheduled_time)
+        t.treatment_session = session
+        t.save()
+        logger.debug(f"TreatmentInstance {t.id} was assigned a new session")
+    else:
+        logger.debug(f"TreatmentInstance {t.id} already has a session")
+    return True

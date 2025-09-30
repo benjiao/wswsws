@@ -2,6 +2,9 @@ services:
   api:
     volumes:
       - ./api:/app
+  migrate:
+    volumes:
+      - ./api:/app
   celery-worker:
     volumes:
       - ./api:/app  # use override in prod as discussed

@@ -4,7 +4,9 @@ from django.db import transaction
 from django.dispatch import receiver
 
 from .models import TreatmentSchedule
+from .models import TreatmentInstance
 from .tasks import generate_treatment_instances  # celery shared_task
+from .tasks import generate_treatment_session    # celery shared_task
 
 @receiver(post_save, sender=TreatmentSchedule)
 def enqueue_generate_instances_on_create(sender, instance: TreatmentSchedule, created: bool, **kwargs):
@@ -13,3 +15,12 @@ def enqueue_generate_instances_on_create(sender, instance: TreatmentSchedule, cr
         generate_treatment_instances.delay(instance.id)
 
     transaction.on_commit(_enqueue)
+
+
+@receiver(post_save, sender=TreatmentInstance)
+def enqueue_generate_session_on_create(sender, instance: TreatmentInstance, created: bool, **kwargs):
+    if created:
+        def _enqueue():
+            generate_treatment_session.delay(instance.id)
+        transaction.on_commit(_enqueue)
+
