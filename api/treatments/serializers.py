@@ -43,7 +43,7 @@ class TreatmentInstanceDetailSerializer(TreatmentInstanceSerializer):
 # Add to existing serializers.py
 
 class TreatmentSessionSerializer(serializers.ModelSerializer):
-    session_type_display = serializers.CharField(read_only=True)
+    session_type_display = serializers.CharField(source='get_session_type_display', read_only=True)
     instances_count = serializers.SerializerMethodField()
     pending_count = serializers.SerializerMethodField()
     completed_count = serializers.SerializerMethodField()
@@ -51,9 +51,13 @@ class TreatmentSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TreatmentSession
         fields = [
-            'id', 'session_type', 'session_type_display', 'session_date', 
+            'id',
+            'session_type',
+            'session_type_display',
+            'session_date', 
             'instances_count', 'pending_count',
-            'completed_count', 'created_at', 'updated_at'
+            'completed_count', 'created_at', 'updated_at',
+            'url'
         ]
     
     def get_instances_count(self, obj):
@@ -64,6 +68,12 @@ class TreatmentSessionSerializer(serializers.ModelSerializer):
     
     def get_completed_count(self, obj):
         return obj.instances.filter(status__in=[2, 3]).count()
+
+    def get_url(self, obj):
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(f'/api/treatment-sessions/{obj.id}/')
+        return None
 
 class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
     session_type_display = serializers.CharField(read_only=True)
