@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 
 # Create your models here.
@@ -53,6 +54,8 @@ class TreatmentSession(models.Model):
     @classmethod
     def get_session_for_time(cls, datetime_obj):
         """Determine which session a datetime belongs to"""
+        if settings.USE_TZ:
+            datetime_obj = timezone.localtime(datetime_obj)
         time = datetime_obj.time()
         date = datetime_obj.date()
         
