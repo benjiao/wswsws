@@ -25,13 +25,12 @@ class TreatmentScheduleDetailSerializer(TreatmentScheduleSerializer):
         fields = TreatmentScheduleSerializer.Meta.fields + ['instances_count']
 
 class TreatmentInstanceSerializer(serializers.ModelSerializer):
-    patient_name = serializers.CharField(source='treatment_schedule.patient.name', read_only=True)
-    medicine_name = serializers.CharField(source='treatment_schedule.medicine.name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     
+    treatment_schedule = TreatmentScheduleSerializer(read_only=True)
     class Meta:
         model = TreatmentInstance
-        fields = ['id', 'treatment_schedule', 'patient_name', 'medicine_name',
+        fields = ['id', 'treatment_schedule',
                  'scheduled_time', 'status', 'status_display']
         
 class TreatmentInstanceDetailSerializer(TreatmentInstanceSerializer):

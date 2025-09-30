@@ -1,6 +1,9 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from datetime import datetime
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from .models import TreatmentSchedule, TreatmentInstance
@@ -9,6 +12,9 @@ from .serializers import (
     TreatmentInstanceSerializer, TreatmentInstanceDetailSerializer
 )
 from .tasks import generate_treatment_instances
+
+import logging
+logger = logging.getLogger(__name__)
 
 class TreatmentScheduleViewSet(viewsets.ModelViewSet):
     queryset = TreatmentSchedule.objects.select_related('patient', 'medicine')
@@ -48,12 +54,46 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         'treatment_schedule__patient', 'treatment_schedule__medicine'
     )
     serializer_class = TreatmentInstanceSerializer
+
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status', 'treatment_schedule__patient', 'treatment_schedule__medicine']
-    search_fields = ['treatment_schedule__patient__name', 'treatment_schedule__medicine__name']
+    filterset_fields = [
+        'status',
+        'treatment_schedule__patient',
+        'treatment_schedule__medicine',
+        'scheduled_time',  # Allows filtering by exact datetime or date
+    ]
+    search_fields = [
+        'treatment_schedule__patient__name',
+        'treatment_schedule__medicine__name']
     ordering_fields = ['scheduled_time']
     ordering = ['scheduled_time']
-    
+        
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Handle date filtering manually to avoid issues
+        scheduled_date = self.request.query_params.get('scheduled_time__date', None)
+        if scheduled_date:
+            try:
+                # Parse the date string
+                date_obj = datetime.strptime(scheduled_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(scheduled_time__date=date_obj)
+            except ValueError as e:
+                logger.warning(f"Invalid date format: {scheduled_date}, error: {e}")
+                # Return empty queryset for invalid dates
+                queryset = queryset.none()
+        
+        return queryset
+
+    def paginate_queryset(self, queryset):
+        """
+        Return a paginated style `Response`, or `None` if pagination is not configured.
+        Only paginate if 'page' parameter is explicitly provided.
+        """
+        if 'page' not in self.request.query_params:
+            return None
+        return super().paginate_queryset(queryset)
+
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return TreatmentInstanceDetailSerializer
