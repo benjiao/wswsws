@@ -41,6 +41,22 @@ class UniqueHourFilter(SimpleListFilter):
             )
         return queryset
 
+class TreatmentSessionFilter(SimpleListFilter):
+    title = 'treatment session'
+    parameter_name = 'treatment_session'
+
+    def lookups(self, request, model_admin):
+        now = datetime.now()
+        days_before = now - timedelta(days=1)
+        days_after = now + timedelta(days=1)
+        sessions = TreatmentSession.objects.filter(session_date__gte=days_before, session_date__lte=days_after)
+        return [(session.id, str(session)) for session in sessions]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(treatment_session_id=self.value())
+        return queryset
+
 @admin.register(TreatmentSession)
 class TreatmentSessionAdmin(ModelAdmin):    # show useful columns in the changelist
     def instance_count(self, obj):
@@ -138,6 +154,7 @@ class TreatmentInstanceAdmin(ModelAdmin):
         ('scheduled_time', RangeDateTimeFilter),
         UniqueHourFilter,
         'status',
+        TreatmentSessionFilter,
     )
 
     # name is better served by a search box than a list filter
