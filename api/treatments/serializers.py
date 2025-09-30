@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TreatmentSchedule, TreatmentInstance
+from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession
 from patients.serializers import PatientSerializer
 from inventory.serializers import MedicineSerializer
 
@@ -39,3 +39,53 @@ class TreatmentInstanceDetailSerializer(TreatmentInstanceSerializer):
     
     class Meta(TreatmentInstanceSerializer.Meta):
         pass
+
+# Add to existing serializers.py
+
+class TreatmentSessionSerializer(serializers.ModelSerializer):
+    session_type_display = serializers.CharField(read_only=True)
+    instances_count = serializers.SerializerMethodField()
+    pending_count = serializers.SerializerMethodField()
+    completed_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = TreatmentSession
+        fields = [
+            'id', 'session_type', 'session_type_display', 'session_date', 
+            'instances_count', 'pending_count',
+            'completed_count', 'created_at', 'updated_at'
+        ]
+    
+    def get_instances_count(self, obj):
+        return obj.instances.count()
+    
+    def get_pending_count(self, obj):
+        return obj.instances.filter(status=1).count()
+    
+    def get_completed_count(self, obj):
+        return obj.instances.filter(status__in=[2, 3]).count()
+
+class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
+    session_type_display = serializers.CharField(read_only=True)
+    instances = TreatmentInstanceSerializer(many=True, read_only=True)
+    instances_count = serializers.SerializerMethodField()
+    pending_count = serializers.SerializerMethodField()
+    completed_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = TreatmentSession
+        fields = [
+            'id', 'session_type', 'session_type_display', 'session_date', 
+            'instances_count', 'pending_count',
+            'completed_count', 'created_at', 'updated_at',
+            'instances'
+        ]
+    
+    def get_instances_count(self, obj):
+        return obj.instances.count()
+    
+    def get_pending_count(self, obj):
+        return obj.instances.filter(status=1).count()
+    
+    def get_completed_count(self, obj):
+        return obj.instances.filter(status__in=[2, 3]).count()

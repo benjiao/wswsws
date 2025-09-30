@@ -1,6 +1,5 @@
 from celery import shared_task
-from .models import TreatmentSchedule
-from .models import TreatmentInstance
+from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession
 import logging
 from datetime import datetime, timedelta, time
 logger = logging.getLogger(__name__)
@@ -46,3 +45,14 @@ def generate_treatment_instances(schedule_id):
 
             current_date += timedelta(days=1)
     return schedule.id
+
+@shared_task
+def generate_treatment_sessions():
+    instances = TreatmentInstance.objects.filter(treatment_session__isnull=True)
+
+    for t in instances:
+        session = TreatmentSession.get_session_for_time(t.scheduled_time)
+        t.treatment_session = session
+        t.save()
+    
+    return True

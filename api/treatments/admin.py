@@ -4,7 +4,7 @@ from unfold.admin import ModelAdmin
 from datetime import datetime, timedelta
 
 # Register your models here.
-from .models import TreatmentSchedule, TreatmentInstance
+from .models import TreatmentSchedule, TreatmentSession, TreatmentInstance
 from unfold.contrib.filters.admin import RangeDateFilter, RangeDateTimeFilter
 
 class UniqueHourFilter(SimpleListFilter):
@@ -41,6 +41,32 @@ class UniqueHourFilter(SimpleListFilter):
             )
         return queryset
 
+@admin.register(TreatmentSession)
+class TreatmentSessionAdmin(ModelAdmin):    # show useful columns in the changelist
+    def instance_count(self, obj):
+        return obj.instances.count()
+    instance_count.short_description = "Treatments"
+
+    list_display = ['session_date', 'session_type', 'instance_count']
+
+    list_filter = (
+        ('session_date', RangeDateFilter),
+        ('session_type'),
+    )
+
+    # name is better served by a search box than a list filter
+    search_fields = []
+
+    def instances_list(self, obj):
+        return ", ".join(str(instance) for instance in obj.instances.all())
+    instances_list.short_description = "Instances"
+
+    readonly_fields = ['instances_list']
+    # paging and ordering
+    list_per_page = 25
+    ordering = ['session_date']
+
+
 @admin.register(TreatmentSchedule)
 class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the changelist
     list_display = ["patient", "medicine", "start_date", "end_date", "frequency", "interval", "dosage", "unit"]
@@ -64,7 +90,6 @@ class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the change
     # paging and ordering
     list_per_page = 25
     ordering = ['start_date']
-
 
 @admin.register(TreatmentInstance)
 class TreatmentInstanceAdmin(ModelAdmin):
@@ -90,6 +115,7 @@ class TreatmentInstanceAdmin(ModelAdmin):
         "get_medicine",
         "get_dosage",
         "get_unit",
+        "treatment_session",
         "scheduled_time",
         "status"
     ]

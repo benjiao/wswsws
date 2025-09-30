@@ -6,11 +6,13 @@ from datetime import datetime
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from .models import TreatmentSchedule, TreatmentInstance
+from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession
 from .serializers import (
     TreatmentScheduleSerializer, TreatmentScheduleDetailSerializer,
-    TreatmentInstanceSerializer, TreatmentInstanceDetailSerializer
+    TreatmentInstanceSerializer, TreatmentInstanceDetailSerializer,
+    TreatmentSessionSerializer, TreatmentSessionDetailSerializer
 )
+
 from .tasks import generate_treatment_instances
 
 import logging
@@ -180,3 +182,150 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(due_today, many=True)
         return Response(serializer.data)
+
+# Add this new ViewSet after TreatmentInstanceViewSet
+class TreatmentSessionViewSet(viewsets.ModelViewSet):
+    queryset = TreatmentSession.objects.prefetch_related('instances__treatment_schedule__patient', 'instances__treatment_schedule__medicine')
+    serializer_class = TreatmentSessionSerializer
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = [
+        'session_type',
+        'session_date',
+    ]
+    search_fields = [
+        'instances__treatment_schedule__patient__name',
+        'instances__treatment_schedule__medicine__name'
+    ]
+    ordering_fields = [
+        'session_date',
+        'session_type',
+        'created_at',
+        'updated_at',
+    ]
+    ordering = ['session_date', 'session_type']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filter by date range if provided
+        date_from = self.request.query_params.get('date_from', None)
+        date_to = self.request.query_params.get('date_to', None)
+        
+        if date_from:
+            try:
+                date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                queryset = queryset.filter(session_date__gte=date_from_obj)
+            except ValueError:
+                logger.warning(f"Invalid date_from format: {date_from}")
+        
+        if date_to:
+            try:
+                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                queryset = queryset.filter(session_date__lte=date_to_obj)
+            except ValueError:
+                logger.warning(f"Invalid date_to format: {date_to}")
+        
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return TreatmentSessionDetailSerializer
+        return TreatmentSessionSerializer
+
+    @action(detail=False, methods=['get'])
+    def today(self, request):
+        """Get all sessions for today"""
+        today = timezone.now().date()
+        today_sessions = self.get_queryset().filter(session_date=today)
+        serializer = self.get_serializer(today_sessions, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def tomorrow(self, request):
+        """Get all sessions for tomorrow"""
+        tomorrow = timezone.now().date() + timezone.timedelta(days=1)
+        tomorrow_sessions = self.get_queryset().filter(session_date=tomorrow)
+        serializer = self.get_serializer(tomorrow_sessions, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def instances(self, request, pk=None):
+        """Get all treatment instances for this session"""
+        session = self.get_object()
+        instances = session.instances.select_related(
+            'treatment_schedule__patient', 'treatment_schedule__medicine'
+        ).order_by('scheduled_time')
+        
+        # Filter by status if provided
+        status_filter = request.query_params.get('status', None)
+        if status_filter:
+            try:
+                status_int = int(status_filter)
+                instances = instances.filter(status=status_int)
+            except ValueError:
+                pass
+        
+        serializer = TreatmentInstanceSerializer(instances, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def progress(self, request, pk=None):
+        """Get progress statistics for this session"""
+        session = self.get_object()
+        total = session.instances.count()
+        pending = session.instances.filter(status=1).count()
+        given = session.instances.filter(status=2).count()
+        skipped = session.instances.filter(status=3).count()
+        
+        return Response({
+            'session_id': session.id,
+            'session_type': session.session_type,
+            'session_type_display': session.session_type_display,
+            'session_date': session.session_date,
+            'total_instances': total,
+            'pending': pending,
+            'given': given,
+            'skipped': skipped,
+            'completed': given + skipped,
+            'completion_percentage': round((given + skipped) / total * 100, 2) if total > 0 else 0
+        })
+
+    @action(detail=False, methods=['post'])
+    def create_sessions_for_date(self, request):
+        """Create all 4 sessions (morning, noon, afternoon, evening) for a specific date"""
+        date_str = request.data.get('date')
+        if not date_str:
+            return Response({'error': 'Date is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        sessions = []
+        for session_type, session_name in TreatmentSession.SESSION_CHOICES:
+            session, created = TreatmentSession.objects.get_or_create(
+                session_type=session_type,
+                session_date=date_obj,
+                defaults=self._get_default_times(session_type)
+            )
+            sessions.append(session)
+        
+        serializer = self.get_serializer(sessions, many=True)
+        return Response(serializer.data)
+
+    def _get_default_times(self, session_type):
+        """Get default start and end times for session type"""
+        time_mappings = {
+            TreatmentSession.SESSION_MORNING: {'start_time': '08:00', 'end_time': '11:00'},
+            TreatmentSession.SESSION_NOON: {'start_time': '11:00', 'end_time': '14:00'},
+            TreatmentSession.SESSION_AFTERNOON: {'start_time': '14:00', 'end_time': '18:00'},
+            TreatmentSession.SESSION_EVENING: {'start_time': '18:00', 'end_time': '22:00'},
+        }
+        
+        times = time_mappings.get(session_type, {'start_time': '08:00', 'end_time': '12:00'})
+        return {
+            'start_time': timezone.datetime.strptime(times['start_time'], '%H:%M').time(),
+            'end_time': timezone.datetime.strptime(times['end_time'], '%H:%M').time(),
+        }
