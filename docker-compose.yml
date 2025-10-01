@@ -9,13 +9,11 @@ services:
       - redis
     env_file:
       - .env.default
-      - .env
     restart: unless-stopped
   db:
     image: postgres:latest
     env_file:
       - .env.default
-      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -28,7 +26,6 @@ services:
       - api
     env_file:
       - .env.default
-      - .env
 
   web:
     build:
@@ -40,7 +37,6 @@ services:
       - api
     env_file:
       - .env.default
-      - .env
     volumes:
       - ./web:/app
       - /app/node_modules  # Anonymous volume for node_modules
@@ -59,7 +55,6 @@ services:
       - db
     env_file:
       - .env.default
-      - .env
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "celery -A api status || exit 1"]
@@ -75,7 +70,6 @@ services:
       - redis
     env_file:
       - .env.default
-      - .env
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "celery -A api status || exit 1"]
