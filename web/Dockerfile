@@ -12,11 +12,11 @@ RUN yarn install --production
 COPY . .
 
 # Build the app
-RUN npm run build
+RUN yarn build
 
 # Expose port
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["yarn", "start"]
 
