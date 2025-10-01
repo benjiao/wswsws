@@ -160,7 +160,7 @@ export default function TreatmentSessionPage() {
 
       <h3>Morning</h3>
       <TreatmentTable 
-        data={morningSession} 
+        data={morningSession?.instances ?? []}
         loading={morningLoading} 
         error={morningError}
         refetch={refetchMorning}
@@ -168,7 +168,7 @@ export default function TreatmentSessionPage() {
 
       <h3>Evening</h3>
       <TreatmentTable 
-        data={eveningSession} 
+        data={eveningSession?.instances ?? []} 
         loading={eveningLoading} 
         error={eveningError} 
         refetch={refetchEvening}

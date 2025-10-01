@@ -2,7 +2,7 @@
 
 import { Spin, Alert, Table, Tag } from 'antd';
 import type { TableProps } from 'antd';
-import { TreatmentInstance, TreatmentSession } from '@/types';
+import { TreatmentInstance } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -37,7 +37,7 @@ const formatDateTime = (dateString: string) => {
 };
 
 interface TreatmentTableProps {
-  data: TreatmentSession | undefined;
+  data: TreatmentInstance[] | undefined;
   loading: boolean;
   error: any;
   refetch: () => void;
@@ -122,7 +122,7 @@ export default function TreatmentTable({ data, loading, error, refetch }: Treatm
 
     if (error) return (
         <Alert 
-            message="Error loading sessions" 
+            message="Error loading treatments" 
             description={error.message} 
             type="error"
             showIcon
@@ -131,7 +131,7 @@ export default function TreatmentTable({ data, loading, error, refetch }: Treatm
 
     return (
         <Table
-            dataSource={data?.instances || []}
+            dataSource={data || []}
             rowKey="id"
             pagination={false}
             size="small" 
