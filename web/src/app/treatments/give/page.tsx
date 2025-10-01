@@ -146,7 +146,7 @@ const TreatmentTable = ({ data, loading, error, refetch }: {
                 msUserSelect: 'none' // IE/Edge
               }}
               onClick={() => {
-                const newStatus = record.status === 1 ? 2 : record.status === 2 ? 3 : 1;
+                const newStatus = (record.status % 3) + 1;
                 updateTreatmentStatus(record.id, newStatus);
               }}
             >
