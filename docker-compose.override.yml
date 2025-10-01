@@ -17,6 +17,8 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       - NODE_ENV=${NODE_ENV:-production}
     restart: unless-stopped
+    volumes:
+      - ./web:/app
 
 
   migrate:

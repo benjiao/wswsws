@@ -26,3 +26,13 @@ export interface TreatmentInstance {
     created_at?: string;
     updated_at?: string;
 }
+
+export interface TreatmentSession {
+    id: number;
+    session_type: 1 | 2 | 3 | 4;
+    session_type_display: string;
+    session_date: String
+    instances: TreatmentInstance[];
+    created_at?: string;
+    updated_at?: string;
+}

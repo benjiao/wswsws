@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Spin, Alert, Table, Tag } from 'antd';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-import { TreatmentInstance, TreatmentSchedule } from '@/types';
+import { TreatmentInstance, TreatmentSession } from '@/types';
 
 const formatDateTime = (dateString: string) => {
   if (!dateString) return 'Not scheduled';
@@ -37,159 +37,129 @@ const formatDateTime = (dateString: string) => {
 };
 
 // API fetcher function
-const fetchTreatmentInstances = async (): Promise<TreatmentInstance[]> => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const dateStr = `${yyyy}-${mm}-${dd}`;
-
-    const response = await fetch(
-      `${API_URL}/treatment-instances/?scheduled_time__date=${dateStr}&ordering=scheduled_time,treatment_schedule__patient__name`, 
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
-
-    if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+const fetchTreatmentSession = async (sessionType: number): Promise<TreatmentSession> => {
+  const response = await fetch(
+    `${API_URL}/treatment-sessions/today/${sessionType}/`, 
+    {
+      headers: {
+        'Accept': 'application/json',
+      },
     }
+  );
 
-    const data = await response.json();
-    return data.results || data;
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data;
 };
 
-export default function TreatmentInstancesPage() {
-  const { 
-    data: treatmentInstances, 
-    isLoading, 
-    error, 
-    refetch 
-  } = useQuery({
-    queryKey: ['treatment_instances'],
-    queryFn: fetchTreatmentInstances,
-  });
-
-  if (isLoading) return <Spin size="large" />;
+// Reusable table component
+const TreatmentTable = ({ data, loading, error }: { 
+  data: TreatmentSession | undefined; 
+  loading: boolean; 
+  error: any; 
+}) => {
+  if (loading) return <Spin size="small" />;
   
   if (error) return (
     <Alert 
-      message="Error fetching treatment instances" 
+      message="Error loading sessions" 
       description={error.message} 
-      type="error" 
-      showIcon 
+      type="error"
     />
   );
 
   return (
-    <div style={{ padding: '20px' }}>
-    <h1>Treatments</h1>
-
-    {treatmentInstances && treatmentInstances.length > 0 && (() => {
-      const pendingCount = treatmentInstances.filter((ti: any) => ti.status === 1).length;
-      const totalCount = treatmentInstances.length;
-      const percent = Math.round(((totalCount - pendingCount) / totalCount) * 100);
-
-      return (
-        <Card style={{ marginBottom: 16 }}>
-          <div style={{ marginBottom: 8 }}>
-            <strong>
-              {totalCount - pendingCount} / {totalCount} treatments completed
-            </strong>
-          </div>
-          <div>
-            <Spin spinning={false}>
-              <div style={{ width: '100%' }}>
-                <div style={{ marginBottom: 4 }}>
-                  <span>Progress</span>
-                </div>
-                <div style={{ width: '100%' }}>
-                  <div
-                    style={{
-                      background: '#f0f0f0',
-                      borderRadius: 4,
-                      height: 16,
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        background: '#52c41a',
-                        width: `${percent}%`,
-                        height: '100%',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: 0,
-                        transform: 'translateX(-50%)',
-                        fontSize: 12,
-                        color: '#222',
-                      }}
-                    >
-                      {percent}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Spin>
-          </div>
-        </Card>
-      );
-    })()}
-
     <Table
-        dataSource={treatmentInstances}
-        rowKey="id"
-        pagination={false}
-        size="small" 
-        style={{ marginBottom: '10px' }}
+      dataSource={data?.instances || []}
+      rowKey="id"
+      pagination={false}
+      size="small" 
+      style={{ marginBottom: '20px' }}
     >
-        <Table.Column
-            title="Schedule"
-            dataIndex={['scheduled_time']}
-            key="patient"
-            render={(time: string) => formatDateTime(time)}
-            responsive={['md']}
-        />
-        <Table.Column
-            title="Task"
-            dataIndex={['treatment_schedule', 'patient_name']}
-            key="patient"
-            render={(_, record: TreatmentInstance) =>
-                `${record.treatment_schedule.patient_name} - ${record.treatment_schedule.medicine_name} ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`
-            }
-        />
-        <Table.Column
-            title="Status"
-            dataIndex={['status']}
-            key="dosage"
-            render={(_, record: TreatmentInstance) =>
-                <span>
-                    <Tag
-                        color={
-                            record.status === 1
-                                ? 'default'
-                                : record.status === 2
-                                ? 'green'
-                                : record.status === 3
-                                ? 'orange'
-                                : 'default'
-                        }
-                        key={record.status}
-                    >
-                        {record.status_display}
-                    </Tag>
-                </span>
-            }
-        />
+      <Table.Column
+        title="Schedule"
+        dataIndex={['scheduled_time']}
+        key="scheduled_time"
+        render={(time: string) => formatDateTime(time)}
+        responsive={['md']}
+      />
+      <Table.Column
+        title="Task"
+        dataIndex={['treatment_schedule', 'patient_name']}
+        key="task"
+        render={(_, record: TreatmentInstance) =>
+          `${record.treatment_schedule.patient_name} - ${record.treatment_schedule.medicine_name} ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`
+        }
+      />
+      <Table.Column
+        title="Status"
+        dataIndex={['status']}
+        key="status"
+        render={(_, record: TreatmentInstance) =>
+          <span>
+            <Tag
+              color={
+                record.status === 1
+                  ? 'default'
+                  : record.status === 2
+                  ? 'green'
+                  : record.status === 3
+                  ? 'orange'
+                  : 'default'
+              }
+              key={record.status}
+            >
+              {record.status_display}
+            </Tag>
+          </span>
+        }
+      />
     </Table>
+  );
+};
+
+export default function GiveTreatmentPage() {
+  // Fetch morning sessions (sessionType = 1)
+  const { 
+    data: morningSession, 
+    isLoading: morningLoading, 
+    error: morningError
+  } = useQuery({
+    queryKey: ['treatment_sessions/today', 1],
+    queryFn: () => fetchTreatmentSession(1),
+  });
+
+  // Fetch evening sessions (sessionType = 2)
+  const { 
+    data: eveningSession, 
+    isLoading: eveningLoading, 
+    error: eveningError
+  } = useQuery({
+    queryKey: ['treatment_sessions/today', 4],
+    queryFn: () => fetchTreatmentSession(4),
+  });
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Treatments</h1>
+
+      <h3>Morning</h3>
+      <TreatmentTable 
+        data={morningSession} 
+        loading={morningLoading} 
+        error={morningError} 
+      />
+
+
+      <h3>Evening</h3>
+      <TreatmentTable 
+        data={eveningSession} 
+        loading={eveningLoading} 
+        error={eveningError} 
+      />
     </div>
   );
 }
