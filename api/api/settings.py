@@ -26,7 +26,7 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = os.environ.get("WSWSWS_ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost").split(",")
 
 # Application definition
 
@@ -91,13 +91,13 @@ WSGI_APPLICATION = 'api.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("WSWSWS_POSTGRES_DB"),
-        "USER": os.environ.get("WSWSWS_POSTGRES_USER"),
-        "PASSWORD": os.environ.get("WSWSWS_POSTGRES_PASSWORD"),
-        "HOST": os.environ.get("WSWSWS_POSTGRES_HOST"),
-        "PORT": os.environ.get("WSWSWS_POSTGRES_PORT"),
+        "NAME": os.environ.get("POSTGRES_DB"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "HOST": os.environ.get("POSTGRES_HOST"),
+        "PORT": os.environ.get("POSTGRES_PORT"),
         "TEST": {
-            "NAME": os.environ.get("WSWSWS_POSTGRES_DB_TEST"),
+            "NAME": os.environ.get("POSTGRES_DB_TEST"),
         },
     }
 }
@@ -126,7 +126,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = os.environ.get("WSWSWS_TIMEZONE", "UTC")
+TIME_ZONE = os.environ.get("TIMEZONE", "UTC")
 
 USE_I18N = True
 
@@ -193,4 +193,4 @@ CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = os.environ.get("WSWSWS_TIMEZONE", "UTC")
+CELERY_TIMEZONE = os.environ.get("TIMEZONE", "UTC")
