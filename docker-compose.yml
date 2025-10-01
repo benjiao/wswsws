@@ -27,21 +27,21 @@ services:
     env_file:
       - .env.default
 
-  web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-    volumes:
-      - ./web:/app
-      - /app/node_modules
-      - /app/.next
-    ports:
-      - "${WEB_PORT:-3000}:3000"
-    depends_on:
-      - api
-    env_file:
-      - .env.default
-    restart: unless-stopped
+  # web:
+  #   build:
+  #     context: ./web
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./web:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   ports:
+  #     - "${WEB_PORT:-3000}:3000"
+  #   depends_on:
+  #     - api
+  #   env_file:
+  #     - .env.default
+  #   restart: unless-stopped
 
   redis:
     image: redis:latest
