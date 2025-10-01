@@ -35,10 +35,6 @@ services:
       - api
     env_file:
       - .env.default
-    volumes:
-      - ./web:/app
-      - /app/node_modules  # Anonymous volume for node_modules
-      - /app/.next         # Anonymous volume for .next build cache
     restart: unless-stopped
 
   redis:
