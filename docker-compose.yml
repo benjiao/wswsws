@@ -3,28 +3,19 @@ services:
     build: api/
     command: bash -c "python manage.py runserver 0.0.0.0:8000"
     ports:
-      - "${WSWSWS_API_PORT}:8000"
+      - "${API_PORT}:8000"
     depends_on:
       - db
       - redis
-    environment:
-      WSWSWS_POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
-      WSWSWS_POSTGRES_DB_TEST: ${WSWSWS_POSTGRES_DB_TEST}
-      WSWSWS_POSTGRES_HOST: ${WSWSWS_POSTGRES_HOST}
-      WSWSWS_POSTGRES_PORT: ${WSWSWS_POSTGRES_PORT}
-      WSWSWS_POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
-      WSWSWS_POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
-      WSWSWS_ALLOWED_HOSTS: ${WSWSWS_ALLOWED_HOSTS}
-      WSWSWS_TIMEZONE: ${WSWSWS_TIMEZONE}
-      SECRET_KEY: ${SECRET_KEY}
-      DEBUG: ${DEBUG} 
+    env_file:
+      - .env.default
+      - .env
     restart: unless-stopped
   db:
     image: postgres:latest
-    environment:
-      POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
-      POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
+    env_file:
+      - .env.default
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -35,16 +26,26 @@ services:
     depends_on:
       - db
       - api
-    environment:
-      WSWSWS_POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
-      WSWSWS_POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
-      WSWSWS_POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
-      WSWSWS_POSTGRES_HOST: ${WSWSWS_POSTGRES_HOST}
-      WSWSWS_POSTGRES_PORT: ${WSWSWS_POSTGRES_PORT}
-      WSWSWS_ALLOWED_HOSTS: ${WSWSWS_ALLOWED_HOSTS}
-      WSWSWS_TIMEZONE: ${WSWSWS_TIMEZONE}
-      SECRET_KEY: ${SECRET_KEY}
-      DEBUG: ${DEBUG}
+    env_file:
+      - .env.default
+      - .env
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+    env_file:
+      - .env.default
+      - .env
+    volumes:
+      - ./web:/app
+      - /app/node_modules  # Anonymous volume for node_modules
+      - /app/.next         # Anonymous volume for .next build cache
+    restart: unless-stopped
 
   redis:
     image: redis:latest
@@ -56,17 +57,9 @@ services:
     depends_on:
       - redis
       - db
-    environment:
-      CELERY_BROKER_URL: redis://redis:6379/0
-      WSWSWS_POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
-      WSWSWS_POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
-      WSWSWS_POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
-      WSWSWS_POSTGRES_HOST: ${WSWSWS_POSTGRES_HOST}
-      WSWSWS_POSTGRES_PORT: ${WSWSWS_POSTGRES_PORT}
-      WSWSWS_ALLOWED_HOSTS: ${WSWSWS_ALLOWED_HOSTS}
-      WSWSWS_TIMEZONE: ${WSWSWS_TIMEZONE}
-      SECRET_KEY: ${SECRET_KEY}
-      DEBUG: ${DEBUG}
+    env_file:
+      - .env.default
+      - .env
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "celery -A api status || exit 1"]
@@ -80,17 +73,9 @@ services:
     command: celery -A api beat --loglevel=info
     depends_on:
       - redis
-    environment:
-      CELERY_BROKER_URL: redis://redis:6379/0
-      WSWSWS_POSTGRES_DB: ${WSWSWS_POSTGRES_DB}
-      WSWSWS_POSTGRES_USER: ${WSWSWS_POSTGRES_USER}
-      WSWSWS_POSTGRES_PASSWORD: ${WSWSWS_POSTGRES_PASSWORD}
-      WSWSWS_POSTGRES_HOST: ${WSWSWS_POSTGRES_HOST}
-      WSWSWS_POSTGRES_PORT: ${WSWSWS_POSTGRES_PORT}
-      WSWSWS_ALLOWED_HOSTS: ${WSWSWS_ALLOWED_HOSTS}
-      WSWSWS_TIMEZONE: ${WSWSWS_TIMEZONE}
-      SECRET_KEY: ${SECRET_KEY}
-      DEBUG: ${DEBUG}
+    env_file:
+      - .env.default
+      - .env
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "celery -A api status || exit 1"]
