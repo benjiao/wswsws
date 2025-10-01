@@ -268,7 +268,9 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
         session = self.get_object()
         instances = session.instances.select_related(
             'treatment_schedule__patient', 'treatment_schedule__medicine'
-        ).order_by('scheduled_time')
+        ).order_by(
+            'treatment_schedule__patient__name'
+        )
         
         # Filter by status if provided
         status_filter = request.query_params.get('status', None)
@@ -361,7 +363,8 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
 
         instances = session.instances.select_related(
             'treatment_schedule__patient', 'treatment_schedule__medicine'
-        ).order_by('scheduled_time')
+        ).order_by('treatment_schedule__patient__name')
+
         instance_serializer = TreatmentInstanceSerializer(instances, many=True)
         session_data = self.get_serializer(session).data
         session_data['instances'] = instance_serializer.data
