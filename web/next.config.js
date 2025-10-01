@@ -1,48 +1,44 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {  
-  output: 'standalone',
-  
-  // Add module resolution for problematic packages
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        os: false,
-      };
-    }
+const nextConfig = {
 
-    // Handle rc-util module resolution issues
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'rc-util/es/utils/get': require.resolve('rc-util/lib/utils/get'),
-      'rc-util/es/utils/set': require.resolve('rc-util/lib/utils/set'),
-      'rc-picker/es/locale/common': require.resolve('rc-picker/lib/locale/common'),
-      'rc-picker/es/locale/en_US': require.resolve('rc-picker/lib/locale/en_US'),
-      'rc-picker/es': require.resolve('rc-picker/lib'),
-    };
-
-    return config;
-  },
-
-  // Allow external API calls
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.API_URL}/:path*`,
-      },
-    ];
-  },
-
-  // Optimize for production
-  experimental: {
-    optimizePackageImports: ['@ant-design/icons'],
-  },
-
-  // Transpile packages that might have ESM issues
-  transpilePackages: ['antd', '@ant-design/icons', 'rc-util', 'rc-picker'],
+  transpilePackages: [
+    // antd & deps
+    "@ant-design",
+    "@rc-component",
+    "antd",
+    "rc-cascader",
+    "rc-checkbox",
+    "rc-collapse",
+    "rc-dialog",
+    "rc-drawer",
+    "rc-dropdown",
+    "rc-field-form",
+    "rc-image",
+    "rc-input",
+    "rc-input-number",
+    "rc-mentions",
+    "rc-menu",
+    "rc-motion",
+    "rc-notification",
+    "rc-pagination",
+    "rc-picker",
+    "rc-progress",
+    "rc-rate",
+    "rc-resize-observer",
+    "rc-segmented",
+    "rc-select",
+    "rc-slider",
+    "rc-steps",
+    "rc-switch",
+    "rc-table",
+    "rc-tabs",
+    "rc-textarea",
+    "rc-tooltip",
+    "rc-tree",
+    "rc-tree-select",
+    "rc-upload",
+    "rc-util",
+  ],
 }
 
 module.exports = nextConfig

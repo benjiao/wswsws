@@ -48,18 +48,20 @@ services:
       - SECRET_KEY=${SECRET_KEY:-fallback-secret-key}
       - DEBUG=${DEBUG:-True}
 
-  # web:
-  #   build:
-  #     context: ./web
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "${WEB_PORT:-3000}:3000"
-  #   depends_on:
-  #     - api
-  #   environment:
-  #     - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
-  #     - NODE_ENV=${NODE_ENV:-production}
-  #   restart: unless-stopped
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NODE_ENV=${NODE_ENV:-production}
+    restart: unless-stopped
 
   redis:
     image: redis:latest
