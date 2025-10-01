@@ -55,7 +55,7 @@ const fetchTreatmentSession = async (sessionType: number): Promise<TreatmentSess
   return data;
 };
 
-// Reusable table component
+
 const TreatmentTable = ({ data, loading, error }: { 
   data: TreatmentSession | undefined; 
   loading: boolean; 
@@ -145,6 +145,73 @@ export default function GiveTreatmentPage() {
   return (
     <div style={{ padding: '20px' }}>
       <h1>Treatments</h1>
+
+      <Card style={{ marginBottom: 24 }}>
+        {morningSession && eveningSession ? (
+          (() => {
+            const allInstances = [
+              ...(morningSession.instances || []),
+              ...(eveningSession.instances || [])
+            ];
+            const total = allInstances.length;
+            const completed = allInstances.filter(i => i.status === 2).length;
+            const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+            return (
+              <>
+                <div style={{ marginBottom: 8 }}>
+                  <strong>
+                    {completed} / {total} treatments completed
+                  </strong>
+                </div>
+                <div>
+                  <Spin spinning={false}>
+                    <div style={{ width: '100%' }}>
+                      <div style={{ marginBottom: 4 }}>
+                        <span>Progress</span>
+                      </div>
+                      <div style={{ width: '100%' }}>
+                        <div
+                          style={{
+                            background: '#f0f0f0',
+                            borderRadius: 4,
+                            height: 16,
+                            position: 'relative',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <div
+                            style={{
+                              background: '#52c41a',
+                              width: `${percent}%`,
+                              height: '100%',
+                              transition: 'width 0.3s',
+                            }}
+                          />
+                          <span
+                            style={{
+                              position: 'absolute',
+                              left: '50%',
+                              top: 0,
+                              transform: 'translateX(-50%)',
+                              fontSize: 12,
+                              color: '#222',
+                            }}
+                          >
+                            {percent}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Spin>
+                </div>
+              </>
+            );
+          })()
+        ) : (
+          <Spin />
+        )}
+      </Card>
 
       <h3>Morning</h3>
       <TreatmentTable 
