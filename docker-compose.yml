@@ -28,9 +28,7 @@ services:
       - .env.default
 
   web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
+    build: web/
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
