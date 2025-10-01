@@ -138,7 +138,13 @@ const TreatmentTable = ({ data, loading, error, refetch }: {
                   : 'default'
               }
               key={record.status}
-              style={{ cursor: 'pointer' }}
+              style={{
+                cursor: 'pointer',
+                userSelect: 'none',
+                WebkitUserSelect: 'none', // Safari
+                MozUserSelect: 'none', // Firefox
+                msUserSelect: 'none' // IE/Edge
+              }}
               onClick={() => {
                 const newStatus = record.status === 1 ? 2 : record.status === 2 ? 3 : 1;
                 updateTreatmentStatus(record.id, newStatus);
