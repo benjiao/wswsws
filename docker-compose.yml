@@ -30,6 +30,23 @@ services:
       - .env.default
       - .env
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+    env_file:
+      - .env.default
+      - .env
+    volumes:
+      - ./web:/app
+      - /app/node_modules  # Anonymous volume for node_modules
+      - /app/.next         # Anonymous volume for .next build cache
+    restart: unless-stopped
+
   redis:
     image: redis:latest
     restart: unless-stopped
