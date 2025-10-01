@@ -2,7 +2,7 @@
 
 import { Spin, Alert, Table, Tag } from 'antd';
 import type { TableProps } from 'antd';
-import { TreatmentInstance } from '@/types';
+import { TreatmentInstance, TreatmentSession } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -37,7 +37,7 @@ const formatDateTime = (dateString: string) => {
 };
 
 interface TreatmentTableProps {
-  data: TreatmentInstance | undefined;
+  data: TreatmentSession | undefined;
   loading: boolean;
   error: any;
   refetch: () => void;
