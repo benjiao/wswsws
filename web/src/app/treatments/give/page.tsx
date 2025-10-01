@@ -56,11 +56,38 @@ const fetchTreatmentSession = async (sessionType: number): Promise<TreatmentSess
 };
 
 
-const TreatmentTable = ({ data, loading, error }: { 
+const TreatmentTable = ({ data, loading, error, refetch }: { 
   data: TreatmentSession | undefined; 
   loading: boolean; 
-  error: any; 
+  error: any;
+  refetch: () => void;
 }) => {
+  
+  const updateTreatmentStatus = async (instanceId: number, newStatus: number) => {
+    try {
+      const response = await fetch(`${API_URL}/treatment-instances/${instanceId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const updatedData = await response.json();      
+      // You might want to refetch the data here or update the local state
+      refetch(); // if you pass refetch function as prop
+      
+    } catch (error) {
+      console.error('Failed to update treatment:', error);
+      // Handle error (show notification, etc.)
+    }
+  };
+
   if (loading) return <Spin size="small" />;
   
   if (error) return (
@@ -111,6 +138,11 @@ const TreatmentTable = ({ data, loading, error }: {
                   : 'default'
               }
               key={record.status}
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                const newStatus = record.status === 1 ? 2 : record.status === 2 ? 3 : 1;
+                updateTreatmentStatus(record.id, newStatus);
+              }}
             >
               {record.status_display}
             </Tag>
@@ -126,7 +158,8 @@ export default function GiveTreatmentPage() {
   const { 
     data: morningSession, 
     isLoading: morningLoading, 
-    error: morningError
+    error: morningError,
+    refetch: refetchMorning 
   } = useQuery({
     queryKey: ['treatment_sessions/today', 1],
     queryFn: () => fetchTreatmentSession(1),
@@ -136,7 +169,8 @@ export default function GiveTreatmentPage() {
   const { 
     data: eveningSession, 
     isLoading: eveningLoading, 
-    error: eveningError
+    error: eveningError,
+    refetch: refetchEvening
   } = useQuery({
     queryKey: ['treatment_sessions/today', 4],
     queryFn: () => fetchTreatmentSession(4),
@@ -217,7 +251,8 @@ export default function GiveTreatmentPage() {
       <TreatmentTable 
         data={morningSession} 
         loading={morningLoading} 
-        error={morningError} 
+        error={morningError}
+        refetch={refetchMorning}
       />
 
 
@@ -226,6 +261,7 @@ export default function GiveTreatmentPage() {
         data={eveningSession} 
         loading={eveningLoading} 
         error={eveningError} 
+        refetch={refetchEvening}
       />
     </div>
   );
