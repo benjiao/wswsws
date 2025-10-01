@@ -17,6 +17,9 @@ export default function FrontPage() {
       <div>Show calendar here</div>
       <ul>
         <li>
+          <a href="/treatments/session/yesterday">Yesterday's Sessions</a>
+        </li>
+        <li>
           <a href="/treatments/session">Today's Sessions</a>
         </li>
       </ul>
