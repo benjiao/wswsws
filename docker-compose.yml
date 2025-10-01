@@ -30,7 +30,7 @@ services:
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
