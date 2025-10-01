@@ -2,7 +2,7 @@
 import TreatmentTable from '@/components/TreatmentTable';
 
 import { useQuery } from '@tanstack/react-query';
-import { Card, Spin, Alert, Flex, Progress } from 'antd';
+import { Card, Spin, Alert, Flex, Progress, Breadcrumb} from 'antd';
 import { useParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -90,55 +90,69 @@ export default function TreatmentSessionPage() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>{formatDateForDisplay(date)}</h1>
+    <>
+      <div style={{ padding: '20px' }}>
+        <Breadcrumb items={[
+          {
+            title: <a href="/"><span role="img" aria-label="home">🏠</span></a>,
+          },
+          {
+            title: <a href="/treatments">Treatments</a>,
+          },
+          {
+            title: "Today's session",
+          },
+        ]} />
 
-      <Card style={{ marginBottom: 24 }}>
-        {morningSession && eveningSession ? (
-          (() => {
-            const allInstances = [
-              ...(morningSession.instances || []),
-              ...(eveningSession.instances || [])
-            ];
-            const total = allInstances.length;
-            const completed = allInstances.filter(i => i.status === 2 || i.status === 3).length;
-            const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+        <h1>{formatDateForDisplay(date)}</h1>
 
-            return (
-              <>
-                <div style={{ marginBottom: 8 }}>
-                  <strong>
-                    {completed} / {total} treatments completed
-                  </strong>
-                </div>
-                <div>
-                    <Flex gap="small" vertical>
-                      <Progress percent={percent} />
-                    </Flex>
-                </div>
-              </>
-            );
-          })()
-        ) : (
-          <Spin />
-        )}
-      </Card>
+        <Card style={{ marginBottom: 24 }}>
+          {morningSession && eveningSession ? (
+            (() => {
+              const allInstances = [
+                ...(morningSession.instances || []),
+                ...(eveningSession.instances || [])
+              ];
+              const total = allInstances.length;
+              const completed = allInstances.filter(i => i.status === 2 || i.status === 3).length;
+              const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
 
-      <h3>Morning</h3>
-      <TreatmentTable 
-        data={morningSession?.instances ?? []}
-        loading={morningLoading} 
-        error={morningError}
-        refetch={refetchMorning}
-      />
+              return (
+                <>
+                  <div style={{ marginBottom: 8 }}>
+                    <strong>
+                      {completed} / {total} treatments completed
+                    </strong>
+                  </div>
+                  <div>
+                      <Flex gap="small" vertical>
+                        <Progress percent={percent} />
+                      </Flex>
+                  </div>
+                </>
+              );
+            })()
+          ) : (
+            <Spin />
+          )}
+        </Card>
 
-      <h3>Evening</h3>
-      <TreatmentTable 
-        data={eveningSession?.instances ?? []} 
-        loading={eveningLoading} 
-        error={eveningError} 
-        refetch={refetchEvening}
-      />
-    </div>
+        <h3>Morning</h3>
+        <TreatmentTable 
+          data={morningSession?.instances ?? []}
+          loading={morningLoading} 
+          error={morningError}
+          refetch={refetchMorning}
+        />
+
+        <h3>Evening</h3>
+        <TreatmentTable 
+          data={eveningSession?.instances ?? []} 
+          loading={eveningLoading} 
+          error={eveningError} 
+          refetch={refetchEvening}
+        />
+      </div>
+    </>
   );
 }

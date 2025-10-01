@@ -1,8 +1,18 @@
 'use client';
+import { Breadcrumb} from 'antd';
 
 export default function FrontPage() {
   return (
     <div style={{ padding: '20px' }}>
+      <Breadcrumb items={[
+        {
+          title: <a href="/"><span role="img" aria-label="home">🏠</span></a>,
+        },
+        {
+          title: <a>Treatments</a>,
+        },
+      ]} />
+
       <h1>Treatments</h1>
       <div>Show calendar here</div>
       <ul>
