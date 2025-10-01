@@ -1,7 +1,7 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
+from django.db.models import Prefetch
 from datetime import datetime
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
@@ -185,7 +185,7 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
 
 # Add this new ViewSet after TreatmentInstanceViewSet
 class TreatmentSessionViewSet(viewsets.ModelViewSet):
-    queryset = TreatmentSession.objects.prefetch_related('instances__treatment_schedule__patient', 'instances__treatment_schedule__medicine')
+    queryset = TreatmentSession.objects.all()
     serializer_class = TreatmentSessionSerializer
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -206,7 +206,20 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
     ordering = ['session_date', 'session_type']
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # Define the sorted instances prefetch
+        sorted_instances = TreatmentInstance.objects.select_related(
+            'treatment_schedule__patient',
+            'treatment_schedule__medicine'
+        ).order_by(
+            'treatment_schedule__patient__name',  # Sort by patient name
+            'scheduled_time'  # Then by scheduled time
+        )
+
+        # Base queryset with prefetch
+        queryset = TreatmentSession.objects.prefetch_related(
+            Prefetch('instances', queryset=sorted_instances)
+        )
+        
         
         # Filter by date range if provided
         date_from = self.request.query_params.get('date_from', None)
