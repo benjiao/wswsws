@@ -167,20 +167,18 @@ REST_FRAMEWORK = {
 }
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = [
-    "https://wswsws.benjiao.net",
-]
 
 # CORS settings (for frontend integration)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React default
-    "http://127.0.0.1:3000",
-    "http://localhost:8080",  # Vue default
-    "http://127.0.0.1:8080",
-    "http://192.168.0.100:3000",
-    "http://wswsws.benjiao.net",
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS", 
+    "http://localhost:3000,http://127.0.0.1:3000"
+).split(",")
+
+# Also update CSRF_TRUSTED_ORIGINS to use env vars
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    "CSRF_TRUSTED_ORIGINS",
     "https://wswsws.benjiao.net"
-]
+).split(",")
 
 CORS_ALLOW_CREDENTIALS = True
 
