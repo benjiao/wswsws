@@ -29,8 +29,16 @@ const fetchTreatmentSession = async (date: string, sessionType: number): Promise
 
 export default function TreatmentSessionPage() {
   const params = useParams();
-  const date = typeof params.date === 'string' ? params.date : Array.isArray(params.date) ? params.date[0] : null;
+  const { date } = params as { date: string | undefined };
 
+  // Handle the case where params might be null
+  if (!params) {
+    return (
+      <div style={{ padding: '20px' }}>
+        <Alert message="Invalid route parameters" type="error" />
+      </div>
+    );
+  }
   // Validate date parameter
   if (!date) {
     return (
