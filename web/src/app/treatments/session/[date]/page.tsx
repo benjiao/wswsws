@@ -2,7 +2,7 @@
 import TreatmentTable from '@/components/TreatmentTable';
 
 import { useQuery } from '@tanstack/react-query';
-import { Card, Spin, Alert, Table, Tag } from 'antd';
+import { Card, Spin, Alert, Flex, Progress } from 'antd';
 import { useParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -101,7 +101,7 @@ export default function TreatmentSessionPage() {
               ...(eveningSession.instances || [])
             ];
             const total = allInstances.length;
-            const completed = allInstances.filter(i => i.status === 2).length;
+            const completed = allInstances.filter(i => i.status === 2 || i.status === 3).length;
             const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
 
             return (
@@ -112,43 +112,9 @@ export default function TreatmentSessionPage() {
                   </strong>
                 </div>
                 <div>
-                  <div style={{ width: '100%' }}>
-                    <div style={{ marginBottom: 4 }}>
-                      <span>Progress</span>
-                    </div>
-                    <div style={{ width: '100%' }}>
-                      <div
-                        style={{
-                          background: '#f0f0f0',
-                          borderRadius: 4,
-                          height: 16,
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            background: '#52c41a',
-                            width: `${percent}%`,
-                            height: '100%',
-                            transition: 'width 0.3s',
-                          }}
-                        />
-                        <span
-                          style={{
-                            position: 'absolute',
-                            left: '50%',
-                            top: 0,
-                            transform: 'translateX(-50%)',
-                            fontSize: 12,
-                            color: '#222',
-                          }}
-                        >
-                          {percent}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                    <Flex gap="small" vertical>
+                      <Progress percent={percent} />
+                    </Flex>
                 </div>
               </>
             );
