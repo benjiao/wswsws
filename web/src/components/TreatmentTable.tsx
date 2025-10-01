@@ -1,7 +1,8 @@
 'use client';
 
 import { Spin, Alert, Table, Tag } from 'antd';
-import { TreatmentInstance, TreatmentSession } from '@/types';
+import type { TableProps } from 'antd';
+import { TreatmentInstance } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -36,105 +37,108 @@ const formatDateTime = (dateString: string) => {
 };
 
 interface TreatmentTableProps {
-  data: TreatmentSession | undefined;
+  data: TreatmentInstance | undefined;
   loading: boolean;
   error: any;
   refetch: () => void;
 }
 
 export default function TreatmentTable({ data, loading, error, refetch }: TreatmentTableProps) {
-  const updateTreatmentStatus = async (instanceId: number, newStatus: number) => {
-    try {
-      const response = await fetch(`${API_URL}/treatment-instances/${instanceId}/`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    const updateTreatmentStatus = async (instanceId: number, newStatus: number) => {
+        try {
+            const response = await fetch(`${API_URL}/treatment-instances/${instanceId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
 
-      const updatedData = await response.json();
-      console.log('Treatment updated:', updatedData);
-      
-      // Refetch the data
-      refetch();
-      
-    } catch (error) {
-      console.error('Failed to update treatment:', error);
-    }
-  };
-
-  if (loading) return <Spin size="small" />;
-  
-  if (error) return (
-    <Alert 
-      message="Error loading sessions" 
-      description={error.message} 
-      type="error"
-      showIcon
-    />
-  );
-
-  return (
-    <Table
-      dataSource={data?.instances || []}
-      rowKey="id"
-      pagination={false}
-      size="small" 
-      style={{ marginBottom: '20px' }}
-    >
-      <Table.Column
-        title="Schedule"
-        dataIndex={['scheduled_time']}
-        key="scheduled_time"
-        render={(time: string) => formatDateTime(time)}
-        responsive={['md']}
-      />
-      <Table.Column
-        title="Task"
-        dataIndex={['treatment_schedule', 'patient_name']}
-        key="task"
-        render={(_, record: TreatmentInstance) =>
-          `${record.treatment_schedule.patient_name} - ${record.treatment_schedule.medicine_name} ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`
-        }
-      />
-      <Table.Column
-        title="Status"
-        dataIndex={['status']}
-        key="status"
-        render={(_, record: TreatmentInstance) => (
-          <Tag
-            color={
-              record.status === 1
-                ? 'default'
-                : record.status === 2
-                ? 'green'
-                : record.status === 3
-                ? 'orange'
-                : 'default'
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            style={{ 
-              cursor: 'pointer',
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              MozUserSelect: 'none',
-              msUserSelect: 'none',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            onClick={() => {
-              const newStatus = record.status === 1 ? 2 : 1;
-              updateTreatmentStatus(record.id, newStatus);
-            }}
-          >
-            {record.status_display}
-          </Tag>
-        )}
-      />
-    </Table>
-  );
+
+            const updatedData = await response.json();
+            refetch();
+            
+        } catch (error) {
+            console.error('Failed to update treatment:', error);
+        }
+    };
+
+    const columns: TableProps<TreatmentInstance>['columns'] = [
+        {
+            title: 'Schedule',
+            dataIndex: 'scheduled_time',
+            key: 'scheduled_time',
+            render: (time: string) => formatDateTime(time),
+            responsive: ['md'],
+            width: 180,
+        },
+        {
+            title: 'Task',
+            key: 'task',
+            render: (_: any, record: TreatmentInstance) =>
+                `${record.treatment_schedule.patient_name} - ${record.treatment_schedule.medicine_name} ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`,
+        },
+        {
+            title: 'Status',
+            dataIndex: 'status',
+            key: 'status',
+            width: 90,
+            render: (_: any, record: TreatmentInstance) => (
+                <Tag
+                    color={
+                        record.status === 1
+                            ? 'default'
+                            : record.status === 2
+                            ? 'green'
+                            : record.status === 3
+                            ? 'orange'
+                            : 'default'
+                    }
+                    style={{
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        MozUserSelect: 'none',
+                        msUserSelect: 'none',
+                        WebkitTapHighlightColor: 'transparent',
+                    }}
+                    onClick={() => {
+                        const newStatus = (record.status % 3) + 1;
+                        updateTreatmentStatus(record.id, newStatus);
+                    }}
+                >
+                    {record.status_display}
+                </Tag>
+            ),
+        },
+    ];
+
+    if (loading) return <Spin size="small" />;
+
+    if (error) return (
+        <Alert 
+            message="Error loading sessions" 
+            description={error.message} 
+            type="error"
+            showIcon
+        />
+    );
+
+    return (
+        <Table
+            dataSource={data?.instances || []}
+            rowKey="id"
+            pagination={false}
+            size="small" 
+            bordered
+            style={{ marginBottom: '20px' }}
+            columns={columns}
+        >
+        </Table>
+    );
 }
