@@ -47,7 +47,7 @@ const fetchTreatmentSessionsByDate = async (date: string): Promise<TreatmentSess
   return data;
 };
 
-export default function TreatmentSessionPage() {
+export default function TreatmentSessionsByDatePage() {
   const params = useParams();
   const { date } = params as { date: string | undefined };
 
@@ -75,32 +75,9 @@ export default function TreatmentSessionPage() {
     refetch: refetchTreatmentSessions 
   } = useQuery({
     queryKey: ['treatment_sessions', date, 1],
-    queryFn: () => fetchTreatmentSessionsByDate(date, 1),
+    queryFn: () => fetchTreatmentSessionsByDate(date),
   });
   
-
-  // Fetch morning sessions with date parameter
-  const { 
-    data: morningSession, 
-    isLoading: morningLoading, 
-    error: morningError,
-    refetch: refetchMorning 
-  } = useQuery({
-    queryKey: ['treatment_sessions', date, 1],
-    queryFn: () => fetchTreatmentSession(date, 1),
-  });
-
-  // Fetch evening sessions with date parameter
-  const { 
-    data: eveningSession, 
-    isLoading: eveningLoading, 
-    error: eveningError,
-    refetch: refetchEvening
-  } = useQuery({
-    queryKey: ['treatment_sessions', date, 4],
-    queryFn: () => fetchTreatmentSession(date, 4),
-  });
-
   // Format date for display
   const formatDateForDisplay = (dateStr: string) => {
     if (dateStr === 'today') return 'Today';
