@@ -104,10 +104,13 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
   // Initialize open keys based on current pathname
   React.useEffect(() => {
     const newOpenKeys: string[] = [];
-    if (pathname.startsWith('/treatments')) {
+    if (pathname && pathname.startsWith('/treatments')) {
       newOpenKeys.push('/treatments');
     }
-    if (pathname.startsWith('/settings') || pathname === '/users' || pathname === '/admin') {
+    if (
+      pathname &&
+      (pathname.startsWith('/settings') || pathname === '/users' || pathname === '/admin')
+    ) {
       newOpenKeys.push('/settings');
     }
     setOpenKeys(newOpenKeys);
@@ -126,6 +129,15 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
 
   return (
     <html lang="en">
+      <head>
+        {/* Add Google Fonts link */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&display=swap" 
+          rel="stylesheet" 
+        />
+      </head>
       <body style={{ margin: 0, padding: 0 }}>
         <QueryClientProvider client={queryClient}>
           <AntdRegistry>
@@ -174,11 +186,12 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     }}
                   >
                     <span style={{ 
-                      fontSize: collapsed ? 16 : 20, 
-                      fontWeight: 'bold',
-                      color: '#1890ff'
+                      fontSize: collapsed ? 18 : 24, 
+                      fontFamily: '"Cedarville Cursive", cursive',
+                      fontWeight: 'normal', // Cursive fonts usually don't need bold
+                      letterSpacing: '1px',
                     }}>
-                      {collapsed ? 'WS' : 'WSWSWS'}
+                      {collapsed ? 'ws' : 'Wswsws...'}
                     </span>
                   </div>
 
