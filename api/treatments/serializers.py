@@ -47,7 +47,6 @@ class TreatmentSessionSerializer(serializers.ModelSerializer):
     instances_count = serializers.SerializerMethodField()
     pending_count = serializers.SerializerMethodField()
     completed_count = serializers.SerializerMethodField()
-    prep_list = serializers.SerializerMethodField()
     
     class Meta:
         model = TreatmentSession
@@ -58,8 +57,7 @@ class TreatmentSessionSerializer(serializers.ModelSerializer):
             'session_date', 
             'instances_count', 'pending_count',
             'completed_count', 'created_at', 'updated_at',
-            'url',
-            'prep_list'
+            'url'
         ]
     
 
@@ -99,7 +97,7 @@ class TreatmentSessionSerializer(serializers.ModelSerializer):
         return None
 
 class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
-    session_type_display = serializers.CharField(read_only=True)
+    session_type_display = serializers.CharField(source='get_session_type_display', read_only=True)
     instances = TreatmentInstanceSerializer(many=True, read_only=True)
     instances_count = serializers.SerializerMethodField()
     pending_count = serializers.SerializerMethodField()
@@ -109,9 +107,14 @@ class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TreatmentSession
         fields = [
-            'id', 'session_type', 'session_type_display', 'session_date', 
-            'instances_count', 'pending_count',
-            'completed_count', 'created_at', 'updated_at',
+            'id',
+            'session_type',
+            'session_type_display',
+            'session_date', 
+            'instances_count',
+            'pending_count',
+            'completed_count',
+            'created_at', 'updated_at',
             'instances', 'prep_list'
         ]
     

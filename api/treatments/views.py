@@ -218,8 +218,7 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
         # Base queryset with prefetch
         queryset = TreatmentSession.objects.prefetch_related(
             Prefetch('instances', queryset=sorted_instances)
-        )
-        
+        )        
         
         # Filter by date range if provided
         date_from = self.request.query_params.get('date_from', None)
@@ -246,20 +245,22 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
             return TreatmentSessionDetailSerializer
         return TreatmentSessionSerializer
 
-    @action(detail=False, methods=['get'])
-    def today(self, request):
-        """Get all sessions for today"""
-        today = timezone.now().date()
-        today_sessions = self.get_queryset().filter(session_date=today)
-        serializer = self.get_serializer(today_sessions, many=True)
-        return Response(serializer.data)
+    @action(detail=False, methods=['get'], url_path='by-date/(?P<session_date>[^/.]+)')
+    def by_date(self, request, session_date=None, session_type=None):
+        """
+        Fetch a TreatmentInstance by session_date and session_type_display.
+        Expects URL: treatment-session/by_date/<session_date>/
+        """
 
-    @action(detail=False, methods=['get'])
-    def tomorrow(self, request):
-        """Get all sessions for tomorrow"""
-        tomorrow = timezone.now().date() + timezone.timedelta(days=1)
-        tomorrow_sessions = self.get_queryset().filter(session_date=tomorrow)
-        serializer = self.get_serializer(tomorrow_sessions, many=True)
+        if session_date == "today":
+            session_date = timezone.localtime(timezone.now()).date().strftime('%Y-%m-%d')
+        if session_date == "tomorrow":
+            session_date = (timezone.localtime(timezone.now()).date() + timezone.timedelta(days=1)).strftime('%Y-%m-%d')
+        if session_date == "yesterday":
+            session_date = (timezone.localtime(timezone.now()).date() - timezone.timedelta(days=1)).strftime('%Y-%m-%d')
+
+        today_sessions = self.get_queryset().filter(session_date=session_date).order_by('session_type')
+        serializer = TreatmentSessionDetailSerializer(today_sessions, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
@@ -329,10 +330,9 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
                 
         serializer = self.get_serializer(sessions, many=True)
         return Response(serializer.data)
-    
 
     @action(detail=False, methods=['get'], url_path='(?P<session_date>[^/.]+)/(?P<session_type>[^/.]+)')
-    def get_sessions_by_date_and_type(self, request, session_date=None, session_type=None):
+    def by_date_and_type(self, request, session_date=None, session_type=None):
         """
         Fetch a TreatmentInstance by session_date and session_type_display.
         Expects URL: treatment-schedule/<session_date>/<session_type>/
@@ -366,7 +366,7 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
         ).order_by('treatment_schedule__patient__name')
 
         instance_serializer = TreatmentInstanceSerializer(instances, many=True)
-        session_data = self.get_serializer(session).data
+        session_data = TreatmentSessionDetailSerializer(session).data
         session_data['instances'] = instance_serializer.data
         return Response(session_data)
 

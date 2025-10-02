@@ -28,6 +28,25 @@ const fetchTreatmentSession = async (date: string, sessionType: number): Promise
   return data;
 };
 
+// Updated API fetcher function to accept date
+const fetchTreatmentSessionsByDate = async (date: string): Promise<TreatmentSession[]> => {
+  const response = await fetch(
+    `${API_URL}/treatment-sessions/by-date/${date}/`, 
+    {
+      headers: {
+        'Accept': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data;
+};
+
 export default function TreatmentSessionPage() {
   const params = useParams();
   const { date } = params as { date: string | undefined };
@@ -48,6 +67,17 @@ export default function TreatmentSessionPage() {
       </div>
     );
   }
+
+  const { 
+    data: treatmentSessions, 
+    isLoading: treatmentSessionsLoading, 
+    error: treatmentSessionsError,
+    refetch: refetchTreatmentSessions 
+  } = useQuery({
+    queryKey: ['treatment_sessions', date, 1],
+    queryFn: () => fetchTreatmentSessionsByDate(date, 1),
+  });
+  
 
   // Fetch morning sessions with date parameter
   const { 
@@ -101,22 +131,24 @@ export default function TreatmentSessionPage() {
             title: <a href="/treatments">Treatments</a>,
           },
           {
-            title: "Today's session",
+            title: "Daily Sessions",
           },
         ]} />
 
         <h1>{formatDateForDisplay(date)}</h1>
 
         <Card style={{ marginBottom: 24 }}>
-          {morningSession && eveningSession ? (
+          {treatmentSessions ? (
             (() => {
-              const allInstances = [
-                ...(morningSession.instances || []),
-                ...(eveningSession.instances || [])
-              ];
-              const total = allInstances.length;
-              const completed = allInstances.filter(i => i.status === 2 || i.status === 3).length;
-              const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+              const completed = treatmentSessions.reduce(
+                (sum, session) => sum + (session.completed_count ?? 0), 0
+              );
+              const total = treatmentSessions.reduce(
+                (sum, session) => sum + (session.instances_count ?? 0), 0
+              );
+
+              const percent = total > 0 ? Math.floor((completed / total) * 100) : 0;
 
               return (
                 <>
@@ -138,35 +170,27 @@ export default function TreatmentSessionPage() {
           )}
         </Card>
 
-        <h3>Morning</h3>
+        {treatmentSessions && treatmentSessions.map(session => (
+          (session.instances_count ?? 0) > 0 && (
+            <div key={session.id} style={{ marginBottom: 24 }}>
+              <h3>{session.session_type_display}</h3>
 
-        <div style={{ marginBottom: '1em' }}>
-          <PrepList
-            data={morningSession?.prep_list ?? []}
-            loading={morningLoading}
-            error={morningError} />
-        </div>
+                <div style={{ marginBottom: '1em' }}>
+                  <PrepList
+                    data={session?.prep_list ?? []}
+                    loading={treatmentSessionsLoading}
+                    error={treatmentSessionsError} />
+                </div>
+                <TreatmentInstanceTable 
+                  data={session?.instances ?? []}
+                  loading={treatmentSessionsLoading} 
+                  error={treatmentSessionsError}
+                  refetch={refetchTreatmentSessions}
+                />
 
-        <TreatmentInstanceTable 
-          data={morningSession?.instances ?? []}
-          loading={morningLoading} 
-          error={morningError}
-          refetch={refetchMorning}
-        />
-
-        <h3>Evening</h3>
-        <div style={{ marginBottom: 16 }}>
-          <PrepList
-            data={eveningSession?.prep_list ?? []}
-            loading={eveningLoading}
-            error={eveningError} />
-        </div>
-        <TreatmentInstanceTable 
-          data={eveningSession?.instances ?? []} 
-          loading={eveningLoading} 
-          error={eveningError} 
-          refetch={refetchEvening}
-        />
+            </div>
+          )
+        ))}
       </div>
     </>
   );

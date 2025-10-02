@@ -39,4 +39,7 @@ export interface TreatmentSession {
     prep_list: PrepListItem[];
     created_at?: string;
     updated_at?: string;
+    instances_count?: number;
+    pending_count?: number;
+    completed_count?: number;
 }
