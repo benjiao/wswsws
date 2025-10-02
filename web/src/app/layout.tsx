@@ -25,6 +25,7 @@ type MenuItem = Required<MenuProps>['items'][number];
 const RootLayout = ({ children }: React.PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
+  const [broken, setBroken] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -54,7 +55,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
     {
       key: '/treatments',
       icon: <MedicineBoxOutlined />,
-      label: <Link href="/treatments">Treatments</Link>, // Make parent clickable
+      label: <Link href="/treatments">Treatments</Link>,
       children: [
         {
           key: '/treatments/sessions/today',
@@ -82,7 +83,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
     {
       key: '/settings',
       icon: <SettingOutlined />,
-      label: <Link href="/settings">Settings</Link>, // Make parent clickable
+      label: <Link href="/settings">Settings</Link>,
       children: [
         {
           key: '/users',
@@ -121,16 +122,29 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
     setOpenKeys(keys);
   };
 
-  // Handle menu click
+  // Handle menu click - close mobile menu after clicking
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     console.log('Menu clicked:', e);
-    // Parent items are now clickable through their Link components
+    // Close mobile menu after navigation
+    if (broken) {
+      setCollapsed(true);
+    }
+  };
+
+  // Toggle sidebar - different behavior for mobile vs desktop
+  const toggleSidebar = () => {
+    if (broken) {
+      // On mobile: toggle between hidden (collapsed=true) and visible (collapsed=false)
+      setCollapsed(!collapsed);
+    } else {
+      // On desktop: toggle between expanded and icon-only
+      setCollapsed(!collapsed);
+    }
   };
 
   return (
     <html lang="en">
       <head>
-        {/* Add Google Fonts link */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link 
@@ -164,7 +178,24 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                   collapsible 
                   collapsed={collapsed}
                   width={240}
-                  collapsedWidth={80}
+                  breakpoint="lg"
+                  collapsedWidth={broken ? 0 : 80} // Hide completely on mobile, show icons on desktop
+                  onBreakpoint={(isBroken) => {
+                    console.log('Breakpoint triggered:', isBroken);
+                    setBroken(isBroken);
+                    if (isBroken) {
+                      setCollapsed(true); // Start collapsed on mobile
+                    } else {
+                      // Reset to normal state on desktop
+                      setCollapsed(false);
+                    }
+                  }}
+                  onCollapse={(isCollapsed, type) => {
+                    console.log('Collapse:', isCollapsed, type);
+                    if (type === 'clickTrigger') {
+                      setCollapsed(isCollapsed);
+                    }
+                  }}
                   style={{
                     overflow: 'auto',
                     height: '100vh',
@@ -172,6 +203,8 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     left: 0,
                     top: 0,
                     bottom: 0,
+                    zIndex: 1001, // Higher than header
+                    boxShadow: broken && !collapsed ? '2px 0 8px rgba(0,0,0,0.15)' : 'none', // Shadow on mobile when open
                   }}
                 >
                   {/* Logo */}
@@ -186,12 +219,13 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     }}
                   >
                     <span style={{ 
-                      fontSize: collapsed ? 18 : 24, 
+                      fontSize: (broken && !collapsed) ? 24 : (collapsed ? 18 : 24), 
                       fontFamily: '"Cedarville Cursive", cursive',
-                      fontWeight: 'normal', // Cursive fonts usually don't need bold
+                      fontWeight: 'normal',
                       letterSpacing: '1px',
+                      color: '#1890ff',
                     }}>
-                      {collapsed ? 'ws' : 'Wswsws...'}
+                      {collapsed && !broken ? 'ws' : 'wswsws'}
                     </span>
                   </div>
 
@@ -199,30 +233,48 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     theme="light"
                     mode="inline" 
                     selectedKeys={getSelectedKeys()}
-                    openKeys={collapsed ? [] : openKeys} // Don't show open submenus when collapsed
+                    openKeys={collapsed ? [] : openKeys}
                     onOpenChange={handleOpenChange}
                     onClick={handleMenuClick}
                     items={menuItems}
                     style={{ borderRight: 0 }}
-                    inlineCollapsed={collapsed}
+                    inlineCollapsed={collapsed && !broken} // Only inline collapse on desktop
                   />
                 </Sider>
 
+                {/* Mobile overlay */}
+                {broken && !collapsed && (
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                      zIndex: 1000,
+                    }}
+                    onClick={() => setCollapsed(true)}
+                  />
+                )}
+
                 <Layout style={{ 
-                  marginLeft: collapsed ? 80 : 240, 
+                  marginLeft: broken ? 0 : (collapsed ? 80 : 240),
                   transition: 'margin-left 0.2s' 
                 }}>
                   <Header style={{ 
                     padding: 0, 
                     background: colorBgContainer,
                     display: 'flex',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    position: 'relative',
+                    zIndex: 999,
                   }}>
-                    {/* Collapse/Expand Button */}
+                    {/* Hamburger menu button */}
                     <Button
                       type="text"
                       icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                      onClick={() => setCollapsed(!collapsed)}
+                      onClick={toggleSidebar}
                       style={{
                         fontSize: '16px',
                         width: 64,
