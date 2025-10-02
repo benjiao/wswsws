@@ -140,10 +140,12 @@ export default function TreatmentSessionPage() {
 
         <h3>Morning</h3>
 
-        <PrepList
-          data={morningSession?.prep_list ?? []}
-          loading={morningLoading}
-          error={morningError} />
+        <div style={{ marginBottom: '1em' }}>
+          <PrepList
+            data={morningSession?.prep_list ?? []}
+            loading={morningLoading}
+            error={morningError} />
+        </div>
 
         <TreatmentTable 
           data={morningSession?.instances ?? []}
@@ -153,11 +155,12 @@ export default function TreatmentSessionPage() {
         />
 
         <h3>Evening</h3>
-        <PrepList
-          data={eveningSession?.prep_list ?? []}
-          loading={eveningLoading}
-          error={eveningError} />
-
+        <div style={{ marginBottom: 16 }}>
+          <PrepList
+            data={eveningSession?.prep_list ?? []}
+            loading={eveningLoading}
+            error={eveningError} />
+        </div>
         <TreatmentTable 
           data={eveningSession?.instances ?? []} 
           loading={eveningLoading} 

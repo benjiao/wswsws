@@ -19,20 +19,16 @@ export default function PrepList({ data, loading, error }: { data: PrepListItem[
     );
 
     return (
-        <>
-        <div style={{ marginBottom: 16 }}>
-            <List
-                itemLayout="horizontal"
-                dataSource={data}
-                size="small"
-                bordered
-                renderItem={item => (
-                    <List.Item>
-                        {item.medicine_name} - {item.dosage} {item.unit} x {item.count}
-                    </List.Item>
-                )}
-            />
-        </div>
-        </>
+        <List
+            itemLayout="horizontal"
+            dataSource={data}
+            size="small"
+            bordered
+            renderItem={item => (
+                <List.Item>
+                    {item.medicine_name} - {item.dosage} {item.unit} x {item.count}
+                </List.Item>
+            )}
+        />
     );
 }

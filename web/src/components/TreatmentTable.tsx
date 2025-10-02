@@ -80,8 +80,19 @@ export default function TreatmentTable({ data, loading, error, refetch }: Treatm
         {
             title: 'Task',
             key: 'task',
-            render: (_: any, record: TreatmentInstance) =>
-                `${record.treatment_schedule.patient_name} - ${record.treatment_schedule.medicine_name} ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`,
+            render: (_: any, record: TreatmentInstance) => (
+                <span
+                    style={{
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        MozUserSelect: 'none',
+                        msUserSelect: 'none',
+                        WebkitTapHighlightColor: 'transparent',
+                    }}
+                >
+                    {`${record.treatment_schedule.patient_name} - ${record.treatment_schedule.medicine_name} ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`}
+                </span>
+            ),
         },
         {
             title: 'Status',
