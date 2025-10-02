@@ -283,15 +283,8 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     />
                   </Header>
 
-                  <Content style={{ margin: '0 16px' }}>
-                    <Breadcrumb
-                      style={{ margin: '16px 0' }}
-                      items={[
-                        { title: <Link href="/">🏠</Link> },
-                        { title: <Link href="/treatments/sessions">Sessions</Link>},
-                        { title: "Today"}
-                      ]}
-                    />
+                  <Content style={{ margin: broken ? '8px' : '16px' }}>
+
                     <div
                       style={{
                         padding: 24,
@@ -304,7 +297,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     </div>
                   </Content>
                   <Footer style={{ textAlign: 'center' }}>
-                    {new Date().getFullYear()} Medical System
+                     <span style={{ fontFamily: 'Cedarville Cursive' }}>{new Date().getFullYear()} WSWSWS</span>
                   </Footer>
                 </Layout>
               </Layout>
