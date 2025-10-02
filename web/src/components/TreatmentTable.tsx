@@ -78,9 +78,16 @@ export default function TreatmentTable({ data, loading, error, refetch }: Treatm
             width: 180,
         },
         {
-            title: 'Task',
-            key: 'task',
-            render: (_: any, record: TreatmentInstance) => (
+            title: 'Patient',
+            dataIndex: ['treatment_schedule', 'patient_name'],
+            key: 'patient_name',
+            render: (_: any, record: TreatmentInstance) => record.treatment_schedule.patient_name,
+        },
+        {
+            title: 'Medicine',
+            dataIndex: ['treatment_schedule', 'medicine_name'],
+            key: 'medicine_name',
+            render:  (_: any, record: TreatmentInstance) => (
                 <span
                     style={{
                         userSelect: 'none',
@@ -88,9 +95,15 @@ export default function TreatmentTable({ data, loading, error, refetch }: Treatm
                         MozUserSelect: 'none',
                         msUserSelect: 'none',
                         WebkitTapHighlightColor: 'transparent',
+                        display: 'inline-block',
+                        whiteSpace: 'pre-line',
                     }}
                 >
-                    {`${record.treatment_schedule.patient_name} - ${record.treatment_schedule.medicine_name} ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`}
+                    {record.treatment_schedule.medicine_name}
+
+                    <span style={{ color: '#888', fontSize: '90%' }}>
+                        {` ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`}
+                    </span>
                 </span>
             ),
         },
