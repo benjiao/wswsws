@@ -1,3 +1,6 @@
+import { PrepListItem } from './prep_list';
+
+
 export interface TreatmentSchedule {
     id: number;
     patient: number;
@@ -33,6 +36,7 @@ export interface TreatmentSession {
     session_type_display: string;
     session_date: String
     instances: TreatmentInstance[];
+    prep_list: PrepListItem[];
     created_at?: string;
     updated_at?: string;
 }
