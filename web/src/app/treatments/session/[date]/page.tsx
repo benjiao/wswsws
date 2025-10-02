@@ -1,12 +1,13 @@
 'use client';
 import TreatmentTable from '@/components/TreatmentTable';
+import PrepList from '@/components/PrepList';
 
 import { useQuery } from '@tanstack/react-query';
 import { Card, Spin, Alert, Flex, Progress, Breadcrumb} from 'antd';
 import { useParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-import { TreatmentInstance, TreatmentSession } from '@/types';
+import { TreatmentSession } from '@/types';
 
 // Updated API fetcher function to accept date
 const fetchTreatmentSession = async (date: string, sessionType: number): Promise<TreatmentSession> => {
@@ -138,6 +139,12 @@ export default function TreatmentSessionPage() {
         </Card>
 
         <h3>Morning</h3>
+
+        <PrepList
+          data={morningSession?.prep_list ?? []}
+          loading={morningLoading}
+          error={morningError} />
+
         <TreatmentTable 
           data={morningSession?.instances ?? []}
           loading={morningLoading} 
@@ -146,6 +153,11 @@ export default function TreatmentSessionPage() {
         />
 
         <h3>Evening</h3>
+        <PrepList
+          data={eveningSession?.prep_list ?? []}
+          loading={eveningLoading}
+          error={eveningError} />
+
         <TreatmentTable 
           data={eveningSession?.instances ?? []} 
           loading={eveningLoading} 
