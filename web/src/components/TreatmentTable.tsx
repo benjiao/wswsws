@@ -99,6 +99,7 @@ export default function TreatmentTable({ data, loading, error, refetch }: Treatm
             dataIndex: 'status',
             key: 'status',
             width: 90,
+            align: 'center',
             render: (_: any, record: TreatmentInstance) => (
                 <Tag
                     color={
