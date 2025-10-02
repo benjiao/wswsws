@@ -36,14 +36,14 @@ const formatDateTime = (dateString: string) => {
   return `${dateLabel} at ${timeLabel}`;
 };
 
-interface TreatmentTableProps {
+interface TreatmentInstanceTableProps {
   data: TreatmentInstance[] | undefined;
   loading: boolean;
   error: any;
   refetch: () => void;
 }
 
-export default function TreatmentTable({ data, loading, error, refetch }: TreatmentTableProps) {
+export default function TreatmentInstanceTable({ data, loading, error, refetch }: TreatmentInstanceTableProps) {
 
     const updateTreatmentStatus = async (instanceId: number, newStatus: number) => {
         try {

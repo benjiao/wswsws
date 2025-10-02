@@ -1,5 +1,5 @@
 'use client';
-import TreatmentTable from '@/components/TreatmentTable';
+import TreatmentInstanceTable from '@/components/TreatmentInstanceTable';
 import PrepList from '@/components/PrepList';
 
 import { useQuery } from '@tanstack/react-query';
@@ -147,7 +147,7 @@ export default function TreatmentSessionPage() {
             error={morningError} />
         </div>
 
-        <TreatmentTable 
+        <TreatmentInstanceTable 
           data={morningSession?.instances ?? []}
           loading={morningLoading} 
           error={morningError}
@@ -161,7 +161,7 @@ export default function TreatmentSessionPage() {
             loading={eveningLoading}
             error={eveningError} />
         </div>
-        <TreatmentTable 
+        <TreatmentInstanceTable 
           data={eveningSession?.instances ?? []} 
           loading={eveningLoading} 
           error={eveningError} 
