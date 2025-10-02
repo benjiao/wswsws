@@ -4,6 +4,25 @@ import React, { useState } from 'react';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import dynamic from 'next/dynamic';
+
+const DynamicLayoutContent = dynamic(
+  () => import('@/components/LayoutContent'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: '#f5f5f5'
+      }}>
+        Loading...
+      </div>
+    )
+  }
+);
 
 const RootLayout = ({ children }: React.PropsWithChildren) => {
   const [queryClient] = useState(
@@ -11,9 +30,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // With SSR, we usually want to set some default staleTime
-            // above 0 to avoid refetching immediately on the client
-            staleTime: 60 * 1000, // 1 minute
+            staleTime: 60 * 1000,
             retry: 1,
           },
         },
@@ -22,9 +39,11 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
 
   return (
     <html lang="en">
-      <body>
+      <body style={{ margin: 0, padding: 0 }}>
         <QueryClientProvider client={queryClient}>
-          <AntdRegistry>{children}</AntdRegistry>
+          <AntdRegistry>
+            <DynamicLayoutContent>{children}</DynamicLayoutContent>
+          </AntdRegistry>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </body>
