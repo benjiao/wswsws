@@ -83,6 +83,7 @@ services:
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
       - SECRET_KEY=${SECRET_KEY:-fallback-secret-key}
       - DEBUG=${DEBUG:-True}
+      - TIMEZONE=${TIMEZONE:-UTC}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "celery -A api status || exit 1"]
@@ -106,6 +107,7 @@ services:
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
       - SECRET_KEY=${SECRET_KEY:-fallback-secret-key}
       - DEBUG=${DEBUG:-True}
+      - TIMEZONE=${TIMEZONE:-UTC}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "celery -A api status || exit 1"]
