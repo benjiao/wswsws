@@ -12,4 +12,4 @@ COPY . .
 EXPOSE 3000
 
 # Use development mode with hot reload
-CMD ["npm", "run", "dev"]
+CMD ["yarn", "dev"]

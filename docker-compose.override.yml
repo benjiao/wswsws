@@ -15,10 +15,11 @@ services:
       - api
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
-      - NODE_ENV=${NODE_ENV:-production}
+      - NODE_ENV=${NODE_ENV:-development}
     restart: unless-stopped
     volumes:
       - ./web:/app
+      - /app/node_modules
 
 
   migrate:
