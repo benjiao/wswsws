@@ -164,10 +164,11 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                   Menu: {
                     itemBg: '#ffffff',
                     itemColor: '#333',
-                    itemHoverColor: '#1890ff',
+                    itemHoverColor: '#333',
                     itemHoverBg: '#f0f0f0',
                     itemSelectedBg: '#e6f7ff',
-                    itemSelectedColor: '#1890ff',
+                    itemSelectedColor: '#333',
+                    itemActiveBg: '#f0f0f0',
                   }
                 }
               }}
@@ -223,9 +224,9 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                       fontFamily: '"Cedarville Cursive", cursive',
                       fontWeight: 'normal',
                       letterSpacing: '1px',
-                      color: '#1890ff',
+                      color: '#111',
                     }}>
-                      {collapsed && !broken ? 'ws' : 'wswsws'}
+                      {collapsed && !broken ? 'ws' : 'wswsws...'}
                     </span>
                   </div>
 
