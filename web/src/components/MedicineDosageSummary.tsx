@@ -79,13 +79,13 @@ type MedicineDosageSummaryProps = {
 };
 
 const MedicineDosageSummary: React.FC<MedicineDosageSummaryProps> = ({ data, loading, error, refetch }) => {
-  const today = '2025-10-05';
+    const today = new Date().toISOString().slice(0, 10);
 
-  // Format date for display
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+    // Format date for display
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
 
   return (
     <div className="w-full">
