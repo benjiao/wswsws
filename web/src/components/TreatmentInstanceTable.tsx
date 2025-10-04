@@ -4,6 +4,7 @@ import { Spin, Alert, Table, Tag } from 'antd';
 import type { TableProps } from 'antd';
 import { TreatmentInstance } from '@/types';
 
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const formatDateTime = (dateString: string) => {

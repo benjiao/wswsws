@@ -4,6 +4,7 @@ import { Spin, Alert, List, Tag } from 'antd';
 import type { TableProps } from 'antd';
 import { PrepListItem } from '@/types';
 
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function PrepList({ data, loading, error }: { data: PrepListItem[] | undefined; loading: boolean; error: any; }) {

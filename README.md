@@ -1,6 +1,21 @@
 # WSWSWS Cat Shelter Management Software
 [![CC BY-SA 4.0][cc-by-sa-shield]][cc-by-sa]
 
+## Development
+### Getting started
+1. Install Docker
+2. Build environment `docker compose build`
+3. Run environment `docker compose up`
+
+### Other Notes
+#### Install `node_modules` for VSCode
+If you're using VSCode, you'll need to install `node_modules` on the host machine. This is because the VSCode plugin needs access to the packages for error checking in the editor.
+
+1. Install npm. 
+2. Install yarn. `npm install -g yarn`
+3. Run yarn. `cd web && yarn install`
+
+
 ## How does it work?
 
 ## License
