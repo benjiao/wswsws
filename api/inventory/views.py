@@ -96,6 +96,169 @@ class MedicineViewSet(viewsets.ModelViewSet):
             'average_daily_dosage': round(avg_daily_dosage, 2),
             'days_with_treatment': len(dosage_by_date)
         })
+    @action(detail=False, methods=['get'])
+    def all_medicines_daily_stats(self, request):
+        """Get daily dosage statistics for all medicines with detailed breakdown"""
+        # Get date range from query params (default to last 7 days)
+        end_date = request.query_params.get('end_date')
+        start_date = request.query_params.get('start_date')
+        
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        else:
+            end_date = timezone.now().date()
+            
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        else:
+            start_date = end_date - timedelta(days=7)
+
+        # Get all medicines that have treatment instances in the date range
+        medicines_with_treatments = Medicine.objects.filter(
+            treatment_schedules__instances__scheduled_time__date__gte=start_date,
+            treatment_schedules__instances__scheduled_time__date__lte=end_date
+        ).distinct().order_by('name')
+
+        # Calculate days count for the period
+        days_count = (end_date - start_date).days + 1
+
+        medicines_data = []
+
+        for medicine in medicines_with_treatments:
+            # Get treatment instances for this medicine in date range
+            treatment_instances = TreatmentInstance.objects.filter(
+                treatment_schedule__medicine=medicine,
+                scheduled_time__date__gte=start_date,
+                scheduled_time__date__lte=end_date
+            ).select_related(
+                'treatment_schedule__patient',
+                'treatment_session'
+            ).order_by('scheduled_time')
+
+            # Group by date
+            daily_stats = {}
+            total_dosage_period = 0
+            total_instances = 0
+            total_given = 0
+            total_pending = 0
+            total_skipped = 0
+            unique_patients = set()
+
+            for instance in treatment_instances:
+                date_str = instance.scheduled_time.date().isoformat()
+                
+                if date_str not in daily_stats:
+                    daily_stats[date_str] = {
+                        'date': date_str,
+                        'day_of_week': instance.scheduled_time.date().strftime('%A'),
+                        'total_dosage_given': 0,
+                        'total_dosage_scheduled': 0,
+                        'instance_count': 0,
+                        'given_count': 0,
+                        'pending_count': 0,
+                        'skipped_count': 0,
+                        'patients': set(),
+                        'sessions': {
+                            'Morning': {'count': 0, 'dosage': 0},
+                            'Noon': {'count': 0, 'dosage': 0},
+                            'Afternoon': {'count': 0, 'dosage': 0},
+                            'Evening': {'count': 0, 'dosage': 0},
+                            'No Session': {'count': 0, 'dosage': 0}
+                        }
+                    }
+                
+                day_data = daily_stats[date_str]
+                day_data['instance_count'] += 1
+                day_data['total_dosage_scheduled'] += instance.treatment_schedule.dosage or 0
+                day_data['patients'].add(instance.treatment_schedule.patient.name)
+                
+                # Count by status
+                if instance.status == TreatmentInstance.STATUS_GIVEN:
+                    day_data['given_count'] += 1
+                    dosage = instance.treatment_schedule.dosage or 0
+                    day_data['total_dosage_given'] += dosage
+                    total_dosage_period += dosage
+                    total_given += 1
+                elif instance.status == TreatmentInstance.STATUS_PENDING:
+                    day_data['pending_count'] += 1
+                    total_pending += 1
+                elif instance.status == TreatmentInstance.STATUS_SKIPPED:
+                    day_data['skipped_count'] += 1
+                    total_skipped += 1
+                
+                total_instances += 1
+                unique_patients.add(instance.treatment_schedule.patient.name)
+                
+                # Session breakdown
+                session_name = 'No Session'
+                if instance.treatment_session:
+                    session_name = instance.treatment_session.get_session_type_display()
+                
+                if session_name in day_data['sessions']:
+                    day_data['sessions'][session_name]['count'] += 1
+                    if instance.status == TreatmentInstance.STATUS_GIVEN:
+                        day_data['sessions'][session_name]['dosage'] += instance.treatment_schedule.dosage or 0
+
+            # Convert sets to lists and sort by date
+            daily_list = []
+            for date_str in sorted(daily_stats.keys()):
+                day_data = daily_stats[date_str]
+                day_data['patients'] = list(day_data['patients'])
+                day_data['patient_count'] = len(day_data['patients'])
+                daily_list.append(day_data)
+
+            # Calculate summary stats for this medicine
+            avg_daily_dosage = total_dosage_period / days_count if days_count > 0 else 0
+            compliance_rate = (total_given / total_instances * 100) if total_instances > 0 else 0
+
+            # Get medicine unit from first instance
+            unit = 'mL'
+            if treatment_instances.exists():
+                unit = treatment_instances.first().treatment_schedule.unit or 'mL'
+
+            medicines_data.append({
+                'medicine_id': medicine.id,
+                'medicine_name': medicine.name,
+                'unit': unit,
+                'summary': {
+                    'total_dosage_period': round(total_dosage_period, 2),
+                    'average_daily_dosage': round(avg_daily_dosage, 2),
+                    'total_instances': total_instances,
+                    'given_instances': total_given,
+                    'pending_instances': total_pending,
+                    'skipped_instances': total_skipped,
+                    'compliance_rate': round(compliance_rate, 2),
+                    'days_with_treatment': len(daily_list),
+                    'unique_patients': len(unique_patients)
+                },
+                'daily_breakdown': daily_list
+            })
+
+        # Overall summary across all medicines
+        overall_summary = {
+            'total_medicines': len(medicines_data),
+            'total_dosage_all_medicines': sum(med['summary']['total_dosage_period'] for med in medicines_data),
+            'total_instances_all_medicines': sum(med['summary']['total_instances'] for med in medicines_data),
+            'overall_compliance_rate': round(
+                sum(med['summary']['given_instances'] for med in medicines_data) / 
+                sum(med['summary']['total_instances'] for med in medicines_data) * 100
+                if sum(med['summary']['total_instances'] for med in medicines_data) > 0 else 0, 2
+            ),
+            'total_unique_patients': len(set().union(*[
+                set(med['summary']['unique_patients'] for med in medicines_data) 
+                for med in medicines_data if medicines_data
+            ])) if medicines_data else 0
+        }
+
+        return Response({
+            'date_range': {
+                'start_date': start_date,
+                'end_date': end_date,
+                'total_days': days_count
+            },
+            'overall_summary': overall_summary,
+            'medicines': medicines_data
+        })
 
     @action(detail=False, methods=['get'])
     def daily_dosage_summary(self, request):
