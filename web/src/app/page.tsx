@@ -2,7 +2,7 @@
 import Link from 'next/link';
 
 import { useQuery } from '@tanstack/react-query';
-import MedicineDosageSummary from '@/components/MedicineDosageSummary';
+import MedicineDosageTimeline from '@/components/MedicineDosageTimeline';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -107,7 +107,7 @@ export default function FrontPage() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <MedicineDosageSummary 
+      <MedicineDosageTimeline
         dailyDosageList={dailyDosageList}
         colorMap={medicineColorMap} />
     </div>

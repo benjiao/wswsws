@@ -25,9 +25,9 @@ type MedicineData = {
 //   { name: 'LC-Vit', color: '#ffc658', unit: 'mL' },
 // ];
 
-// Removed duplicate MedicineDosageSummaryProps type definition
+// Removed duplicate MedicineDosageTimelineProps type definition
 
-type MedicineDosageSummaryProps = {
+type MedicineDosageTimelineProps = {
   dailyDosageList: MedicineData[];
   colorMap: Record<string, string>;
   loading?: boolean;
@@ -35,7 +35,7 @@ type MedicineDosageSummaryProps = {
   refetch?: () => void;
 };
 
-const MedicineDosageSummary: React.FC<MedicineDosageSummaryProps> = ({
+const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
   dailyDosageList,
   colorMap,
   loading,
@@ -56,14 +56,11 @@ const MedicineDosageSummary: React.FC<MedicineDosageSummaryProps> = ({
   return (
     <div className="w-full">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-          Daily Medicine Scheduled Dosage
+        <h3 className="text-lg font-semibold text-gray-800 mb-2 text-center">
+          Daily Dosage
         </h3>
       </div>
 
-      <pre className="mb-4 bg-gray-100 p-2 rounded text-xs overflow-x-auto">
-        {JSON.stringify(dailyDosageList, null, 2)}
-      </pre>
       <ResponsiveContainer width="100%" height={400}>
         <AreaChart
           data={dailyDosageList}
@@ -115,4 +112,4 @@ const MedicineDosageSummary: React.FC<MedicineDosageSummaryProps> = ({
   );
 };
 
-export default MedicineDosageSummary;
+export default MedicineDosageTimeline;
