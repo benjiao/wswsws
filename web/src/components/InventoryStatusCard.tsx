@@ -54,7 +54,7 @@ export default function InventoryStatusCard() {
             title={
                 <Flex justify="space-between" align="center">
                     <span>Inventory Status</span>
-                    <Link href="/medicines" style={{ fontSize: 14 }}>
+                    <Link href={`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory/medicine/`} style={{ fontSize: 14 }}>
                         View All
                     </Link>
                 </Flex>
@@ -62,32 +62,38 @@ export default function InventoryStatusCard() {
         >
 
             {/* Show actual content */}
-            {data && Array.isArray(data["Out of Stock"]) && data["Out of Stock"].length > 0 ? (
+            {Array.isArray(data["Out of Stock"]) && data["Out of Stock"].length > 0 && (
+                <>
+                <Alert
+                    type="error"
+                    showIcon
+                    message={`Out of stock`}
+                    description={
+                        <ul style={{ margin: 0, paddingLeft: 20 }}>
+                            {data["Out of Stock"].map(
+                                (medicine: { name: string; pending_dosage_required: number; dosage_unit?: string }, idx: number) => (
+                                    <li key={idx}>
+                                        <div>
+                                            <strong>{medicine.name}</strong>
+                                        </div>
+                                        <div>
+                                            Pending Dosage: {medicine.pending_dosage_required}
+                                            {medicine.dosage_unit ? ` ${medicine.dosage_unit}` : ''}
+                                        </div>
+                                    </li>
+                                )
+                            )}
+                        </ul>
+                    }
+                />
+                <div style={{ height: 16 }} />
+                </>
+            )}
+            {Array.isArray(data["Low Stock"]) && data["Low Stock"].length > 0 && (
                 <>
                     <Alert
-                        type="error"
-                        message={`Out of stock`}
-                        description={
-                            <ul style={{ margin: 0, paddingLeft: 20 }}>
-                                {data["Out of Stock"].map(
-                                    (medicine: { name: string; pending_dosage_required: number; dosage_unit?: string }, idx: number) => (
-                                        <li key={idx}>
-                                            <div>
-                                                <strong>{medicine.name}</strong>
-                                            </div>
-                                            <div>
-                                                Pending Dosage: {medicine.pending_dosage_required}
-                                                {medicine.dosage_unit ? ` ${medicine.dosage_unit}` : ''}
-                                            </div>
-                                        </li>
-                                    )
-                                )}
-                            </ul>
-                        }
-                    />
-                    <div style={{ height: 16 }} />
-                    <Alert
                         type="warning"
+                        showIcon
                         message={`Low in stock`}
                         description={
                             <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -107,14 +113,18 @@ export default function InventoryStatusCard() {
                             </ul>
                         }
                     />
+                    <div style={{ height: 16 }} />
                 </>
-            ) : (
-                <Flex align="center" gap={8}>
-                    <Typography.Text type="success">
-                        All medicines are sufficiently stocked.
-                    </Typography.Text>
-                </Flex>
             )}
+
+            {(!data["Low Stock"] || data["Low Stock"].length === 0) && (!data["Out of Stock"] || data["Out of Stock"].length === 0) && (
+                <Alert
+                    type="success"
+                    message="All medicines are sufficiently stocked."
+                    showIcon
+                />
+            )}
+
         </Card>
     );
 }
