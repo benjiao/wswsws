@@ -54,7 +54,7 @@ export default function InventoryStatusCard() {
             title={
                 <Flex justify="space-between" align="center">
                     <span>Inventory Status</span>
-                    <Link href="/treatments/sessions/today" style={{ fontSize: 14 }}>
+                    <Link href="/medicines" style={{ fontSize: 14 }}>
                         View All
                     </Link>
                 </Flex>
@@ -70,7 +70,7 @@ export default function InventoryStatusCard() {
                         description={
                             <ul style={{ margin: 0, paddingLeft: 20 }}>
                                 {data["Out of Stock"].map(
-                                    (medicine: { name: string; pending_dosage_required: number }, idx: number) => (
+                                    (medicine: { name: string; pending_dosage_required: number; dosage_unit?: string }, idx: number) => (
                                         <li key={idx}>
                                             <div>
                                                 <strong>{medicine.name}</strong>
@@ -92,7 +92,7 @@ export default function InventoryStatusCard() {
                         description={
                             <ul style={{ margin: 0, paddingLeft: 20 }}>
                                 {data["Low Stock"].map(
-                                    (medicine: { name: string; pending_dosage_required: number }, idx: number) => (
+                                    (medicine: { name: string; pending_dosage_required: number; dosage_unit?: string }, idx: number) => (
                                         <li key={idx}>
                                             <div>
                                                 <strong>{medicine.name}</strong>
