@@ -25,9 +25,35 @@ class MedicineViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def low_stock(self, request):
         """Get medicines with low or out of stock"""
-        medicines = self.queryset.filter(stock_status__in=[0, 1])
-        serializer = self.get_serializer(medicines, many=True)
-        return Response(serializer.data)
+        # Group medicines by stock_status
+        medicines_by_status = {}
+        for status in [0, 1]:
+            medicines = self.queryset.filter(stock_status=status)
+            key = Medicine.STOCK_STATUS_CHOICES[status][1] if hasattr(Medicine, 'STOCK_STATUS_CHOICES') else str(status)
+
+            medicines_by_status[key] = []
+            for medicine in medicines:
+                # Calculate pending dosage required for this specific medicine
+                pending_instances = TreatmentInstance.objects.filter(
+                    treatment_schedule__medicine=medicine,
+                    status=TreatmentInstance.STATUS_PENDING,
+                    scheduled_time__date__gt=timezone.now().date()
+                )
+                pending_dosage = pending_instances.aggregate(
+                    total_pending_dosage=Sum('treatment_schedule__dosage')
+                )['total_pending_dosage'] or 0
+
+                medicine_data = self.get_serializer(medicine).data
+                # Get all unique dosage units used for this medicine
+                dosage_unit = TreatmentSchedule.objects.filter(
+                    medicine=medicine
+                ).values_list('unit', flat=True).distinct().first()
+
+                medicine_data['dosage_unit'] = dosage_unit
+                medicine_data['pending_dosage_required'] = pending_dosage
+                medicines_by_status[key].append(medicine_data)
+
+        return Response(medicines_by_status)
     
     @action(detail=True, methods=['get'])
     def usage_stats(self, request, pk=None):

@@ -4,6 +4,7 @@ import { Card, Col, Row, Space, Flex, Progress, Typography } from "antd";
 import { useQuery } from '@tanstack/react-query';
 import MedicineDosageTimeline from '@/components/MedicineDosageTimeline';
 import TodaysSessionsCard from '@/components/TodaysSessionsCard';
+import InventoryStatusCard from '@/components/InventoryStatusCard';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -113,9 +114,7 @@ export default function FrontPage() {
             <TodaysSessionsCard />
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Card title="Inventory Status">
-              Card content
-            </Card>
+            <InventoryStatusCard />
           </Col>
         </Row>
         <Row gutter={16}>
