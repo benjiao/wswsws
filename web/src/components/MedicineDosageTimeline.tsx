@@ -11,6 +11,7 @@ import {
   CartesianGrid,
   ReferenceLine,
 } from 'recharts';
+import { getUserLocalDate } from '../utils/DateUtils';
 
 type MedicineData = {
   date: string;
@@ -33,7 +34,7 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
   error,
   refetch,
 }) => {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getUserLocalDate(); // Uses local timezone
 
   // Format date for display
   const formatDate = (dateStr: string) => {

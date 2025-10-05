@@ -1,4 +1,5 @@
 'use client';
+
 import Link from 'next/link';
 import { Card, Col, Row, Space, Flex, Progress, Typography, Statistic } from "antd";
 import { useQuery } from '@tanstack/react-query';
@@ -7,6 +8,7 @@ import TodaysSessionsCard from '@/components/TodaysSessionsCard';
 import InventoryStatusCard from '@/components/InventoryStatusCard';
 import ArrowUpOutlined from '@ant-design/icons/lib/icons/ArrowUpOutlined';
 import ArrowDownOutlined from '@ant-design/icons/lib/icons/ArrowDownOutlined';
+import { getUserLocalDate } from '@/utils/DateUtils';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -30,18 +32,15 @@ const fetchMedicineDailyDosageStats = async (start_date:string , end_date:string
 };
 
 export default function FrontPage() {
-  const today = new Date();
+  const today = getUserLocalDate()
+  // Get local time as a string
+  const localTimeString = today.toLocaleString();
   const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
 
-  const startDateObj = new Date(today.getTime() - oneMonthMs);
-  const endDateObj = new Date(today.getTime() + oneMonthMs * 2);
-
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  const formatDate = (date: Date) =>
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-  const start_date = formatDate(startDateObj);
-  const end_date = formatDate(endDateObj);
+  console.log('Current local time:', today.toLocaleString());
+  // Calculate start and end date for the query (last 30 days)
+  const end_date = new Date(new Date(today).getTime() + 2 * 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10); // 2 months from today in YYYY-MM-DD format
+  const start_date = new Date(new Date(today).getTime() - oneMonthMs).toISOString().slice(0, 10); // YYYY-MM-DD
 
   const { 
     data: treatmentSessions, 
