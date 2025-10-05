@@ -2,6 +2,7 @@
 import { Card, Flex, Progress, Typography, Alert, Spin } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { getTodayInTimezone } from '../utils/DateUtils';
 
 const fetchTodaysSessions = async (date: string) => {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/treatment-sessions/by-date/${date}/`;
@@ -29,8 +30,10 @@ const fetchTodaysSessions = async (date: string) => {
 };
 
 export default function TodaysSessionsCard() {
-    const today = new Date().toISOString().slice(0, 10);
-    console.log('Today date:', today);
+    const timezone = process.env.NEXT_PUBLIC_TIMEZONE || "Asia/Manila";
+    const today = getTodayInTimezone(timezone);
+    console.log('Today date (UTC+8):', today);
+    console.log('Server timezone date would be:', new Date().toISOString().slice(0, 10));
     
     const { data: sessions, isLoading, error } = useQuery({
         queryKey: ['todays_sessions', today],
