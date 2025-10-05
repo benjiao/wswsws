@@ -55,17 +55,9 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
 
   return (
     <div className="w-full">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2 text-center">
-          Daily Dosage
-        </h3>
-      </div>
-
       <ResponsiveContainer width="100%" height={400}>
         <AreaChart
-          data={dailyDosageList}
-          margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-        >
+          data={dailyDosageList}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 
           <XAxis

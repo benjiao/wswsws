@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-
+import { Card } from "antd";
 import { useQuery } from '@tanstack/react-query';
 import MedicineDosageTimeline from '@/components/MedicineDosageTimeline';
 
@@ -30,7 +30,7 @@ export default function FrontPage() {
   const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
 
   const startDateObj = new Date(today.getTime() - oneMonthMs);
-  const endDateObj = new Date(today.getTime() + oneMonthMs);
+  const endDateObj = new Date(today.getTime() + oneMonthMs * 2);
 
   const pad = (n: number) => n.toString().padStart(2, '0');
   const formatDate = (date: Date) =>
@@ -107,9 +107,11 @@ export default function FrontPage() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <MedicineDosageTimeline
-        dailyDosageList={dailyDosageList}
-        colorMap={medicineColorMap} />
+      <Card title="Daily Dosage per Medicine">
+        <MedicineDosageTimeline
+          dailyDosageList={dailyDosageList}
+          colorMap={medicineColorMap} />
+      </Card>
     </div>
   );
 }
