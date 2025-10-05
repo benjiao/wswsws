@@ -66,7 +66,6 @@ export default function InventoryStatusCard() {
                 <>
                 <Alert
                     type="error"
-                    showIcon
                     message={`Out of stock`}
                     description={
                         <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -93,7 +92,6 @@ export default function InventoryStatusCard() {
                 <>
                     <Alert
                         type="warning"
-                        showIcon
                         message={`Low in stock`}
                         description={
                             <ul style={{ margin: 0, paddingLeft: 20 }}>
