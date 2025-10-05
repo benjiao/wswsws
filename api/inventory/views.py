@@ -220,6 +220,7 @@ class MedicineViewSet(viewsets.ModelViewSet):
                 'medicine_id': medicine.id,
                 'medicine_name': medicine.name,
                 'unit': unit,
+                'color': medicine.color,
                 'summary': {
                     'total_dosage_period': round(total_dosage_period, 2),
                     'average_daily_dosage': round(avg_daily_dosage, 2),

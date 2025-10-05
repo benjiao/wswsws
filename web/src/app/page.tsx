@@ -56,14 +56,14 @@ export default function FrontPage() {
   };
 
   let dailyDosageList: DailyDosage[] = [];
+  let medicineColorMap: { [medicineName: string]: string } = {};
 
   if (treatmentSessions && treatmentSessions.medicines) {
     // Assuming treatmentSessions.medicines is an array of medicine objects
     // Each medicine object has a 'daily_breakdown' array with { date, total_dosage }
     // Collect all unique dates
     const allDates = Array.from(
-      new Set(
-      treatmentSessions.medicines
+      new Set(treatmentSessions.medicines
         .flatMap((medicine: any) => (medicine.daily_breakdown || []).map((stat: any) => stat.date as string))
       )
     ).sort() as string[];
@@ -80,6 +80,10 @@ export default function FrontPage() {
         }
         dateMedicineDosageMap[stat.date][medicine.medicine_name] = stat.total_dosage_scheduled;
       });
+    });
+
+    treatmentSessions.medicines.forEach((medicine: any) => {
+      medicineColorMap[medicine.medicine_name] = medicine.color || '#4F8A8B';
     });
 
     // Build the final list
@@ -104,7 +108,8 @@ export default function FrontPage() {
     <div>
       <h1>Dashboard</h1>
       <MedicineDosageSummary 
-        data={dailyDosageList} />
+        dailyDosageList={dailyDosageList}
+        colorMap={medicineColorMap} />
     </div>
   );
 }

@@ -17,5 +17,8 @@ class Medicine(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    color = models.CharField(max_length=7, default='#FFA500', blank=True, null=True)  # Default to orange
+    notes = models.TextField(blank=True, null=True)
+
     def __str__(self):
         return self.name
