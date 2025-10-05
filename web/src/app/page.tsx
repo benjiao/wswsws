@@ -110,10 +110,10 @@ export default function FrontPage() {
     <>
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <TodaysSessionsCard />
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <InventoryStatusCard />
           </Col>
         </Row>
