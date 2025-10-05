@@ -6,17 +6,12 @@ import { getUserLocalDate } from '@/utils/DateUtils';
 
 const fetchTodaysSessions = async (date: string) => {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/treatment-sessions/by-date/${date}/`;
-    console.log('Fetching from URL:', url);
-    console.log('Date being used:', date);
-    
     const response = await fetch(url, 
     {
       headers: {
         'Accept': 'application/json',
       },
     });
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
         const errorText = await response.text();
@@ -25,13 +20,11 @@ const fetchTodaysSessions = async (date: string) => {
     }
     
     const data = await response.json();
-    console.log('Response data:', data);
     return data;
 };
 
 export default function TodaysSessionsCard() {
     const today = getUserLocalDate();
-    console.log('Today date (local):', today);
     
     const { data: sessions, isLoading, error } = useQuery({
         queryKey: ['todays_sessions', today],

@@ -5,7 +5,6 @@ import Link from 'next/link';
 
 const fetchLowStockMedicines = async () => {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/medicines/low_stock/`;
-    console.log('Fetching from URL:', url);
     
     const response = await fetch(url, 
     {
@@ -13,9 +12,7 @@ const fetchLowStockMedicines = async () => {
         'Accept': 'application/json',
       },
     });
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-    
+
     if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
@@ -23,7 +20,6 @@ const fetchLowStockMedicines = async () => {
     }
     
     const data = await response.json();
-    console.log('Response data:', data);
     return data;
 };
 

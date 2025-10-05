@@ -37,7 +37,6 @@ export default function FrontPage() {
   const localTimeString = today.toLocaleString();
   const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
 
-  console.log('Current local time:', today.toLocaleString());
   // Calculate start and end date for the query (last 30 days)
   const end_date = new Date(new Date(today).getTime() + 2 * 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10); // 2 months from today in YYYY-MM-DD format
   const start_date = new Date(new Date(today).getTime() - oneMonthMs).toISOString().slice(0, 10); // YYYY-MM-DD

@@ -124,7 +124,6 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
 
   // Handle menu click - close mobile menu after clicking
   const handleMenuClick: MenuProps['onClick'] = (e) => {
-    console.log('Menu clicked:', e);
     // Close mobile menu after navigation
     if (broken) {
       setCollapsed(true);
@@ -182,7 +181,6 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                   breakpoint="lg"
                   collapsedWidth={broken ? 0 : 80} // Hide completely on mobile, show icons on desktop
                   onBreakpoint={(isBroken) => {
-                    console.log('Breakpoint triggered:', isBroken);
                     setBroken(isBroken);
                     if (isBroken) {
                       setCollapsed(true); // Start collapsed on mobile
@@ -192,7 +190,6 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     }
                   }}
                   onCollapse={(isCollapsed, type) => {
-                    console.log('Collapse:', isCollapsed, type);
                     if (type === 'clickTrigger') {
                       setCollapsed(isCollapsed);
                     }
