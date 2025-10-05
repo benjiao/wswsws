@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import {
   ResponsiveContainer,
@@ -17,59 +18,12 @@ type MedicineData = {
   [medicineName: string]: string | number | boolean;
 };
 
-// Sample data structure for multiple medicines with projections
-const sampleData: MedicineData[] = [
-  // Historical data (actual consumption)
-  { date: '2025-09-28', actualData: true, 'Immunol': 250, 'Supreme Pro Plus': 400, 'LC-Vit': 1000 },
-  { date: '2025-09-29', actualData: true, 'Immunol': 500, 'Supreme Pro Plus': 200, 'LC-Vit': 1000 },
-  { date: '2025-09-30', actualData: true, 'Immunol': 250, 'Supreme Pro Plus': 600, 'LC-Vit': 1000 },
-  { date: '2025-10-01', actualData: true, 'Immunol': 500, 'Supreme Pro Plus': 400, 'LC-Vit': 2000 },
-  { date: '2025-10-02', actualData: true, 'Immunol': 250, 'Supreme Pro Plus': 200, 'LC-Vit': 1000 },
-  { date: '2025-10-03', actualData: true, 'Immunol': 500, 'Supreme Pro Plus': 400, 'LC-Vit': 1000 },
-  { date: '2025-10-04', actualData: true, 'Immunol': 250, 'Supreme Pro Plus': 600, 'LC-Vit': 2000 },
-
-  // Today (boundary)
-  { date: '2025-10-05', actualData: false, 'Immunol': 500, 'Supreme Pro Plus': 400, 'LC-Vit': 1000 },
-
-  // Future projections
-  { date: '2025-10-06', actualData: false, 'Immunol': 500, 'Supreme Pro Plus': 400, 'LC-Vit': 1000 },
-  { date: '2025-10-07', actualData: false, 'Immunol': 250, 'Supreme Pro Plus': 200, 'LC-Vit': 1000 },
-  { date: '2025-10-08', actualData: false, 'Immunol': 500, 'Supreme Pro Plus': 400, 'LC-Vit': 2000 },
-  { date: '2025-10-09', actualData: false, 'Immunol': 250, 'Supreme Pro Plus': 600, 'LC-Vit': 1000 },
-  { date: '2025-10-10', actualData: false, 'Immunol': 500, 'Supreme Pro Plus': 400, 'LC-Vit': 1000 },
-  { date: '2025-10-11', actualData: false, 'Immunol': 250, 'Supreme Pro Plus': 200, 'LC-Vit': 2000 },
-];
-
 // Medicine configurations with colors
 const medicineConfig = [
   { name: 'Immunol', color: '#8884d8', unit: 'mL' },
   { name: 'Supreme Pro Plus', color: '#82ca9d', unit: 'mL' },
   { name: 'LC-Vit', color: '#ffc658', unit: 'mL' },
 ];
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const isProjection = payload[0]?.payload?.actualData === false;
-    
-    return (
-      <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
-        <p className="font-semibold">{`Date: ${label}`}</p>
-        <p className="text-sm text-gray-600 mb-2">
-          {isProjection ? '📊 Projected' : '✅ Actual'}
-        </p>
-        {payload.map((entry: any, index: number) => {
-          const config = medicineConfig.find(m => m.name === entry.dataKey);
-          return (
-            <p key={index} style={{ color: entry.color }}>
-              {`${entry.dataKey}: ${entry.value} ${config?.unit || 'mg'}`}
-            </p>
-          );
-        })}
-      </div>
-    );
-  }
-  return null;
-};
 
 type MedicineDosageSummaryProps = {
   data: MedicineData[];
@@ -116,8 +70,7 @@ const MedicineDosageSummary: React.FC<MedicineDosageSummaryProps> = ({ data, loa
             label={{ value: 'Dosage (mL)', angle: -90, position: 'insideLeft' }}
             fontSize={12}
           />
-          
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip />        
           <Legend />
 
           {/* Reference line for today */}
