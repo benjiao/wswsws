@@ -18,15 +18,6 @@ type MedicineData = {
   [medicineName: string]: string | number | boolean;
 };
 
-// Medicine configurations with colors
-// const medicineConfig = [
-//   { name: 'Immunol', color: '#8884d8', unit: 'mL' },
-//   { name: 'Supreme Pro Plus', color: '#82ca9d', unit: 'mL' },
-//   { name: 'LC-Vit', color: '#ffc658', unit: 'mL' },
-// ];
-
-// Removed duplicate MedicineDosageTimelineProps type definition
-
 type MedicineDosageTimelineProps = {
   dailyDosageList: MedicineData[];
   colorMap: Record<string, string>;
@@ -94,8 +85,7 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
               stackId="1"
               stroke={colorMap[medicineName]}
               fill={colorMap[medicineName]}
-              fillOpacity={0.6}
-              strokeWidth={2}
+              fillOpacity={0.1}
             />
           ))}
         </AreaChart>
