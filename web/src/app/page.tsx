@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
-import { Card } from "antd";
+import { Card, Col, Row, Space, Flex, Progress, Typography } from "antd";
 import { useQuery } from '@tanstack/react-query';
 import MedicineDosageTimeline from '@/components/MedicineDosageTimeline';
+import TodaysSessionsCard from '@/components/TodaysSessionsCard';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -105,13 +106,28 @@ export default function FrontPage() {
   }
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <Card title="Daily Dosage per Medicine">
-        <MedicineDosageTimeline
-          dailyDosageList={dailyDosageList}
-          colorMap={medicineColorMap} />
-      </Card>
-    </div>
+    <>
+      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <TodaysSessionsCard />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card title="Inventory Status">
+              Card content
+            </Card>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={24}>
+            <Card title="Daily Dosage per Medicine">
+              <MedicineDosageTimeline
+                dailyDosageList={dailyDosageList}
+                colorMap={medicineColorMap} />
+            </Card>
+          </Col>
+        </Row>
+      </Space>
+    </>
   );
 }
