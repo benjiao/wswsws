@@ -16,6 +16,8 @@ from .serializers import (
 from .tasks import generate_treatment_instances
 
 import logging
+from django.db.models import Count, Q
+
 logger = logging.getLogger(__name__)
 
 class TreatmentScheduleViewSet(viewsets.ModelViewSet):
@@ -182,6 +184,71 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(due_today, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'])
+    def medicine_adherence(self, request):
+        """
+        Calculate medicine adherence, filtered by start and end date.
+        Query params: start_date, end_date
+        Also returns daily adherence.
+        """
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        queryset = self.get_queryset()
+
+        if start_date:
+            try:
+                start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+                queryset = queryset.filter(scheduled_time__date__gte=start_dt.date())
+            except ValueError:
+                return Response({'error': 'Invalid start_date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if end_date:
+            try:
+                end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+                queryset = queryset.filter(scheduled_time__date__lte=end_dt.date())
+            except ValueError:
+                return Response({'error': 'Invalid end_date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        total = queryset.count()
+        if total == 0:
+            return Response({'adherence': 0, 'daily_adherence': {}})
+
+        given = queryset.filter(status=TreatmentInstance.STATUS_GIVEN).count()
+        adherence = (given / total) * 100
+
+        # Calculate daily adherence
+        daily_qs = queryset.values('scheduled_time__date').annotate(
+            scheduled=Count('id'),
+            given=Count('id', filter=Q(status=TreatmentInstance.STATUS_GIVEN)),
+            skipped=Count('id', filter=Q(status=TreatmentInstance.STATUS_SKIPPED)),
+            pending=Count('id', filter=Q(status=TreatmentInstance.STATUS_PENDING)),
+        ).order_by('scheduled_time__date')
+
+        daily_adherence = {}
+        for row in daily_qs:
+            # scheduled_time__date comes as a date object (or string depending on DB/driver)
+            date_obj = row['scheduled_time__date']
+            # ensure string key in YYYY-MM-DD
+            date_str = date_obj.strftime('%Y-%m-%d') if hasattr(date_obj, 'strftime') else str(date_obj)
+            scheduled = row.get('scheduled', 0)
+            given_count = row.get('given', 0)
+            skipped_count = row.get('skipped', 0)
+            pending_count = row.get('pending', 0)
+            adherence_pct = round((given_count / scheduled) * 100, 2) if scheduled > 0 else 0
+
+            daily_adherence[date_str] = {
+                'scheduled': scheduled,
+                'given': given_count,
+                'skipped': skipped_count,
+                'pending': pending_count,
+                'adherence': adherence_pct,
+            }
+
+        return Response({'adherence': round(adherence, 2), 'daily_adherence': daily_adherence})
+
 
 # Add this new ViewSet after TreatmentInstanceViewSet
 class TreatmentSessionViewSet(viewsets.ModelViewSet):

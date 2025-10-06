@@ -2,6 +2,7 @@ import { Card, Col, Row, Space, Flex, Progress, Typography, Statistic } from "an
 import MedicineDosageTimeline from '@/components/MedicineDosageTimeline';
 import TodaysSessionsCard from '@/components/TodaysSessionsCard';
 import InventoryStatusCard from '@/components/InventoryStatusCard';
+import MedicineAdherenceCard from '@/components/MedicineAdherenceCard';
 import ArrowUpOutlined from '@ant-design/icons/lib/icons/ArrowUpOutlined';
 import ArrowDownOutlined from '@ant-design/icons/lib/icons/ArrowDownOutlined';
 
@@ -17,28 +18,7 @@ export default function FrontPage() {
             <InventoryStatusCard />
           </Col>
           <Col xs={24} sm={12} md={4} lg={4}>
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
-            <Card>
-              <Statistic
-                title="Medicine Adherence"
-                value={0}
-                precision={2}
-                valueStyle={{ color: '#3f8600' }}
-                prefix={<ArrowUpOutlined />}
-                suffix="%"
-              />
-            </Card>
-            <Card>
-              <Statistic
-                title="Doses Skipped"
-                value={0}
-                precision={0}
-                valueStyle={{ color: '#3f8600' }}
-                prefix={<ArrowDownOutlined />}
-                suffix=""
-              />
-            </Card>
-            </Space>
+            <MedicineAdherenceCard />
           </Col>
           <Col xs={24} sm={12} md={4} lg={4}>
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
