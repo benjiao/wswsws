@@ -22,8 +22,6 @@ type MedicineData = {
 };
 
 type MedicineDosageTimelineProps = {
-  // dailyDosageList: MedicineData[]; --- IGNORE ---
-  // colorMap: Record<string, string>; --- IGNORE ---
   loading?: boolean;
   error?: any;
   refetch?: () => void;
