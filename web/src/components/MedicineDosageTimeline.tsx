@@ -150,13 +150,18 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
             textAnchor="end"
             height={60}
             fontSize={12}
-            interval={window.innerWidth < 600 ? Math.ceil(dailyDosageList.length / 4) : Math.ceil(dailyDosageList.length / 20)}
+            interval={
+              typeof window !== 'undefined'
+              ? window.innerWidth < 600
+                ? Math.ceil(dailyDosageList.length / 4)
+                : Math.ceil(dailyDosageList.length / 20)
+              : 0
+            }
           />
 
           <YAxis
             label={{ value: 'Dosage (mL)', angle: -90, position: 'insideLeft' }}
             fontSize={12}
-
           />
           <Tooltip />
           <Legend />
