@@ -1,5 +1,5 @@
 'use client';
-import { Card, Statistic, Space, Typography, Alert, Spin } from 'antd';
+import { Card, Statistic, Space, Typography, Alert, Spin, Row, Col } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
@@ -71,21 +71,25 @@ export default function MedicineAdherenceCard() {
 
     return (
         <Card title="Medicine Adherence">
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
-                <Statistic
-                    title="Yesterday"
-                    precision={0}
-                    valueStyle={{ color: adherenceYesterdayIncreased ? '#3f8600' : 'black' }}
-                    value={medicineAdherenceData?.daily_adherence ? medicineAdherenceData.daily_adherence[yesterday].adherence : 0}
-                    suffix="%"
-                />
+            <Row>
+                <Col span={12}>
+                    <Statistic
+                        title="Yesterday"
+                        precision={0}
+                        valueStyle={{ color: adherenceYesterdayIncreased ? '#3f8600' : 'black' }}
+                        value={medicineAdherenceData?.daily_adherence ? medicineAdherenceData.daily_adherence[yesterday].adherence : 0}
+                        suffix="%"
+                    />
+                </Col>
+                <Col span={12}>
                 <Statistic
                     title="Last 7 days"
                     precision={0}
                     value={medicineAdherenceData?.adherence}
                     suffix="%"
                 />
-            </Space>
+                </Col>
+            </Row>
         </Card>
     );
 }
