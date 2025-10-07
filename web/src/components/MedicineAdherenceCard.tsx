@@ -30,8 +30,9 @@ const fetchMedicineAdherence = async (startDate?: string, endDate?: string) => {
 
 export default function MedicineAdherenceCard() {
     const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 1)
     const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 7);
+    startDate.setDate(endDate.getDate() - 6);
 
     const formattedStartDate = startDate.toISOString().split('T')[0];
     const formattedEndDate = endDate.toISOString().split('T')[0];
