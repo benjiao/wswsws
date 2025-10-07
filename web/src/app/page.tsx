@@ -17,10 +17,10 @@ export default function FrontPage() {
           <Col xs={24} sm={12} md={8} lg={6}>
             <InventoryStatusCard />
           </Col>
-          <Col xs={24} sm={12} md={4} lg={4}>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <MedicineAdherenceCard />
           </Col>
-          <Col xs={24} sm={12} md={4} lg={4}>
+          <Col xs={24} sm={12} md={6} lg={6}>
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
               <Card>
               <Statistic
