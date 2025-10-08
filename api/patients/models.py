@@ -14,5 +14,9 @@ class Patient(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    spay_neuter_status = models.BooleanField(default=False, blank=True)
+    spay_neuter_date = models.DateField(null=True, blank=True)
+    spay_neuter_clinic = models.CharField(max_length=255, null=True, blank=True)
+
     def __str__(self):
         return self.name

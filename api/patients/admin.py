@@ -9,7 +9,9 @@ from unfold.contrib.filters.admin import TextFilter, FieldTextFilter
 
 @admin.register(Patient)
 class PatientAdmin(ModelAdmin):
-    list_editable = ('color', 'sex', 'birth_date', 'rescued_date')
+    list_editable = (
+        'color', 'sex', 'birth_date', 'rescued_date',
+        'spay_neuter_status', 'spay_neuter_date', 'spay_neuter_clinic')
 
     # show a submit button for filters (unfold contrib)
     list_filter_submit = True
@@ -25,7 +27,16 @@ class PatientAdmin(ModelAdmin):
     )
 
     # show useful columns in the changelist
-    list_display = ["name", "color", "sex", "birth_date", "rescued_date"]
+    list_display = [
+        "name",
+        "color",
+        "sex",
+        "birth_date",
+        "rescued_date",
+        "spay_neuter_status",
+        "spay_neuter_date",
+        "spay_neuter_clinic"
+    ]
 
     # name is better served by a search box than a list filter
     search_fields = ['name', 'color']
