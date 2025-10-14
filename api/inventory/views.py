@@ -43,6 +43,9 @@ class MedicineViewSet(viewsets.ModelViewSet):
                     total_pending_dosage=Sum('treatment_schedule__dosage')
                 )['total_pending_dosage'] or 0
 
+                if pending_dosage == 0:
+                    continue
+
                 medicine_data = self.get_serializer(medicine).data
                 # Get all unique dosage units used for this medicine
                 dosage_unit = TreatmentSchedule.objects.filter(
