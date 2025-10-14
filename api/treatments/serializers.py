@@ -70,13 +70,34 @@ class TreatmentSessionSerializer(serializers.ModelSerializer):
             key = (medicine.id, medicine.name, dosage, unit)
             prep[key] = prep.get(key, 0) + 1
         result = []
-        for (med_id, med_name, dosage, unit), count in prep.items():
+
+        # Count pending, given, skipped per medicine
+        status_counts = {}
+        for instance in obj.instances.all():
+            medicine = instance.treatment_schedule.medicine
+            dosage = instance.treatment_schedule.dosage
+            unit = instance.treatment_schedule.unit
+            key = (medicine.id, medicine.name, dosage, unit)
+            if key not in status_counts:
+                status_counts[key] = {'pending': 0, 'given': 0, 'skipped': 0, 'count': 0}
+                status_counts[key]['count'] += 1
+            if instance.status == 1:
+                status_counts[key]['pending'] += 1
+            elif instance.status == 2:
+                status_counts[key]['given'] += 1
+            elif instance.status == 3:
+                status_counts[key]['skipped'] += 1
+
+        for (med_id, med_name, dosage, unit), counts in status_counts.items():
             result.append({
-                'medicine_id': med_id,
-                'medicine_name': med_name,
-                'dosage': dosage,
-                'unit': unit,
-                'count': count
+            'medicine_id': med_id,
+            'medicine_name': med_name,
+            'dosage': dosage,
+            'unit': unit,
+            'count': counts['count'],
+            'pending_count': counts['pending'],
+            'given_count': counts['given'],
+            'skipped_count': counts['skipped'],
             })
         result.sort(key=lambda x: x['medicine_name'])
         return result
@@ -137,14 +158,33 @@ class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
             prep[key] = prep.get(key, 0) + 1
         result = []
 
-        for (med_id, med_name, dosage, unit), count in prep.items():
-            result.append({
-                'medicine_id': med_id,
-                'medicine_name': med_name,
-                'dosage': dosage,
-                'unit': unit,
-                'count': count
-            })
+        # Count pending, given, skipped per medicine
+        status_counts = {}
+        for instance in obj.instances.all():
+            medicine = instance.treatment_schedule.medicine
+            dosage = instance.treatment_schedule.dosage
+            unit = instance.treatment_schedule.unit
+            key = (medicine.id, medicine.name, dosage, unit)
+            if key not in status_counts:
+                status_counts[key] = {'pending': 0, 'given': 0, 'skipped': 0, 'count': 0}
+                status_counts[key]['count'] += 1
+            if instance.status == 1:
+                status_counts[key]['pending'] += 1
+            elif instance.status == 2:
+                status_counts[key]['given'] += 1
+            elif instance.status == 3:
+                status_counts[key]['skipped'] += 1
 
+        for (med_id, med_name, dosage, unit), counts in status_counts.items():
+            result.append({
+            'medicine_id': med_id,
+            'medicine_name': med_name,
+            'dosage': dosage,
+            'unit': unit,
+            'count': counts['count'],
+            'pending_count': counts['pending'],
+            'given_count': counts['given'],
+            'skipped_count': counts['skipped'],
+            })
         result.sort(key=lambda x: x['medicine_name'])
         return result

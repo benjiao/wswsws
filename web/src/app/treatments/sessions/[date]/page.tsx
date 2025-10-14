@@ -1,6 +1,7 @@
 'use client';
 import TreatmentInstanceTable from '@/components/TreatmentInstanceTable';
 import PrepList from '@/components/PrepList';
+import MedicinePrepTable from '@/components/MedicinePrepTable';
 
 import { useQuery } from '@tanstack/react-query';
 import { Card, Spin, Alert, Flex, Progress, Breadcrumb} from 'antd';
@@ -120,12 +121,14 @@ export default function TreatmentSessionsByDatePage() {
           <div key={session.id} style={{ marginBottom: 24 }}>
             <h3>{session.session_type_display}</h3>
 
-              <div style={{ marginBottom: '1em' }}>
-                <PrepList
+                <div style={{ marginBottom: '1em' }}>
+                  <MedicinePrepTable
                   data={session?.prep_list ?? []}
                   loading={treatmentSessionsLoading}
-                  error={treatmentSessionsError} />
-              </div>
+                  error={treatmentSessionsError}
+                  refetch={refetchTreatmentSessions}
+                  />
+                </div>
               <TreatmentInstanceTable 
                 data={session?.instances ?? []}
                 loading={treatmentSessionsLoading} 
