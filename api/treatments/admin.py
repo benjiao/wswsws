@@ -101,7 +101,7 @@ class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the change
     )
 
     # name is better served by a search box than a list filter
-    search_fields = ['patient__name']
+    search_fields = ['patient__name', 'medicine__name']
 
     # paging and ordering
     list_per_page = 25
