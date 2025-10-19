@@ -77,17 +77,28 @@ export default function TreatmentInstanceTable({ data, loading, error, refetch }
             render: (time: string) => formatDateTime(time),
             responsive: ['md'],
             width: 180,
+            sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
+                (a.scheduled_time ? new Date(a.scheduled_time).getTime() : Infinity) -
+                (b.scheduled_time ? new Date(b.scheduled_time).getTime() : Infinity),
+            sortDirections: ['ascend', 'descend'],
+            defaultSortOrder: 'ascend',
         },
         {
             title: 'Patient',
             dataIndex: ['treatment_schedule', 'patient_name'],
             key: 'patient_name',
+            sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
+                (a.treatment_schedule?.patient_name || '').localeCompare(b.treatment_schedule?.patient_name || ''),
+            sortDirections: ['ascend', 'descend'],
             render: (_: any, record: TreatmentInstance) => record.treatment_schedule.patient_name,
         },
         {
             title: 'Medicine',
             dataIndex: ['treatment_schedule', 'medicine_name'],
             key: 'medicine_name',
+            sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
+                (a.treatment_schedule?.medicine_name || '').localeCompare(b.treatment_schedule?.medicine_name || ''),
+            sortDirections: ['ascend', 'descend'],
             render:  (_: any, record: TreatmentInstance) => (
                 <span
                     style={{
@@ -114,6 +125,9 @@ export default function TreatmentInstanceTable({ data, loading, error, refetch }
             key: 'status',
             width: 90,
             align: 'center',
+            sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
+                (a.status ?? 0) - (b.status ?? 0),
+            sortDirections: ['ascend', 'descend'],
             render: (_: any, record: TreatmentInstance) => (
                 <Tag
                     color={
