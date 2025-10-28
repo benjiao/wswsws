@@ -52,6 +52,17 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
         instances = schedule.instances.all().order_by('scheduled_time')
         serializer = TreatmentInstanceSerializer(instances, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get all active treatment schedules"""
+        today = timezone.now().date()
+        active_schedules = self.get_queryset().filter(
+            Q(end_date__isnull=True) | Q(end_date__gte=today),
+            start_date__lte=today
+        )
+        serializer = self.get_serializer(active_schedules, many=True)
+        return Response(serializer.data)
 
 class TreatmentInstanceViewSet(viewsets.ModelViewSet):
     queryset = TreatmentInstance.objects.select_related(

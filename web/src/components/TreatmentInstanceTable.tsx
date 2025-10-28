@@ -120,6 +120,18 @@ export default function TreatmentInstanceTable({ data, loading, error, refetch }
             ),
         },
         {
+            title: 'Last Day',
+            dataIndex: ['treatment_schedule', 'end_date'],
+            key: 'end_date',
+            render: (date: string) => formatDateTime(date),
+            responsive: ['lg'],
+            width: 180,
+            sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
+                (a.treatment_schedule?.end_date ? new Date(a.treatment_schedule.end_date).getTime() : Infinity) -
+                (b.treatment_schedule?.end_date ? new Date(b.treatment_schedule.end_date).getTime() : Infinity),
+            sortDirections: ['ascend', 'descend'],
+        },
+        {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
