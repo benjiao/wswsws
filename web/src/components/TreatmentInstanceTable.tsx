@@ -37,6 +37,31 @@ const formatDateTime = (dateString: string) => {
   return `${dateLabel} at ${timeLabel}`;
 };
 
+const formatDate = (dateString: string) => {
+  if (!dateString) return 'Not scheduled';
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const isTomorrow = date.toDateString() === new Date(now.getTime() + 24 * 60 * 60 * 1000).toDateString();
+  
+  let dateLabel = '';
+  if (isToday) {
+    dateLabel = 'Today';
+  } else if (isTomorrow) {
+    dateLabel = 'Tomorrow';
+  } else {
+    dateLabel = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  }
+  
+  return dateLabel;
+};
+
+
 interface TreatmentInstanceTableProps {
   data: TreatmentInstance[] | undefined;
   loading: boolean;
@@ -123,7 +148,9 @@ export default function TreatmentInstanceTable({ data, loading, error, refetch }
             title: 'Last Day',
             dataIndex: ['treatment_schedule', 'end_date'],
             key: 'end_date',
-            render: (date: string) => formatDateTime(date),
+            render: (date: string) => {
+                return formatDate(date);
+            },
             responsive: ['lg'],
             width: 180,
             sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
