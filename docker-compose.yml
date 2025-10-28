@@ -68,6 +68,8 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       - NODE_ENV=${NODE_ENV:-production}
     restart: unless-stopped
+    networks:
+      - wswsws_network
 
   redis:
     image: redis:latest
