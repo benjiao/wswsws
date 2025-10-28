@@ -134,3 +134,4 @@ volumes:
 networks:
   wswsws_network:
     driver: bridge
+    external: false
