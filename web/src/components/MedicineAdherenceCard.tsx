@@ -78,7 +78,7 @@ export default function MedicineAdherenceCard() {
                         title="Yesterday"
                         precision={0}
                         valueStyle={{ color: adherenceYesterdayIncreased ? '#3f8600' : 'black' }}
-                        value={medicineAdherenceData?.daily_adherence ? medicineAdherenceData.daily_adherence[yesterday].adherence : 0}
+                        value={medicineAdherenceData.daily_adherence[yesterday]?.adherence ?? 0}
                         suffix="%"
                     />
                 </Col>
