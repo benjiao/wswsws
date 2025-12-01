@@ -3,19 +3,40 @@ import { PrepListItem } from './prep_list';
 
 export interface TreatmentSchedule {
     id: number;
-    patient: number;
+    patient: {
+        id: number;
+        name: string;
+        birth_date?: string;
+        rescued_date?: string;
+        color?: string;
+        sex?: number;
+        sex_display?: string;
+        created_at?: string;
+        updated_at?: string;
+    };
     patient_name: string;
-    medicine: number;
+    medicine: {
+        id: number;
+        name: string;
+        stock_status?: number;
+        stock_status_display?: string;
+        created_at?: string;
+        updated_at?: string;
+    } | null;
     medicine_name: string;
     start_date: string;
     end_date: string | null;
-    frequency: number;
-    interval: 1 | 2;
-    dosage: string;
+    frequency: number | null;
+    interval: 1 | 2 | null;
+    interval_display?: string;
+    dosage: string | null;
     unit: string;
     notes?: string;
     created_at?: string;
     updated_at?: string;
+    instances_count?: number;
+    pending_count?: number;
+    completed_count?: number;
 }
 
 export interface TreatmentInstance {

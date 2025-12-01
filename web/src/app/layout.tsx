@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
 import {
   DashboardOutlined,
   MedicineBoxOutlined,
@@ -14,6 +15,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
+import { PiPawPrint } from "react-icons/pi";
 
 import { Button, Breadcrumb, Layout, Menu, theme, ConfigProvider } from 'antd';
 const { Header, Content, Footer, Sider } = Layout;
@@ -81,6 +83,11 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
       key: '/patients',
       icon: <UserOutlined />,
       label: <Link href="/patients">Patients</Link>,
+    },
+    {
+      key: '/paw-count',
+      icon: <PiPawPrint />,
+      label: <Link href="/paw-count">Paw Count</Link>,
     },
     {
       key: '/settings',
