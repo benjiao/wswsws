@@ -7,13 +7,26 @@ class TreatmentScheduleSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='patient.name', read_only=True)
     medicine_name = serializers.CharField(source='medicine.name', read_only=True)
     interval_display = serializers.CharField(source='get_interval_display', read_only=True)
+    instances_count = serializers.SerializerMethodField()
+    pending_count = serializers.SerializerMethodField()
+    completed_count = serializers.SerializerMethodField()
     
     class Meta:
         model = TreatmentSchedule
         fields = ['id', 'patient', 'patient_name', 'medicine', 'medicine_name', 
                  'start_date', 'end_date', 'frequency', 'interval', 'interval_display',
-                 'dosage', 'unit', 'notes', 'created_at', 'updated_at']
+                 'dosage', 'unit', 'notes', 'created_at', 'updated_at',
+                 'instances_count', 'pending_count', 'completed_count']
         read_only_fields = ['created_at', 'updated_at']
+    
+    def get_instances_count(self, obj):
+        return obj.instances.count()
+    
+    def get_pending_count(self, obj):
+        return obj.instances.filter(status=1).count()  # Status 1 is PENDING
+    
+    def get_completed_count(self, obj):
+        return obj.instances.filter(status=3).count()  # Status 3 is COMPLETED
 
 class TreatmentScheduleDetailSerializer(TreatmentScheduleSerializer):
     """Detailed serializer with nested objects"""
