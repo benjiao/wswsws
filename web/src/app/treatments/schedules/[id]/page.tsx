@@ -77,13 +77,13 @@ const updateTreatmentSchedule = async (id: string, values: any) => {
 export default function EditSchedulePage() {
   const router = useRouter();
   const params = useParams();
-  const scheduleId = params.id as string;
+  const scheduleId = params?.id as string | undefined;
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
 
   const { data: schedule, isLoading: scheduleLoading } = useQuery({
     queryKey: ['treatment_schedule', scheduleId],
-    queryFn: () => fetchSchedule(scheduleId),
+    queryFn: () => fetchSchedule(scheduleId!),
     enabled: !!scheduleId,
   });
 
@@ -97,16 +97,25 @@ export default function EditSchedulePage() {
     queryFn: fetchMedicines,
   });
 
+  if (!scheduleId) {
+    return (
+      <Alert
+        message="Invalid Schedule ID"
+        description="The schedule ID is missing from the URL."
+        type="error"
+        showIcon
+      />
+    );
+  }
+
   const updateMutation = useMutation({
-    mutationFn: (values: any) => updateTreatmentSchedule(scheduleId, values),
+    mutationFn: (values: any) => updateTreatmentSchedule(scheduleId!, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['treatment_schedules'] });
       queryClient.invalidateQueries({ queryKey: ['treatment_schedule', scheduleId] });
       router.push('/treatments/schedules');
     },
   });
-  
-  console.log(schedule);
 
   // Set form values when schedule data and options are loaded
   React.useEffect(() => {
