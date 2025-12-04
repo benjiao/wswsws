@@ -123,3 +123,7 @@ export default function NewPatientPage() {
   );
 }
 
+
+
+
+
