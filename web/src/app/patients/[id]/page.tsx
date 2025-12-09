@@ -60,10 +60,27 @@ const updatePatient = async (id: string, values: any) => {
 export default function EditPatientPage() {
   const router = useRouter();
   const params = useParams();
-  const patientId = params.id as string;
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
 
+    // Extract and validate patientId
+  const patientId = React.useMemo(() => {
+    if (!params?.id) return null;
+    return typeof params.id === 'string' ? params.id : String(params.id);
+  }, [params]);
+
+  // Early return if no valid patientId
+  if (!patientId) {
+    return (
+      <Alert
+        message="Invalid patient ID"
+        description="No patient ID provided in the URL."
+        type="error"
+        showIcon
+      />
+    );
+  }
+  
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ['patient', patientId],
     queryFn: () => fetchPatient(patientId),
