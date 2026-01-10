@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Prefetch
 from datetime import datetime
 from django.db.models import Q
+from django.db.models.functions import TruncDate
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession
@@ -226,6 +227,7 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         Calculate medicine adherence, filtered by start and end date.
         Query params: start_date, end_date
         Also returns daily adherence.
+        Uses Django timezone for date calculations.
         """
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
@@ -234,15 +236,23 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
 
         if start_date:
             try:
-                start_dt = datetime.strptime(start_date, '%Y-%m-%d')
-                queryset = queryset.filter(scheduled_time__date__gte=start_dt.date())
+                # Parse date string and create timezone-aware datetime at start of day in Django timezone
+                start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+                start_datetime = timezone.make_aware(
+                    datetime.combine(start_date_obj, datetime.min.time())
+                )
+                queryset = queryset.filter(scheduled_time__gte=start_datetime)
             except ValueError:
                 return Response({'error': 'Invalid start_date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if end_date:
             try:
-                end_dt = datetime.strptime(end_date, '%Y-%m-%d')
-                queryset = queryset.filter(scheduled_time__date__lte=end_dt.date())
+                # Parse date string and create timezone-aware datetime at end of day in Django timezone
+                end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+                end_datetime = timezone.make_aware(
+                    datetime.combine(end_date_obj, datetime.max.time())
+                )
+                queryset = queryset.filter(scheduled_time__lte=end_datetime)
             except ValueError:
                 return Response({'error': 'Invalid end_date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -254,17 +264,29 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         adherence = (given / total) * 100
 
         # Calculate daily adherence
-        daily_qs = queryset.values('scheduled_time__date').annotate(
+        # Use timezone-aware date extraction for proper timezone handling
+        daily_qs = queryset.annotate(
+            scheduled_date=TruncDate('scheduled_time', tzinfo=timezone.get_current_timezone())
+        ).values('scheduled_date').annotate(
             scheduled=Count('id'),
             given=Count('id', filter=Q(status=TreatmentInstance.STATUS_GIVEN)),
             skipped=Count('id', filter=Q(status=TreatmentInstance.STATUS_SKIPPED)),
             pending=Count('id', filter=Q(status=TreatmentInstance.STATUS_PENDING)),
-        ).order_by('scheduled_time__date')
+        ).order_by('scheduled_date')
 
         daily_adherence = {}
         for row in daily_qs:
-            # scheduled_time__date comes as a date object (or string depending on DB/driver)
-            date_obj = row['scheduled_time__date']
+            # scheduled_date comes as a datetime at midnight in Django timezone (from TruncDate)
+            date_obj = row['scheduled_date']
+            # Convert to date in Django timezone
+            if isinstance(date_obj, datetime):
+                # If it's timezone-aware, convert to local timezone then get date
+                if timezone.is_aware(date_obj):
+                    date_obj = timezone.localtime(date_obj).date()
+                else:
+                    date_obj = date_obj.date()
+            elif hasattr(date_obj, 'date'):
+                date_obj = date_obj.date()
             # ensure string key in YYYY-MM-DD
             date_str = date_obj.strftime('%Y-%m-%d') if hasattr(date_obj, 'strftime') else str(date_obj)
             scheduled = row.get('scheduled', 0)
