@@ -9,6 +9,12 @@ import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+interface PatientGroup {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 interface Patient {
   id: number;
   name: string;
@@ -18,6 +24,8 @@ interface Patient {
   sex_display: string;
   spay_neuter_status: boolean;
   active_treatment_schedules_count: number;
+  group_id?: number | null;
+  group_name?: string | null;
 }
 
 interface PaginatedResponse<T> {
@@ -58,6 +66,15 @@ const fetchPatients = async (page: number = 1, pageSize: number = 20): Promise<P
   };
 };
 
+const fetchPatientGroups = async (): Promise<PatientGroup[]> => {
+  const response = await fetch(`${API_URL}/patient-groups/all/`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'N/A';
   
@@ -76,6 +93,7 @@ export default function PatientsPage() {
   const [sexFilter, setSexFilter] = useState<string | undefined>(undefined);
   const [spayNeuterFilter, setSpayNeuterFilter] = useState<string | undefined>(undefined);
   const [activeTreatmentsFilter, setActiveTreatmentsFilter] = useState<string | undefined>(undefined);
+  const [groupFilter, setGroupFilter] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const queryClient = useQueryClient();
@@ -88,6 +106,11 @@ export default function PatientsPage() {
   } = useQuery({
     queryKey: ['patients', currentPage, pageSize],
     queryFn: () => fetchPatients(currentPage, pageSize),
+  });
+
+  const { data: patientGroups, isLoading: groupsLoading } = useQuery({
+    queryKey: ['patient_groups'],
+    queryFn: fetchPatientGroups,
   });
 
   const patients = paginatedData?.results || [];
@@ -116,6 +139,34 @@ export default function PatientsPage() {
     onError: (error) => {
       Modal.error({
         title: 'Error deleting patient',
+        content: error instanceof Error ? error.message : 'Unknown error',
+      });
+    },
+  });
+
+  // Mutation to update patient group
+  const updatePatientGroupMutation = useMutation({
+    mutationFn: async ({ patientId, groupId }: { patientId: number; groupId: number | null }) => {
+      const response = await fetch(`${API_URL}/patients/${patientId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ group_id: groupId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+    },
+    onError: (error) => {
+      Modal.error({
+        title: 'Error updating patient group',
         content: error instanceof Error ? error.message : 'Unknown error',
       });
     },
@@ -188,8 +239,14 @@ export default function PatientsPage() {
       filtered = filtered.filter((patient: Patient) => patient.active_treatment_schedules_count === 0);
     }
 
+    // Group filter
+    if (groupFilter) {
+      const groupId = parseInt(groupFilter);
+      filtered = filtered.filter((patient: Patient) => patient.group_id === groupId);
+    }
+
     return filtered;
-  }, [patients, searchText, colorFilter, sexFilter, spayNeuterFilter, activeTreatmentsFilter]);
+  }, [patients, searchText, colorFilter, sexFilter, spayNeuterFilter, activeTreatmentsFilter, groupFilter]);
 
   // Get unique colors for filter
   const uniqueColors = useMemo(() => {
@@ -263,6 +320,35 @@ export default function PatientsPage() {
       ),
     },
     {
+      title: 'Group',
+      dataIndex: 'group_id',
+      key: 'group',
+      width: 180,
+      render: (groupId: number | null | undefined, record: Patient) => (
+        <Select
+          value={groupId ?? undefined}
+          placeholder="Select group"
+          allowClear
+          showSearch
+          loading={groupsLoading}
+          style={{ width: '100%' }}
+          onChange={(value) => {
+            updatePatientGroupMutation.mutate({ patientId: record.id, groupId: value ?? null });
+          }}
+          filterOption={(input, option) =>
+            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+          }
+          options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name })) || []}
+        />
+      ),
+      sorter: (a, b) => {
+        const aGroup = a.group_name || '';
+        const bGroup = b.group_name || '';
+        return aGroup.localeCompare(bGroup);
+      },
+      sortDirections: ['ascend', 'descend'],
+    },
+    {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
@@ -325,7 +411,10 @@ export default function PatientsPage() {
             placeholder="Filter by Color"
             allowClear
             value={colorFilter}
-            onChange={setColorFilter}
+            onChange={(value) => {
+              setColorFilter(value);
+              setCurrentPage(1);
+            }}
             style={{ width: 150 }}
           >
             {uniqueColors.map(color => (
@@ -336,7 +425,10 @@ export default function PatientsPage() {
             placeholder="Filter by Sex"
             allowClear
             value={sexFilter}
-            onChange={setSexFilter}
+            onChange={(value) => {
+              setSexFilter(value);
+              setCurrentPage(1);
+            }}
             style={{ width: 130 }}
           >
             <Select.Option value="1">Male</Select.Option>
@@ -346,7 +438,10 @@ export default function PatientsPage() {
             placeholder="Spay/Neuter Status"
             allowClear
             value={spayNeuterFilter}
-            onChange={setSpayNeuterFilter}
+            onChange={(value) => {
+              setSpayNeuterFilter(value);
+              setCurrentPage(1);
+            }}
             style={{ width: 160 }}
           >
             <Select.Option value="yes">Spayed/Neutered</Select.Option>
@@ -356,12 +451,31 @@ export default function PatientsPage() {
             placeholder="Active Treatments"
             allowClear
             value={activeTreatmentsFilter}
-            onChange={setActiveTreatmentsFilter}
+            onChange={(value) => {
+              setActiveTreatmentsFilter(value);
+              setCurrentPage(1);
+            }}
             style={{ width: 160 }}
           >
             <Select.Option value="yes">Has Active Treatments</Select.Option>
             <Select.Option value="no">No Active Treatments</Select.Option>
           </Select>
+          <Select
+            placeholder="Filter by Group"
+            allowClear
+            value={groupFilter}
+            onChange={(value) => {
+              setGroupFilter(value);
+              setCurrentPage(1);
+            }}
+            loading={groupsLoading}
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            style={{ width: 180 }}
+            options={patientGroups?.map((g: PatientGroup) => ({ value: String(g.id), label: g.name })) || []}
+          />
         </Space>
         <Table
           dataSource={filteredPatients}

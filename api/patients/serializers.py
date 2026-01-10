@@ -1,25 +1,41 @@
 from rest_framework import serializers
-from .models import Patient
+from .models import Patient, PatientGroup
+
+class PatientGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientGroup
+        fields = ['id', 'name', 'description', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
 
 class PatientSerializer(serializers.ModelSerializer):
     sex_display = serializers.CharField(source='get_sex_display', read_only=True)
+    group = PatientGroupSerializer(read_only=True)
+    group_id = serializers.PrimaryKeyRelatedField(
+        source='group',
+        queryset=PatientGroup.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
     
     class Meta:
         model = Patient
         fields = ['id', 'name', 'birth_date', 'rescued_date', 'color', 'sex', 'sex_display', 
                  'spay_neuter_status', 'spay_neuter_date', 'spay_neuter_clinic', 
-                 'created_at', 'updated_at']
+                 'group', 'group_id', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
 
 class PatientListSerializer(serializers.ModelSerializer):
     """Lighter serializer for list views"""
     sex_display = serializers.CharField(source='get_sex_display', read_only=True)
     active_treatment_schedules_count = serializers.SerializerMethodField()
+    group_name = serializers.CharField(source='group.name', read_only=True)
+    group_id = serializers.IntegerField(source='group.id', read_only=True, allow_null=True)
     
     class Meta:
         model = Patient
         fields = ['id', 'name', 'birth_date', 'color', 'sex', 'sex_display', 
-                 'spay_neuter_status', 'active_treatment_schedules_count']
+                 'spay_neuter_status', 'active_treatment_schedules_count', 'group_id', 'group_name']
     
     def get_active_treatment_schedules_count(self, obj):
         """Count active treatment schedules for this patient (schedules where is_active is True)"""

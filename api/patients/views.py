@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-from .models import Patient
-from .serializers import PatientSerializer, PatientListSerializer
+from .models import Patient, PatientGroup
+from .serializers import PatientSerializer, PatientListSerializer, PatientGroupSerializer
 
 
 class PatientViewSet(viewsets.ModelViewSet):
@@ -62,4 +62,23 @@ class PatientViewSet(viewsets.ModelViewSet):
         """Get all patients without pagination (for dropdowns/selects)"""
         patients = self.queryset.all()
         serializer = PatientListSerializer(patients, many=True)
+        return Response(serializer.data)
+
+
+class PatientGroupViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for PatientGroup CRUD operations.
+    """
+    queryset = PatientGroup.objects.all().order_by('name')
+    serializer_class = PatientGroupSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at', 'updated_at']
+    ordering = ['name']
+    
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        """Get all patient groups without pagination (for dropdowns/selects)"""
+        groups = self.queryset.all()
+        serializer = self.get_serializer(groups, many=True)
         return Response(serializer.data)

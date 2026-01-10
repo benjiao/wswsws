@@ -7,6 +7,12 @@ import { useRouter, useParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+interface PatientGroup {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 interface Patient {
   id: number;
   name: string;
@@ -18,7 +24,17 @@ interface Patient {
   spay_neuter_status: boolean;
   spay_neuter_date: string | null;
   spay_neuter_clinic: string | null;
+  group: PatientGroup | null;
 }
+
+const fetchPatientGroups = async (): Promise<PatientGroup[]> => {
+  const response = await fetch(`${API_URL}/patient-groups/all/`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
 
 const fetchPatient = async (id: string): Promise<Patient> => {
   const response = await fetch(`${API_URL}/patients/${id}/`, {
@@ -38,6 +54,7 @@ const updatePatient = async (id: string, values: any) => {
     spay_neuter_status: values.spay_neuter_status || false,
     spay_neuter_date: values.spay_neuter_date || null,
     spay_neuter_clinic: values.spay_neuter_clinic || null,
+    group_id: values.group_id || null,
   };
 
   const response = await fetch(`${API_URL}/patients/${id}/`, {
@@ -62,6 +79,11 @@ export default function EditPatientPage() {
   const params = useParams();
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
+
+  const { data: patientGroups, isLoading: groupsLoading } = useQuery({
+    queryKey: ['patient_groups'],
+    queryFn: fetchPatientGroups,
+  });
 
     // Extract and validate patientId
   const patientId = React.useMemo(() => {
@@ -108,6 +130,7 @@ export default function EditPatientPage() {
         spay_neuter_status: patient.spay_neuter_status || false,
         spay_neuter_date: patient.spay_neuter_date || undefined,
         spay_neuter_clinic: patient.spay_neuter_clinic || undefined,
+        group_id: patient.group?.id || undefined,
       });
     }
   }, [patient, form]);
@@ -180,9 +203,25 @@ export default function EditPatientPage() {
             <Form.Item
               name="rescued_date"
               label="Rescued Date"
-              style={{ marginBottom: 0 }}
             >
               <Input type="date" style={{ width: '100%' }} />
+            </Form.Item>
+
+            <Form.Item
+              name="group_id"
+              label="Patient Group"
+              style={{ marginBottom: 0 }}
+            >
+              <Select
+                placeholder="Select a patient group"
+                allowClear
+                showSearch
+                loading={groupsLoading}
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name }))}
+              />
             </Form.Item>
           </Card>
 

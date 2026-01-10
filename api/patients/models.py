@@ -1,5 +1,14 @@
 from django.db import models
 
+class PatientGroup(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
 # Create your models here.
 class Patient(models.Model):
     name = models.CharField(max_length=255)
@@ -17,6 +26,8 @@ class Patient(models.Model):
     spay_neuter_status = models.BooleanField(default=False, blank=True)
     spay_neuter_date = models.DateField(null=True, blank=True)
     spay_neuter_clinic = models.CharField(max_length=255, null=True, blank=True)
+
+    group = models.ForeignKey(PatientGroup, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.name
