@@ -4,22 +4,41 @@ import PrepList from '@/components/PrepList';
 import MedicinePrepTable from '@/components/MedicinePrepTable';
 
 import { useQuery } from '@tanstack/react-query';
-import { Card, Spin, Alert, Flex, Progress, Breadcrumb} from 'antd';
+import { Card, Spin, Alert, Flex, Progress, Breadcrumb, Select, Space} from 'antd';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 import { TreatmentSession } from '@/types';
 
-// Updated API fetcher function to accept date
-const fetchTreatmentSessionsByDate = async (date: string): Promise<TreatmentSession[]> => {
-  const response = await fetch(
-    `${API_URL}/treatment-sessions/by-date/${date}/`, 
-    {
-      headers: {
-        'Accept': 'application/json',
-      },
-    }
-  );
+interface PatientGroup {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+// Fetch patient groups
+const fetchPatientGroups = async (): Promise<PatientGroup[]> => {
+  const response = await fetch(`${API_URL}/patient-groups/all/`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
+// Updated API fetcher function to accept date and optional group filter
+const fetchTreatmentSessionsByDate = async (date: string, groupId?: number | null): Promise<TreatmentSession[]> => {
+  let url = `${API_URL}/treatment-sessions/by-date/${date}/`;
+  if (groupId) {
+    url += `?group=${groupId}`;
+  }
+  
+  const response = await fetch(url, {
+    headers: {
+      'Accept': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -32,6 +51,7 @@ const fetchTreatmentSessionsByDate = async (date: string): Promise<TreatmentSess
 export default function TreatmentSessionsByDatePage() {
   const params = useParams();
   const { date } = params as { date: string | undefined };
+  const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>(undefined);
 
   // Handle the case where params might be null
   if (!params) {
@@ -50,14 +70,19 @@ export default function TreatmentSessionsByDatePage() {
     );
   }
 
+  const { data: patientGroups, isLoading: groupsLoading } = useQuery({
+    queryKey: ['patient_groups'],
+    queryFn: fetchPatientGroups,
+  });
+
   const { 
     data: treatmentSessions, 
     isLoading: treatmentSessionsLoading, 
     error: treatmentSessionsError,
     refetch: refetchTreatmentSessions 
   } = useQuery({
-    queryKey: ['treatment_sessions', date, 1],
-    queryFn: () => fetchTreatmentSessionsByDate(date),
+    queryKey: ['treatment_sessions', date, selectedGroupId],
+    queryFn: () => fetchTreatmentSessionsByDate(date, selectedGroupId),
   });
   
   // Format date for display
@@ -81,7 +106,22 @@ export default function TreatmentSessionsByDatePage() {
 
   return (
     <>
-      <h1>{formatDateForDisplay(date)}</h1>
+      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+        <h1 style={{ margin: 0 }}>{formatDateForDisplay(date)}</h1>
+        <Select
+          placeholder="Filter by Patient Group"
+          allowClear
+          value={selectedGroupId}
+          onChange={(value) => setSelectedGroupId(value)}
+          loading={groupsLoading}
+          showSearch
+          filterOption={(input, option) =>
+            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+          }
+          style={{ width: 200 }}
+          options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name })) || []}
+        />
+      </Space>
 
       <Card style={{ marginBottom: 24 }}>
         {treatmentSessions ? (

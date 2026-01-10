@@ -156,18 +156,53 @@ class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
             'instances', 'prep_list'
         ]
     
+    def get_filtered_instances(self, obj):
+        """Get instances filtered by patient group if provided"""
+        instances = obj.instances.all()
+        group_id = self.context.get('group_id')
+        if group_id is not None:
+            instances = instances.filter(treatment_schedule__patient__group_id=group_id)
+        return instances
+    
     def get_instances_count(self, obj):
-        return obj.instances.count()
+        filtered = self.get_filtered_instances(obj)
+        return filtered.count()
     
     def get_pending_count(self, obj):
-        return obj.instances.filter(status=1).count()
+        filtered = self.get_filtered_instances(obj)
+        return filtered.filter(status=1).count()
     
     def get_completed_count(self, obj):
-        return obj.instances.filter(status__in=[2, 3]).count()
+        filtered = self.get_filtered_instances(obj)
+        return filtered.filter(status__in=[2, 3]).count()
+    
+    def to_representation(self, instance):
+        """Override to filter instances based on group_id"""
+        representation = super().to_representation(instance)
+        group_id = self.context.get('group_id')
+        
+        if group_id is not None:
+            # Filter instances by patient group
+            filtered_instances = instance.instances.filter(
+                treatment_schedule__patient__group_id=group_id
+            )
+            representation['instances'] = TreatmentInstanceSerializer(
+                filtered_instances, many=True
+            ).data
+        else:
+            # Use default serialization
+            representation['instances'] = TreatmentInstanceSerializer(
+                instance.instances.all(), many=True
+            ).data
+        
+        return representation
 
     def get_prep_list(self, obj):
+        # Get filtered instances based on group_id
+        instances = self.get_filtered_instances(obj)
+        
         prep = {}
-        for instance in obj.instances.all():
+        for instance in instances:
             medicine = instance.treatment_schedule.medicine
             dosage = instance.treatment_schedule.dosage
             unit = instance.treatment_schedule.unit
@@ -177,7 +212,7 @@ class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
 
         # Count pending, given, skipped per medicine
         status_counts = {}
-        for instance in obj.instances.all():
+        for instance in instances:
             medicine = instance.treatment_schedule.medicine
             dosage = instance.treatment_schedule.dosage
             unit = instance.treatment_schedule.unit

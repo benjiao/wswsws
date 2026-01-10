@@ -361,7 +361,16 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
             session_date = (timezone.localtime(timezone.now()).date() - timezone.timedelta(days=1)).strftime('%Y-%m-%d')
 
         today_sessions = self.get_queryset().filter(session_date=session_date).order_by('session_type')
-        serializer = TreatmentSessionDetailSerializer(today_sessions, many=True)
+        
+        # Get patient group filter from query params
+        group_id = request.query_params.get('group', None)
+        
+        # Pass group_id to serializer context for filtering
+        serializer = TreatmentSessionDetailSerializer(
+            today_sessions, 
+            many=True,
+            context={'group_id': int(group_id) if group_id else None}
+        )
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
