@@ -321,6 +321,13 @@ class MedicineViewSet(viewsets.ModelViewSet):
         })
 
     @action(detail=False, methods=['get'])
+    def all(self, request):
+        """Get all medicines without pagination (for dropdowns/selects)"""
+        medicines = self.queryset.all()
+        serializer = self.get_serializer(medicines, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
     def treatment_analytics(self, request):
         """Comprehensive treatment analytics with multiple groupings"""
         # Get date range from query params

@@ -4,7 +4,8 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card } from 'antd';
 import { useRouter, useParams } from 'next/navigation';
-import { TreatmentSchedule } from '@/types';
+import { TreatmentSchedule, TreatmentInstance } from '@/types';
+import TreatmentInstanceTable from '@/components/TreatmentInstanceTable';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -19,25 +20,33 @@ interface Medicine {
 }
 
 const fetchPatients = async (): Promise<Patient[]> => {
-  const response = await fetch(`${API_URL}/patients/`, {
+  const response = await fetch(`${API_URL}/patients/all/`, {
     headers: { 'Accept': 'application/json' },
   });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
-  return data.results || data;
+  return Array.isArray(data) ? data : [];
 };
 
 const fetchMedicines = async (): Promise<Medicine[]> => {
-  const response = await fetch(`${API_URL}/medicines/`, {
+  const response = await fetch(`${API_URL}/medicines/all/`, {
     headers: { 'Accept': 'application/json' },
   });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
-  return data.results || data;
+  return Array.isArray(data) ? data : [];
 };
 
 const fetchSchedule = async (id: string): Promise<TreatmentSchedule> => {
   const response = await fetch(`${API_URL}/treatment-schedules/${id}/`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  return response.json();
+};
+
+const fetchScheduleInstances = async (id: string): Promise<TreatmentInstance[]> => {
+  const response = await fetch(`${API_URL}/treatment-schedules/${id}/instances/`, {
     headers: { 'Accept': 'application/json' },
   });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -125,6 +134,17 @@ export default function EditSchedulePage() {
     queryFn: fetchMedicines,
   });
 
+  const { 
+    data: instances, 
+    isLoading: instancesLoading, 
+    error: instancesError,
+    refetch: refetchInstances 
+  } = useQuery({
+    queryKey: ['treatment_schedule_instances', scheduleId],
+    queryFn: () => fetchScheduleInstances(scheduleId!),
+    enabled: !!scheduleId,
+  });
+
   if (!scheduleId) {
     return (
       <Alert
@@ -141,6 +161,7 @@ export default function EditSchedulePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['treatment_schedules'] });
       queryClient.invalidateQueries({ queryKey: ['treatment_schedule', scheduleId] });
+      queryClient.invalidateQueries({ queryKey: ['treatment_schedule_instances', scheduleId] });
       router.push('/treatments/schedules');
     },
   });
@@ -314,6 +335,29 @@ export default function EditSchedulePage() {
           />
         )}
       </Card>
+
+      {instances && instances.length > 0 && (
+        <Card style={{ marginTop: 24 }}>
+          <h2>Treatment Instances</h2>
+          <TreatmentInstanceTable
+            data={instances}
+            loading={instancesLoading}
+            error={instancesError}
+            refetch={refetchInstances}
+          />
+        </Card>
+      )}
+
+      {instances && instances.length === 0 && !instancesLoading && (
+        <Card style={{ marginTop: 24 }}>
+          <Alert
+            message="No instances found"
+            description="This schedule doesn't have any treatment instances yet. Generate instances using the generate instances action."
+            type="info"
+            showIcon
+          />
+        </Card>
+      )}
     </div>
   );
 }

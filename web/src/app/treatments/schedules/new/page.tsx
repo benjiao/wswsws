@@ -17,21 +17,21 @@ interface Medicine {
 }
 
 const fetchPatients = async (): Promise<Patient[]> => {
-  const response = await fetch(`${API_URL}/patients/`, {
+  const response = await fetch(`${API_URL}/patients/all/`, {
     headers: { 'Accept': 'application/json' },
   });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
-  return data.results || data;
+  return Array.isArray(data) ? data : [];
 };
 
 const fetchMedicines = async (): Promise<Medicine[]> => {
-  const response = await fetch(`${API_URL}/medicines/`, {
+  const response = await fetch(`${API_URL}/medicines/all/`, {
     headers: { 'Accept': 'application/json' },
   });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
-  return data.results || data;
+  return Array.isArray(data) ? data : [];
 };
 
 const createTreatmentSchedule = async (values: any) => {
