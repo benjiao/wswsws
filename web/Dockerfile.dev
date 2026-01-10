@@ -2,9 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Configure yarn for better network reliability
+RUN yarn config set network-timeout 300000 -g && \
+    yarn config set network-concurrency 1 -g
+
 # Install dependencies
-COPY package*.json ./
-RUN yarn install --frozen-lockfile
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile --network-timeout 300000
 
 # Copy source code
 COPY . .
