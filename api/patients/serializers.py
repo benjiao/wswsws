@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Patient
-from treatments.models import TreatmentInstance
 
 class PatientSerializer(serializers.ModelSerializer):
     sex_display = serializers.CharField(source='get_sex_display', read_only=True)
@@ -23,7 +22,5 @@ class PatientListSerializer(serializers.ModelSerializer):
                  'spay_neuter_status', 'active_treatment_schedules_count']
     
     def get_active_treatment_schedules_count(self, obj):
-        """Count active treatment schedules for this patient (schedules with pending instances)"""
-        return obj.treatment_schedules.filter(
-            instances__status=TreatmentInstance.STATUS_PENDING
-        ).distinct().count()
+        """Count active treatment schedules for this patient (schedules where is_active is True)"""
+        return obj.treatment_schedules.filter(is_active=True).count()
