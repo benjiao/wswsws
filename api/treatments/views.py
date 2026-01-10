@@ -160,14 +160,8 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         
         return self.ordering
 
-    def paginate_queryset(self, queryset):
-        """
-        Return a paginated style `Response`, or `None` if pagination is not configured.
-        Only paginate if 'page' parameter is explicitly provided.
-        """
-        if 'page' not in self.request.query_params:
-            return None
-        return super().paginate_queryset(queryset)
+    # Removed custom paginate_queryset to use default pagination
+    # Pagination will now always be applied and include metadata
 
     def get_serializer_class(self):
         if self.action == 'retrieve':

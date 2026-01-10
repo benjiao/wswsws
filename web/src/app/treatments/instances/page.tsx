@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Card, Spin, Alert, Table, Tag } from 'antd';
+import { useState } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 import { TreatmentInstance, TreatmentSchedule } from '@/types';
@@ -36,8 +37,18 @@ const formatDateTime = (dateString: string) => {
   return `${dateLabel} at ${timeLabel}`;
 };
 
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  page_size: number;
+  current_page: number;
+  total_pages: number;
+  results: T[];
+}
+
 // API fetcher function
-const fetchTreatmentInstances = async (): Promise<TreatmentInstance[]> => {
+const fetchTreatmentInstances = async (page: number = 1, pageSize: number = 20): Promise<PaginatedResponse<TreatmentInstance>> => {
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -45,7 +56,7 @@ const fetchTreatmentInstances = async (): Promise<TreatmentInstance[]> => {
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
     const response = await fetch(
-      `${API_URL}/treatment-instances/?scheduled_time__date=${dateStr}&ordering=scheduled_time,treatment_schedule__patient__name`, 
+      `${API_URL}/treatment-instances/?scheduled_time__date=${dateStr}&ordering=scheduled_time,treatment_schedule__patient__name&page=${page}&page_size=${pageSize}`, 
       {
         headers: {
           'Accept': 'application/json',
@@ -58,19 +69,37 @@ const fetchTreatmentInstances = async (): Promise<TreatmentInstance[]> => {
     }
 
     const data = await response.json();
-    return data.results || data;
+    // Handle both paginated and non-paginated responses for backward compatibility
+    if (data.results && typeof data.count === 'number') {
+      return data;
+    }
+    // If not paginated, wrap it
+    return {
+      count: Array.isArray(data) ? data.length : 0,
+      next: null,
+      previous: null,
+      page_size: pageSize,
+      current_page: 1,
+      total_pages: 1,
+      results: Array.isArray(data) ? data : [],
+    };
 };
 
 export default function TreatmentInstancesPage() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
   const { 
-    data: treatmentInstances, 
+    data: paginatedData, 
     isLoading, 
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['treatment_instances'],
-    queryFn: fetchTreatmentInstances,
+    queryKey: ['treatment_instances', currentPage, pageSize],
+    queryFn: () => fetchTreatmentInstances(currentPage, pageSize),
   });
+
+  const treatmentInstances = paginatedData?.results || [];
 
   if (isLoading) return <Spin size="large" />;
   
@@ -147,7 +176,21 @@ export default function TreatmentInstancesPage() {
     <Table
         dataSource={treatmentInstances}
         rowKey="id"
-        pagination={false}
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: paginatedData?.count || 0,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} instances`,
+          onChange: (page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          },
+          onShowSizeChange: (current, size) => {
+            setCurrentPage(1);
+            setPageSize(size);
+          },
+        }}
         size="small" 
         style={{ marginBottom: '10px' }}
     >

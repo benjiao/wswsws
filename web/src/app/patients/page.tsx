@@ -20,8 +20,18 @@ interface Patient {
   active_treatment_schedules_count: number;
 }
 
-const fetchPatients = async (): Promise<Patient[]> => {
-  const response = await fetch(`${API_URL}/patients/`, {
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  page_size: number;
+  current_page: number;
+  total_pages: number;
+  results: T[];
+}
+
+const fetchPatients = async (page: number = 1, pageSize: number = 20): Promise<PaginatedResponse<Patient>> => {
+  const response = await fetch(`${API_URL}/patients/?page=${page}&page_size=${pageSize}`, {
     headers: {
       'Accept': 'application/json',
     },
@@ -32,7 +42,20 @@ const fetchPatients = async (): Promise<Patient[]> => {
   }
 
   const data = await response.json();
-  return data.results || data;
+  // Handle both paginated and non-paginated responses for backward compatibility
+  if (data.results && typeof data.count === 'number') {
+    return data;
+  }
+  // If not paginated, wrap it
+  return {
+    count: Array.isArray(data) ? data.length : 0,
+    next: null,
+    previous: null,
+    page_size: pageSize,
+    current_page: 1,
+    total_pages: 1,
+    results: Array.isArray(data) ? data : [],
+  };
 };
 
 const formatDate = (dateString: string | null) => {
@@ -52,18 +75,22 @@ export default function PatientsPage() {
   const [colorFilter, setColorFilter] = useState<string | undefined>(undefined);
   const [sexFilter, setSexFilter] = useState<string | undefined>(undefined);
   const [spayNeuterFilter, setSpayNeuterFilter] = useState<string | undefined>(undefined);
-  const [activeTreatmentsFilter, setActiveTreatmentsFilter] = useState<string | undefined>('yes');
+  const [activeTreatmentsFilter, setActiveTreatmentsFilter] = useState<string | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const queryClient = useQueryClient();
 
   const { 
-    data: patients, 
+    data: paginatedData, 
     isLoading, 
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['patients'],
-    queryFn: fetchPatients,
+    queryKey: ['patients', currentPage, pageSize],
+    queryFn: () => fetchPatients(currentPage, pageSize),
   });
+
+  const patients = paginatedData?.results || [];
 
   // Mutation to delete patient
   const deletePatientMutation = useMutation({
@@ -331,7 +358,6 @@ export default function PatientsPage() {
             value={activeTreatmentsFilter}
             onChange={setActiveTreatmentsFilter}
             style={{ width: 160 }}
-            defaultValue="yes"
           >
             <Select.Option value="yes">Has Active Treatments</Select.Option>
             <Select.Option value="no">No Active Treatments</Select.Option>
@@ -342,9 +368,19 @@ export default function PatientsPage() {
           columns={columns}
           rowKey="id"
           pagination={{
-            pageSize: 20,
+            current: currentPage,
+            pageSize: pageSize,
+            total: paginatedData?.count || 0,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} patients`,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+            onShowSizeChange: (current, size) => {
+              setCurrentPage(1);
+              setPageSize(size);
+            },
           }}
           bordered
         />

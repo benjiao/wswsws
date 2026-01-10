@@ -11,8 +11,18 @@ import { TreatmentSchedule } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const fetchTreatmentSchedules = async (): Promise<TreatmentSchedule[]> => {
-  const response = await fetch(`${API_URL}/treatment-schedules/`, {
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  page_size: number;
+  current_page: number;
+  total_pages: number;
+  results: T[];
+}
+
+const fetchTreatmentSchedules = async (page: number = 1, pageSize: number = 20): Promise<PaginatedResponse<TreatmentSchedule>> => {
+  const response = await fetch(`${API_URL}/treatment-schedules/?page=${page}&page_size=${pageSize}`, {
     headers: {
       'Accept': 'application/json',
     },
@@ -23,7 +33,20 @@ const fetchTreatmentSchedules = async (): Promise<TreatmentSchedule[]> => {
   }
 
   const data = await response.json();
-  return data.results || data;
+  // Handle both paginated and non-paginated responses for backward compatibility
+  if (data.results && typeof data.count === 'number') {
+    return data;
+  }
+  // If not paginated, wrap it
+  return {
+    count: Array.isArray(data) ? data.length : 0,
+    next: null,
+    previous: null,
+    page_size: pageSize,
+    current_page: 1,
+    total_pages: 1,
+    results: Array.isArray(data) ? data : [],
+  };
 };
 
 const formatDate = (dateString: string | null) => {
@@ -63,17 +86,21 @@ export default function SchedulesPage() {
   const [intervalFilter, setIntervalFilter] = useState<string | undefined>(undefined);
   const [unitFilter, setUnitFilter] = useState<string | undefined>(undefined);
   const [activeFilter, setActiveFilter] = useState<string | undefined>('active');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const queryClient = useQueryClient();
 
   const { 
-    data: schedules, 
+    data: paginatedData, 
     isLoading, 
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['treatment_schedules'],
-    queryFn: fetchTreatmentSchedules,
+    queryKey: ['treatment_schedules', currentPage, pageSize],
+    queryFn: () => fetchTreatmentSchedules(currentPage, pageSize),
   });
+
+  const schedules = paginatedData?.results || [];
 
 
   // Mutation to delete treatment schedule
@@ -394,9 +421,19 @@ export default function SchedulesPage() {
           columns={columns}
           rowKey="id"
           pagination={{
-            pageSize: 20,
+            current: currentPage,
+            pageSize: pageSize,
+            total: paginatedData?.count || 0,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} schedules`,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+            onShowSizeChange: (current, size) => {
+              setCurrentPage(1);
+              setPageSize(size);
+            },
           }}
           bordered
           scroll={{ x: 1200 }}
