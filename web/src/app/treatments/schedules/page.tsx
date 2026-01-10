@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Tag, Select, Button, Modal } from 'antd';
+import { Table, Input, Space, Spin, Alert, Tag, Select, Button, Modal, Switch } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo } from 'react';
@@ -21,8 +21,15 @@ interface PaginatedResponse<T> {
   results: T[];
 }
 
-const fetchTreatmentSchedules = async (page: number = 1, pageSize: number = 20): Promise<PaginatedResponse<TreatmentSchedule>> => {
-  const response = await fetch(`${API_URL}/treatment-schedules/?page=${page}&page_size=${pageSize}`, {
+const fetchTreatmentSchedules = async (page: number = 1, pageSize: number = 20, activeFilter?: string): Promise<PaginatedResponse<TreatmentSchedule>> => {
+  let url = `${API_URL}/treatment-schedules/?page=${page}&page_size=${pageSize}`;
+  if (activeFilter === 'active') {
+    url += '&active=true';
+  } else if (activeFilter === 'inactive') {
+    url += '&active=false';
+  }
+  
+  const response = await fetch(url, {
     headers: {
       'Accept': 'application/json',
     },
@@ -73,9 +80,8 @@ const formatDateTime = (dateString: string | null) => {
   });
 };
 
-const isActive = (schedule: TreatmentSchedule): boolean => {
-  // A schedule is active if it has non-completed instances (pending instances)
-  // Active means there's still work to be done (pending instances)
+// Helper function to check if schedule has pending instances (for display purposes)
+const hasPendingInstances = (schedule: TreatmentSchedule): boolean => {
   const pending = schedule.pending_count ?? 0;
   return pending > 0;
 };
@@ -85,7 +91,7 @@ export default function SchedulesPage() {
   const [searchText, setSearchText] = useState('');
   const [intervalFilter, setIntervalFilter] = useState<string | undefined>(undefined);
   const [unitFilter, setUnitFilter] = useState<string | undefined>(undefined);
-  const [activeFilter, setActiveFilter] = useState<string | undefined>('active');
+  const [activeFilter, setActiveFilter] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const queryClient = useQueryClient();
@@ -96,8 +102,8 @@ export default function SchedulesPage() {
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['treatment_schedules', currentPage, pageSize],
-    queryFn: () => fetchTreatmentSchedules(currentPage, pageSize),
+    queryKey: ['treatment_schedules', currentPage, pageSize, activeFilter],
+    queryFn: () => fetchTreatmentSchedules(currentPage, pageSize, activeFilter),
   });
 
   const schedules = paginatedData?.results || [];
@@ -126,6 +132,34 @@ export default function SchedulesPage() {
     onError: (error) => {
       Modal.error({
         title: 'Error deleting schedule',
+        content: error instanceof Error ? error.message : 'Unknown error',
+      });
+    },
+  });
+
+  // Mutation to toggle is_active
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ scheduleId, isActive }: { scheduleId: number; isActive: boolean }) => {
+      const response = await fetch(`${API_URL}/treatment-schedules/${scheduleId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ is_active: isActive }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['treatment_schedules'] });
+    },
+    onError: (error) => {
+      Modal.error({
+        title: 'Error updating schedule',
         content: error instanceof Error ? error.message : 'Unknown error',
       });
     },
@@ -184,12 +218,8 @@ export default function SchedulesPage() {
       );
     }
 
-    // Active filter
-    if (activeFilter === 'active') {
-      filtered = filtered.filter((schedule: TreatmentSchedule) => isActive(schedule));
-    } else if (activeFilter === 'inactive') {
-      filtered = filtered.filter((schedule: TreatmentSchedule) => !isActive(schedule));
-    }
+    // Active filter is now handled server-side via API query parameter
+    // No need to filter here as the API already filters by is_active field
 
     return filtered;
   }, [schedules, searchText, intervalFilter, unitFilter, activeFilter]);
@@ -282,38 +312,24 @@ export default function SchedulesPage() {
       width: 120,
     },
     {
-      title: 'Instances',
-      key: 'instances',
-      render: (_: any, record: TreatmentSchedule) => {
-        const pending = record.pending_count ?? 0;
-        const completed = record.completed_count ?? 0;
-        const total = record.instances_count ?? 0;
-        return total > 0 ? (
-          <span title={`${pending} pending, ${completed} completed out of ${total} total instances`}>
-            {total-pending} / {total}
-          </span>
-        ) : 'N/A';
-      },
-      sorter: (a, b) => {
-        const aPending = a.pending_count ?? 0;
-        const bPending = b.pending_count ?? 0;
-        return aPending - bPending;
-      },
-      sortDirections: ['ascend', 'descend'],
-      width: 100,
-      align: 'center' as const,
-    },
-    {
-      title: 'Status',
+      title: 'Completed/Pending/Skipped',
       key: 'status',
       render: (_: any, record: TreatmentSchedule) => {
-        const active = isActive(record);
+        const completed = record.completed_count ?? 0;
         const pending = record.pending_count ?? 0;
+        const skipped = record.skipped_count ?? 0;
+        const total = record.instances_count ?? 0;
+        
+        if (total === 0) {
+          return <span>No instances</span>;
+        }
         
         return (
-          <Tag color={active ? 'green' : 'default'}>
-            {active ? `Active (${pending} pending)` : 'Inactive'}
-          </Tag>
+          <Space size="small">
+            <Tag color="green">{completed} Completed</Tag>
+            <Tag color="default">{pending} Pending</Tag>
+            <Tag color="red">{skipped} Skipped</Tag>
+          </Space>
         );
       },
       sorter: (a, b) => {
@@ -322,8 +338,30 @@ export default function SchedulesPage() {
         return aPending - bPending;
       },
       sortDirections: ['ascend', 'descend'],
-      width: 150,
+      width: 250,
       align: 'center',
+    },
+    {
+      title: 'Is Active',
+      dataIndex: 'is_active',
+      key: 'is_active',
+      width: 100,
+      align: 'center',
+      render: (isActive: boolean | undefined, record: TreatmentSchedule) => (
+        <Switch
+          checked={isActive !== undefined ? isActive : true}
+          onChange={(checked) => {
+            toggleActiveMutation.mutate({ scheduleId: record.id, isActive: checked });
+          }}
+          loading={toggleActiveMutation.isPending}
+        />
+      ),
+      sorter: (a, b) => {
+        const aActive = a.is_active !== undefined ? (a.is_active ? 1 : 0) : 1;
+        const bActive = b.is_active !== undefined ? (b.is_active ? 1 : 0) : 1;
+        return aActive - bActive;
+      },
+      sortDirections: ['ascend', 'descend'],
     },
     {
       title: 'Actions',
@@ -406,10 +444,13 @@ export default function SchedulesPage() {
             ))}
           </Select>
           <Select
-            placeholder="Filter by Status"
+            placeholder="Filter by Active Status"
             allowClear
             value={activeFilter}
-            onChange={setActiveFilter}
+            onChange={(value) => {
+              setActiveFilter(value);
+              setCurrentPage(1); // Reset to first page when filter changes
+            }}
             style={{ width: 150 }}
           >
             <Select.Option value="active">Active</Select.Option>

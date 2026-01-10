@@ -10,23 +10,27 @@ class TreatmentScheduleSerializer(serializers.ModelSerializer):
     instances_count = serializers.SerializerMethodField()
     pending_count = serializers.SerializerMethodField()
     completed_count = serializers.SerializerMethodField()
+    skipped_count = serializers.SerializerMethodField()
     
     class Meta:
         model = TreatmentSchedule
         fields = ['id', 'patient', 'patient_name', 'medicine', 'medicine_name', 
                  'start_time', 'frequency', 'interval', 'interval_display', 'doses',
-                 'dosage', 'unit', 'notes', 'created_at', 'updated_at',
-                 'instances_count', 'pending_count', 'completed_count']
+                 'dosage', 'unit', 'notes', 'is_active', 'created_at', 'updated_at',
+                 'instances_count', 'pending_count', 'completed_count', 'skipped_count']
         read_only_fields = ['created_at', 'updated_at']
     
     def get_instances_count(self, obj):
         return obj.instances.count()
     
     def get_pending_count(self, obj):
-        return obj.instances.filter(status=1).count()  # Status 1 is PENDING
+        return obj.instances.filter(status=TreatmentInstance.STATUS_PENDING).count()
     
     def get_completed_count(self, obj):
-        return obj.instances.filter(status=3).count()  # Status 3 is COMPLETED
+        return obj.instances.filter(status=TreatmentInstance.STATUS_GIVEN).count()
+    
+    def get_skipped_count(self, obj):
+        return obj.instances.filter(status=TreatmentInstance.STATUS_SKIPPED).count()
 
 class TreatmentScheduleDetailSerializer(TreatmentScheduleSerializer):
     """Detailed serializer with nested objects"""

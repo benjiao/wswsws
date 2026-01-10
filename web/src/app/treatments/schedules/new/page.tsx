@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card } from 'antd';
+import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Switch } from 'antd';
 import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -56,6 +56,7 @@ const createTreatmentSchedule = async (values: any) => {
     dosage: values.dosage ? String(values.dosage) : null,
     unit: values.unit || 'mL',
     notes: values.notes || null,
+    is_active: values.is_active !== undefined ? values.is_active : true,
   };
 
   const response = await fetch(`${API_URL}/treatment-schedules/`, {
@@ -214,6 +215,15 @@ export default function NewSchedulePage() {
             label="Notes"
           >
             <Input.TextArea rows={4} placeholder="Additional notes" />
+          </Form.Item>
+
+          <Form.Item
+            name="is_active"
+            label="Active"
+            valuePropName="checked"
+            initialValue={true}
+          >
+            <Switch />
           </Form.Item>
 
           <Form.Item>

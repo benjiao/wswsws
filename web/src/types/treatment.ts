@@ -32,11 +32,13 @@ export interface TreatmentSchedule {
     dosage: string | null;
     unit: string;
     notes?: string;
+    is_active?: boolean;
     created_at?: string;
     updated_at?: string;
     instances_count?: number;
     pending_count?: number;
     completed_count?: number;
+    skipped_count?: number;
 }
 
 export interface TreatmentInstance {

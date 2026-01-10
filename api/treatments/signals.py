@@ -10,6 +10,15 @@ from .tasks import generate_treatment_session    # celery shared_task
 
 @receiver(post_save, sender=TreatmentSchedule)
 def enqueue_generate_instances_on_create(sender, instance: TreatmentSchedule, created: bool, **kwargs):
+    # Skip instance generation if only is_active field was updated
+    if not created:
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None:
+            # If update_fields is specified and only contains 'is_active' (and possibly 'updated_at'), skip generation
+            relevant_fields = update_fields - {'updated_at'}  # Remove auto-updated field
+            if relevant_fields == {'is_active'}:
+                return
+    
     # run the task after the DB transaction commits (prevents race conditions)
     def _enqueue():
         generate_treatment_instances.delay(instance.id)

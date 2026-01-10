@@ -34,23 +34,33 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
             return TreatmentScheduleDetailSerializer
         return TreatmentScheduleSerializer
     
+    def perform_update(self, serializer):
+        """Override to pass update_fields when only is_active is being updated"""
+        instance = serializer.instance
+        if self.request.method == 'PATCH' and instance:
+            # Check if only is_active is in the validated data
+            validated_data = serializer.validated_data
+            if len(validated_data) == 1 and 'is_active' in validated_data:
+                # Only is_active is being updated, save with update_fields
+                instance.is_active = validated_data['is_active']
+                instance.save(update_fields=['is_active'])
+                return
+        # For all other updates, use default behavior
+        serializer.save()
+    
     def get_queryset(self):
         """Filter queryset based on active parameter"""
         queryset = super().get_queryset()
         
-        # Filter by active status (has non-completed instances)
+        # Filter by is_active field
         active_param = self.request.query_params.get('active', None)
         if active_param is not None:
             if active_param.lower() == 'true':
-                # Active: schedules with pending instances (non-completed)
-                queryset = queryset.filter(
-                    instances__status=TreatmentInstance.STATUS_PENDING
-                ).distinct()
+                # Active: schedules where is_active is True
+                queryset = queryset.filter(is_active=True)
             elif active_param.lower() == 'false':
-                # Inactive: schedules with no pending instances (all instances are completed)
-                queryset = queryset.exclude(
-                    instances__status=TreatmentInstance.STATUS_PENDING
-                ).distinct()
+                # Inactive: schedules where is_active is False
+                queryset = queryset.filter(is_active=False)
         
         return queryset
     
@@ -75,10 +85,8 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def active(self, request):
-        """Get all active treatment schedules (schedules with pending instances)"""
-        active_schedules = self.get_queryset().filter(
-            instances__status=TreatmentInstance.STATUS_PENDING
-        ).distinct()
+        """Get all active treatment schedules (schedules where is_active is True)"""
+        active_schedules = self.get_queryset().filter(is_active=True)
         serializer = self.get_serializer(active_schedules, many=True)
         return Response(serializer.data)
 

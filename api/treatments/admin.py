@@ -85,8 +85,8 @@ class TreatmentSessionAdmin(ModelAdmin):    # show useful columns in the changel
 
 @admin.register(TreatmentSchedule)
 class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the changelist
-    list_display = ["patient", "medicine", "start_time", "frequency", "doses", "interval", "dosage", "unit"]
-    list_editable = ["start_time", "frequency", "doses", "interval", "dosage", "unit"]
+    list_display = ["patient", "medicine", "start_time", "frequency", "doses", "interval", "dosage", "unit", "is_active"]
+    list_editable = ["start_time", "frequency", "doses", "interval", "dosage", "unit", "is_active"]
 
     # show a submit button for filters (unfold contrib)
     list_filter_submit = True
@@ -98,6 +98,7 @@ class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the change
         'interval',
         'dosage',
         'unit',
+        'is_active',
     )
 
     # name is better served by a search box than a list filter
