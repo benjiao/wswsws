@@ -90,8 +90,7 @@ export default function SchedulesPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [intervalFilter, setIntervalFilter] = useState<string | undefined>(undefined);
-  const [unitFilter, setUnitFilter] = useState<string | undefined>(undefined);
-  const [activeFilter, setActiveFilter] = useState<string | undefined>(undefined);
+  const [activeFilter, setActiveFilter] = useState<string | undefined>("active");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const queryClient = useQueryClient();
@@ -211,18 +210,8 @@ export default function SchedulesPage() {
       );
     }
 
-    // Unit filter
-    if (unitFilter) {
-      filtered = filtered.filter((schedule: TreatmentSchedule) => 
-        schedule.unit === unitFilter
-      );
-    }
-
-    // Active filter is now handled server-side via API query parameter
-    // No need to filter here as the API already filters by is_active field
-
     return filtered;
-  }, [schedules, searchText, intervalFilter, unitFilter, activeFilter]);
+  }, [schedules, searchText, intervalFilter, activeFilter]);
 
   // Get unique units for filter
   const uniqueUnits = useMemo(() => {
@@ -431,17 +420,6 @@ export default function SchedulesPage() {
           >
             <Select.Option value="1">DAILY</Select.Option>
             <Select.Option value="2">EVERY OTHER DAY</Select.Option>
-          </Select>
-          <Select
-            placeholder="Filter by Unit"
-            allowClear
-            value={unitFilter}
-            onChange={setUnitFilter}
-            style={{ width: 150 }}
-          >
-            {uniqueUnits.map(unit => (
-              <Select.Option key={unit} value={unit}>{unit}</Select.Option>
-            ))}
           </Select>
           <Select
             placeholder="Filter by Active Status"
