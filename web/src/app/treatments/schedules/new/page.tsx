@@ -1,8 +1,9 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Switch } from 'antd';
+import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Switch, Checkbox, message } from 'antd';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -80,6 +81,7 @@ export default function NewSchedulePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
+  const [createAnother, setCreateAnother] = useState(false);
 
   const { data: patients, isLoading: patientsLoading } = useQuery({
     queryKey: ['patients'],
@@ -93,9 +95,31 @@ export default function NewSchedulePage() {
 
   const createMutation = useMutation({
     mutationFn: createTreatmentSchedule,
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['treatment_schedules'] });
-      router.push('/treatments/schedules');
+      
+      if (createAnother) {
+        // Keep dosage information but clear patient and start_time
+        const dosageFields = {
+          medicine: variables.medicine || undefined,
+          dosage: variables.dosage || undefined,
+          unit: variables.unit || 'mL',
+          frequency: variables.frequency || undefined,
+          doses: variables.doses || undefined,
+          interval: variables.interval || undefined,
+          notes: variables.notes || undefined,
+          is_active: variables.is_active !== undefined ? variables.is_active : true,
+          start_time: getDefaultStartTime(),
+        };
+        
+        form.resetFields(['patient', 'start_time']);
+        form.setFieldsValue(dosageFields);
+        
+        // Show success message
+        message.success('Schedule created successfully. You can now create another schedule with the same dosage information.', 3);
+      } else {
+        router.push('/treatments/schedules');
+      }
     },
   });
 
@@ -227,13 +251,21 @@ export default function NewSchedulePage() {
           </Form.Item>
 
           <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" loading={createMutation.isPending}>
-                Create Schedule
-              </Button>
-              <Button onClick={() => router.push('/treatments/schedules')}>
-                Cancel
-              </Button>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Checkbox
+                checked={createAnother}
+                onChange={(e) => setCreateAnother(e.target.checked)}
+              >
+                Create another schedule for a different patient (keep dosage information)
+              </Checkbox>
+              <Space>
+                <Button type="primary" htmlType="submit" loading={createMutation.isPending}>
+                  Create Schedule
+                </Button>
+                <Button onClick={() => router.push('/treatments/schedules')}>
+                  Cancel
+                </Button>
+              </Space>
             </Space>
           </Form.Item>
         </Form>
