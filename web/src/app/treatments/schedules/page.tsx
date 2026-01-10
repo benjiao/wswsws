@@ -37,22 +37,24 @@ const formatDate = (dateString: string | null) => {
   });
 };
 
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return 'N/A';
+  
+  const date = new Date(dateString);
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 const isActive = (schedule: TreatmentSchedule): boolean => {
-  if (!schedule.start_date) return false;
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const startDate = new Date(schedule.start_date);
-  startDate.setHours(0, 0, 0, 0);
-  
-  if (startDate > today) return false;
-  
-  if (!schedule.end_date) return true;
-  
-  const endDate = new Date(schedule.end_date);
-  endDate.setHours(0, 0, 0, 0);
-  
-  return endDate >= today;
+  // A schedule is active if it has non-completed instances (pending instances)
+  // Active means there's still work to be done (pending instances)
+  const pending = schedule.pending_count ?? 0;
+  return pending > 0;
 };
 
 export default function SchedulesPage() {
@@ -61,7 +63,6 @@ export default function SchedulesPage() {
   const [intervalFilter, setIntervalFilter] = useState<string | undefined>(undefined);
   const [unitFilter, setUnitFilter] = useState<string | undefined>(undefined);
   const [activeFilter, setActiveFilter] = useState<string | undefined>('active');
-  const [updatingScheduleId, setUpdatingScheduleId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   const { 
@@ -74,33 +75,6 @@ export default function SchedulesPage() {
     queryFn: fetchTreatmentSchedules,
   });
 
-  // Mutation to update treatment schedule status
-  const updateScheduleMutation = useMutation({
-    mutationFn: async ({ scheduleId, endDate }: { scheduleId: number; endDate: string | null }) => {
-      const response = await fetch(`${API_URL}/treatment-schedules/${scheduleId}/`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({ end_date: endDate }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      // Refetch schedules after successful update
-      queryClient.invalidateQueries({ queryKey: ['treatment_schedules'] });
-      setUpdatingScheduleId(null);
-    },
-    onError: () => {
-      setUpdatingScheduleId(null);
-    },
-  });
 
   // Mutation to delete treatment schedule
   const deleteScheduleMutation = useMutation({
@@ -130,40 +104,6 @@ export default function SchedulesPage() {
     },
   });
 
-  const toggleScheduleStatus = async (schedule: TreatmentSchedule) => {
-    if (updatingScheduleId === schedule.id) return; // Prevent double clicks
-    
-    const active = isActive(schedule);
-    
-    if (active) {
-      // Show confirmation modal before making inactive
-      Modal.confirm({
-        title: 'Deactivate Treatment Schedule',
-        content: `Are you sure you want to deactivate the treatment schedule for ${schedule.patient_name}${schedule.medicine_name ? ` - ${schedule.medicine_name}` : ''}? This will set the end date to yesterday.`,
-        okText: 'Yes, Deactivate',
-        okType: 'danger',
-        cancelText: 'Cancel',
-        onOk: () => {
-          setUpdatingScheduleId(schedule.id);
-          const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
-          const newEndDate = yesterday.toISOString().split('T')[0];
-          
-          updateScheduleMutation.mutate({
-            scheduleId: schedule.id,
-            endDate: newEndDate,
-          });
-        },
-      });
-    } else {
-      // Make active: set end_date to null (no confirmation needed)
-      setUpdatingScheduleId(schedule.id);
-      updateScheduleMutation.mutate({
-        scheduleId: schedule.id,
-        endDate: null,
-      });
-    }
-  };
 
   const handleDeleteSchedule = (schedule: TreatmentSchedule) => {
     Modal.confirm({
@@ -253,33 +193,19 @@ export default function SchedulesPage() {
       width: 150,
     },
     {
-      title: 'Start Date',
-      dataIndex: 'start_date',
-      key: 'start_date',
-      render: (date: string | null) => formatDate(date),
+      title: 'Start Time',
+      dataIndex: 'start_time',
+      key: 'start_time',
+      render: (date: string | null) => formatDateTime(date),
       sorter: (a, b) => {
-        if (!a.start_date && !b.start_date) return 0;
-        if (!a.start_date) return 1;
-        if (!b.start_date) return -1;
-        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+        if (!a.start_time && !b.start_time) return 0;
+        if (!a.start_time) return 1;
+        if (!b.start_time) return -1;
+        return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
       },
       sortDirections: ['ascend', 'descend'],
       defaultSortOrder: 'ascend',
-      width: 120,
-    },
-    {
-      title: 'End Date',
-      dataIndex: 'end_date',
-      key: 'end_date',
-      render: (date: string | null) => formatDate(date),
-      sorter: (a, b) => {
-        if (!a.end_date && !b.end_date) return 0;
-        if (!a.end_date) return 1;
-        if (!b.end_date) return -1;
-        return new Date(a.end_date).getTime() - new Date(b.end_date).getTime();
-      },
-      sortDirections: ['ascend', 'descend'],
-      width: 120,
+      width: 180,
     },
     {
       title: 'Frequency',
@@ -287,6 +213,16 @@ export default function SchedulesPage() {
       key: 'frequency',
       render: (freq: number | null) => freq ?? 'N/A',
       sorter: (a, b) => (a.frequency ?? 0) - (b.frequency ?? 0),
+      sortDirections: ['ascend', 'descend'],
+      width: 100,
+      align: 'center',
+    },
+    {
+      title: 'Total Doses',
+      dataIndex: 'doses',
+      key: 'doses',
+      render: (doses: number | null) => doses ?? 'N/A',
+      sorter: (a, b) => (a.doses ?? 0) - (b.doses ?? 0),
       sortDirections: ['ascend', 'descend'],
       width: 100,
       align: 'center',
@@ -327,7 +263,7 @@ export default function SchedulesPage() {
         const total = record.instances_count ?? 0;
         return total > 0 ? (
           <span title={`${pending} pending, ${completed} completed out of ${total} total instances`}>
-            {pending} / {total}
+            {total-pending} / {total}
           </span>
         ) : 'N/A';
       },
@@ -345,27 +281,21 @@ export default function SchedulesPage() {
       key: 'status',
       render: (_: any, record: TreatmentSchedule) => {
         const active = isActive(record);
-        const isUpdating = updatingScheduleId === record.id;
+        const pending = record.pending_count ?? 0;
         
         return (
-          <Tag
-            color={active ? 'green' : 'default'}
-            style={{
-              cursor: isUpdating ? 'not-allowed' : 'pointer',
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              MozUserSelect: 'none',
-              msUserSelect: 'none',
-              WebkitTapHighlightColor: 'transparent',
-              opacity: isUpdating ? 0.6 : 1,
-            }}
-            onClick={() => !isUpdating && toggleScheduleStatus(record)}
-          >
-            {isUpdating ? 'Updating...' : (active ? 'Active' : 'Inactive')}
+          <Tag color={active ? 'green' : 'default'}>
+            {active ? `Active (${pending} pending)` : 'Inactive'}
           </Tag>
         );
       },
-      width: 100,
+      sorter: (a, b) => {
+        const aPending = a.pending_count ?? 0;
+        const bPending = b.pending_count ?? 0;
+        return aPending - bPending;
+      },
+      sortDirections: ['ascend', 'descend'],
+      width: 150,
       align: 'center',
     },
     {

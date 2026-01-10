@@ -10,9 +10,9 @@ class TreatmentSchedule(models.Model):
 
     patient = models.ForeignKey('patients.Patient', on_delete=models.CASCADE, related_name='treatment_schedules')
     medicine = models.ForeignKey('inventory.Medicine', on_delete=models.CASCADE, related_name='treatment_schedules', null=True, blank=True)
-    start_date = models.DateField(null=True, blank=True)
-    end_date = models.DateField(null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
     frequency = models.IntegerField(null=True, blank=True)
+    doses = models.IntegerField(null=True, blank=True)
     INTERVAL_CHOICES = [
         (INTERVAL_DAILY, 'DAILY'),
         (INTERVAL_EVERY_OTHER_DAY, 'EVERY OTHER DAY'),

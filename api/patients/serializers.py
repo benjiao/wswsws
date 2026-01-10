@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from django.utils import timezone
-from django.db.models import Q
 from .models import Patient
+from treatments.models import TreatmentInstance
 
 class PatientSerializer(serializers.ModelSerializer):
     sex_display = serializers.CharField(source='get_sex_display', read_only=True)
@@ -24,9 +23,7 @@ class PatientListSerializer(serializers.ModelSerializer):
                  'spay_neuter_status', 'active_treatment_schedules_count']
     
     def get_active_treatment_schedules_count(self, obj):
-        """Count active treatment schedules for this patient"""
-        today = timezone.now().date()
+        """Count active treatment schedules for this patient (schedules with pending instances)"""
         return obj.treatment_schedules.filter(
-            Q(end_date__isnull=True) | Q(end_date__gte=today),
-            start_date__lte=today
-        ).count()
+            instances__status=TreatmentInstance.STATUS_PENDING
+        ).distinct().count()
