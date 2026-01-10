@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select } from 'antd';
 import type { TableProps, ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -137,6 +137,7 @@ const formatDate = (dateString: string | null) => {
 export default function PatientsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearchText, setDebouncedSearchText] = useState('');
   const [colorFilter, setColorFilter] = useState<string | undefined>(undefined);
   const [sexFilter, setSexFilter] = useState<string | undefined>(undefined);
   const [spayNeuterFilter, setSpayNeuterFilter] = useState<string | undefined>(undefined);
@@ -147,6 +148,16 @@ export default function PatientsPage() {
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
   const queryClient = useQueryClient();
+
+  // Debounce search text - update debouncedSearchText after user stops typing for 500ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchText(searchText);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // Build ordering string from sort field and order
   const ordering = useMemo(() => {
@@ -176,7 +187,7 @@ export default function PatientsPage() {
       'patients', 
       currentPage, 
       pageSize, 
-      searchText, 
+      debouncedSearchText, 
       colorFilter, 
       sexFilter, 
       spayNeuterFilter, 
@@ -188,7 +199,7 @@ export default function PatientsPage() {
       currentPage, 
       pageSize,
       {
-        search: searchText || undefined,
+        search: debouncedSearchText || undefined,
         color: colorFilter,
         sex: sexFilter,
         spayNeuter: spayNeuterFilter,
@@ -197,6 +208,10 @@ export default function PatientsPage() {
       },
       ordering
     ),
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching new data to prevent flash
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
+    staleTime: 0, // Data is immediately stale but we use placeholderData
   });
 
   const { data: patientGroups, isLoading: groupsLoading } = useQuery({
@@ -204,7 +219,7 @@ export default function PatientsPage() {
     queryFn: fetchPatientGroups,
   });
 
-  const patients = paginatedData?.results || [];
+  const patients = (paginatedData?.results || []) as Patient[];
 
   // Handle table change (sorting, pagination)
   const handleTableChange = (
@@ -444,7 +459,10 @@ export default function PatientsPage() {
     },
   ];
 
-  if (isLoading) return <Spin size="large" />;
+  // Only show loading spinner on initial load, not during debounced search
+  const isInitialLoading = isLoading && !paginatedData;
+  
+  if (isInitialLoading) return <Spin size="large" />;
   
   if (error) return (
     <Alert 
@@ -473,10 +491,7 @@ export default function PatientsPage() {
             placeholder="Search by name or color..."
             prefix={<SearchOutlined />}
             value={searchText}
-            onChange={(e) => {
-              setSearchText(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setSearchText(e.target.value)}
             allowClear
             style={{ width: 300 }}
           />

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, Input, Space, Spin, Alert, Tag, Select, Button, Modal, Switch } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { TreatmentSchedule } from '@/types';
@@ -118,6 +118,7 @@ const hasPendingInstances = (schedule: TreatmentSchedule): boolean => {
 export default function SchedulesPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearchText, setDebouncedSearchText] = useState('');
   const [intervalFilter, setIntervalFilter] = useState<string | undefined>(undefined);
   const [activeFilter, setActiveFilter] = useState<string | undefined>("active");
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,6 +126,16 @@ export default function SchedulesPage() {
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
   const queryClient = useQueryClient();
+
+  // Debounce search text - update debouncedSearchText after user stops typing for 500ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchText(searchText);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // Build ordering string from sort field and order
   const ordering = useMemo(() => {
@@ -156,7 +167,7 @@ export default function SchedulesPage() {
       'treatment_schedules', 
       currentPage, 
       pageSize, 
-      searchText, 
+      debouncedSearchText, 
       intervalFilter, 
       activeFilter,
       ordering
@@ -165,15 +176,19 @@ export default function SchedulesPage() {
       currentPage, 
       pageSize,
       {
-        search: searchText || undefined,
+        search: debouncedSearchText || undefined,
         interval: intervalFilter,
         active: activeFilter,
       },
       ordering
     ),
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching new data to prevent flash
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
+    staleTime: 0, // Data is immediately stale but we use placeholderData
   });
 
-  const schedules = paginatedData?.results || [];
+  const schedules = (paginatedData?.results || []) as TreatmentSchedule[];
 
   // Handle table change (sorting, pagination)
   const handleTableChange = (
@@ -421,7 +436,10 @@ export default function SchedulesPage() {
     },
   ];
 
-  if (isLoading) return <Spin size="large" />;
+  // Only show loading spinner on initial load, not during debounced search
+  const isInitialLoading = isLoading && !paginatedData;
+  
+  if (isInitialLoading) return <Spin size="large" />;
   
   if (error) return (
     <Alert 
@@ -450,10 +468,7 @@ export default function SchedulesPage() {
             placeholder="Search by patient, medicine, or notes..."
             prefix={<SearchOutlined />}
             value={searchText}
-            onChange={(e) => {
-              setSearchText(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setSearchText(e.target.value)}
             allowClear
             style={{ width: 300 }}
           />
