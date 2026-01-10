@@ -39,4 +39,7 @@ class PatientListSerializer(serializers.ModelSerializer):
     
     def get_active_treatment_schedules_count(self, obj):
         """Count active treatment schedules for this patient (schedules where is_active is True)"""
+        # Use annotated field if available (from queryset annotation), otherwise calculate
+        if hasattr(obj, 'active_count'):
+            return obj.active_count
         return obj.treatment_schedules.filter(is_active=True).count()

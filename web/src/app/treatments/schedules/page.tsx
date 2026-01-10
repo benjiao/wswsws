@@ -21,15 +21,44 @@ interface PaginatedResponse<T> {
   results: T[];
 }
 
-const fetchTreatmentSchedules = async (page: number = 1, pageSize: number = 20, activeFilter?: string): Promise<PaginatedResponse<TreatmentSchedule>> => {
-  let url = `${API_URL}/treatment-schedules/?page=${page}&page_size=${pageSize}`;
-  if (activeFilter === 'active') {
-    url += '&active=true';
-  } else if (activeFilter === 'inactive') {
-    url += '&active=false';
+const fetchTreatmentSchedules = async (
+  page: number = 1, 
+  pageSize: number = 20,
+  filters?: {
+    search?: string;
+    interval?: string;
+    active?: string;
+  },
+  ordering?: string
+): Promise<PaginatedResponse<TreatmentSchedule>> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    page_size: pageSize.toString(),
+  });
+
+  // Add search parameter
+  if (filters?.search) {
+    params.append('search', filters.search);
   }
-  
-  const response = await fetch(url, {
+
+  // Add filter parameters
+  if (filters?.interval) {
+    params.append('interval', filters.interval);
+  }
+  if (filters?.active) {
+    if (filters.active === 'active') {
+      params.append('active', 'true');
+    } else if (filters.active === 'inactive') {
+      params.append('active', 'false');
+    }
+  }
+
+  // Add ordering parameter
+  if (ordering) {
+    params.append('ordering', ordering);
+  }
+
+  const response = await fetch(`${API_URL}/treatment-schedules/?${params.toString()}`, {
     headers: {
       'Accept': 'application/json',
     },
@@ -93,7 +122,29 @@ export default function SchedulesPage() {
   const [activeFilter, setActiveFilter] = useState<string | undefined>("active");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
   const queryClient = useQueryClient();
+
+  // Build ordering string from sort field and order
+  const ordering = useMemo(() => {
+    if (!sortField) return undefined;
+    const prefix = sortOrder === 'descend' ? '-' : '';
+    // Map frontend field names to API field names
+    const fieldMap: Record<string, string> = {
+      'patient_name': 'patient__name',
+      'medicine_name': 'medicine__name',
+      'start_time': 'start_time',
+      'frequency': 'frequency',
+      'doses': 'doses',
+      'interval': 'interval',
+      'dosage': 'dosage',
+      'is_active': 'is_active',
+      'pending_count': 'pending_count', // Note: This might need special handling
+    };
+    const apiField = fieldMap[sortField] || sortField;
+    return `${prefix}${apiField}`;
+  }, [sortField, sortOrder]);
 
   const { 
     data: paginatedData, 
@@ -101,11 +152,52 @@ export default function SchedulesPage() {
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['treatment_schedules', currentPage, pageSize, activeFilter],
-    queryFn: () => fetchTreatmentSchedules(currentPage, pageSize, activeFilter),
+    queryKey: [
+      'treatment_schedules', 
+      currentPage, 
+      pageSize, 
+      searchText, 
+      intervalFilter, 
+      activeFilter,
+      ordering
+    ],
+    queryFn: () => fetchTreatmentSchedules(
+      currentPage, 
+      pageSize,
+      {
+        search: searchText || undefined,
+        interval: intervalFilter,
+        active: activeFilter,
+      },
+      ordering
+    ),
   });
 
   const schedules = paginatedData?.results || [];
+
+  // Handle table change (sorting, pagination)
+  const handleTableChange = (
+    pagination: any,
+    filters: any,
+    sorter: any
+  ) => {
+    if (pagination) {
+      if (pagination.current !== undefined) {
+        setCurrentPage(pagination.current);
+      }
+      if (pagination.pageSize !== undefined) {
+        setPageSize(pagination.pageSize);
+      }
+    }
+    
+    if (sorter && sorter.field) {
+      setSortField(sorter.field);
+      setSortOrder(sorter.order);
+    } else {
+      setSortField(undefined);
+      setSortOrder(undefined);
+    }
+  };
 
 
   // Mutation to delete treatment schedule
@@ -187,45 +279,13 @@ export default function SchedulesPage() {
     });
   };
 
-  // Filter schedules based on search text and filters
-  const filteredSchedules = useMemo(() => {
-    if (!schedules) return [];
-
-    let filtered = schedules;
-
-    // Search filter
-    if (searchText) {
-      const lowerSearchText = searchText.toLowerCase();
-      filtered = filtered.filter((schedule: TreatmentSchedule) => 
-        schedule.patient_name.toLowerCase().includes(lowerSearchText) ||
-        schedule.medicine_name.toLowerCase().includes(lowerSearchText) ||
-        (schedule.notes && schedule.notes.toLowerCase().includes(lowerSearchText))
-      );
-    }
-
-    // Interval filter
-    if (intervalFilter) {
-      filtered = filtered.filter((schedule: TreatmentSchedule) => 
-        schedule.interval === parseInt(intervalFilter)
-      );
-    }
-
-    return filtered;
-  }, [schedules, searchText, intervalFilter, activeFilter]);
-
-  // Get unique units for filter
-  const uniqueUnits = useMemo(() => {
-    if (!schedules) return [];
-    const units = new Set(schedules.map((s: TreatmentSchedule) => s.unit).filter(Boolean));
-    return Array.from(units).sort();
-  }, [schedules]);
 
   const columns: ColumnsType<TreatmentSchedule> = [
     {
       title: 'Patient',
       dataIndex: 'patient_name',
       key: 'patient_name',
-      sorter: (a, b) => a.patient_name.localeCompare(b.patient_name),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
       fixed: 'left',
       width: 150,
@@ -234,7 +294,7 @@ export default function SchedulesPage() {
       title: 'Medicine',
       dataIndex: 'medicine_name',
       key: 'medicine_name',
-      sorter: (a, b) => a.medicine_name.localeCompare(b.medicine_name),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
       width: 150,
     },
@@ -243,14 +303,9 @@ export default function SchedulesPage() {
       dataIndex: 'start_time',
       key: 'start_time',
       render: (date: string | null) => formatDateTime(date),
-      sorter: (a, b) => {
-        if (!a.start_time && !b.start_time) return 0;
-        if (!a.start_time) return 1;
-        if (!b.start_time) return -1;
-        return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-      },
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
-      defaultSortOrder: 'ascend',
+      defaultSortOrder: 'ascend' as const,
       width: 180,
     },
     {
@@ -258,7 +313,7 @@ export default function SchedulesPage() {
       dataIndex: 'frequency',
       key: 'frequency',
       render: (freq: number | null) => freq ?? 'N/A',
-      sorter: (a, b) => (a.frequency ?? 0) - (b.frequency ?? 0),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
       width: 100,
       align: 'center',
@@ -268,7 +323,7 @@ export default function SchedulesPage() {
       dataIndex: 'doses',
       key: 'doses',
       render: (doses: number | null) => doses ?? 'N/A',
-      sorter: (a, b) => (a.doses ?? 0) - (b.doses ?? 0),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
       width: 100,
       align: 'center',
@@ -282,7 +337,7 @@ export default function SchedulesPage() {
           {interval || 'N/A'}
         </Tag>
       ),
-      sorter: (a, b) => (a.interval ?? 0) - (b.interval ?? 0),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
       width: 130,
     },
@@ -292,11 +347,7 @@ export default function SchedulesPage() {
       key: 'dosage',
       render: (dosage: string | null, record: TreatmentSchedule) => 
         dosage ? `${dosage} ${record.unit || ''}` : 'N/A',
-      sorter: (a, b) => {
-        const aDosage = a.dosage ? parseFloat(a.dosage) : 0;
-        const bDosage = b.dosage ? parseFloat(b.dosage) : 0;
-        return aDosage - bDosage;
-      },
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
       width: 120,
     },
@@ -321,12 +372,8 @@ export default function SchedulesPage() {
           </Space>
         );
       },
-      sorter: (a, b) => {
-        const aPending = a.pending_count ?? 0;
-        const bPending = b.pending_count ?? 0;
-        return aPending - bPending;
-      },
-      sortDirections: ['ascend', 'descend'],
+      // Note: pending_count sorting would require annotation in API
+      sorter: false, // Disable sorting for this column as it's a computed field
       width: 250,
       align: 'center',
     },
@@ -345,11 +392,7 @@ export default function SchedulesPage() {
           loading={toggleActiveMutation.isPending}
         />
       ),
-      sorter: (a, b) => {
-        const aActive = a.is_active !== undefined ? (a.is_active ? 1 : 0) : 1;
-        const bActive = b.is_active !== undefined ? (b.is_active ? 1 : 0) : 1;
-        return aActive - bActive;
-      },
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
     },
     {
@@ -407,7 +450,10 @@ export default function SchedulesPage() {
             placeholder="Search by patient, medicine, or notes..."
             prefix={<SearchOutlined />}
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+              setCurrentPage(1);
+            }}
             allowClear
             style={{ width: 300 }}
           />
@@ -415,7 +461,10 @@ export default function SchedulesPage() {
             placeholder="Filter by Interval"
             allowClear
             value={intervalFilter}
-            onChange={setIntervalFilter}
+            onChange={(value) => {
+              setIntervalFilter(value);
+              setCurrentPage(1);
+            }}
             style={{ width: 180 }}
           >
             <Select.Option value="1">DAILY</Select.Option>
@@ -427,7 +476,7 @@ export default function SchedulesPage() {
             value={activeFilter}
             onChange={(value) => {
               setActiveFilter(value);
-              setCurrentPage(1); // Reset to first page when filter changes
+              setCurrentPage(1);
             }}
             style={{ width: 150 }}
           >
@@ -436,23 +485,16 @@ export default function SchedulesPage() {
           </Select>
         </Space>
         <Table
-          dataSource={filteredSchedules}
+          dataSource={schedules}
           columns={columns}
           rowKey="id"
+          onChange={handleTableChange}
           pagination={{
             current: currentPage,
             pageSize: pageSize,
             total: paginatedData?.count || 0,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} schedules`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
-            onShowSizeChange: (current, size) => {
-              setCurrentPage(1);
-              setPageSize(size);
-            },
           }}
           bordered
           scroll={{ x: 1200 }}

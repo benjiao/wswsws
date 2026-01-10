@@ -38,8 +38,56 @@ interface PaginatedResponse<T> {
   results: T[];
 }
 
-const fetchPatients = async (page: number = 1, pageSize: number = 20): Promise<PaginatedResponse<Patient>> => {
-  const response = await fetch(`${API_URL}/patients/?page=${page}&page_size=${pageSize}`, {
+const fetchPatients = async (
+  page: number = 1, 
+  pageSize: number = 20,
+  filters?: {
+    search?: string;
+    color?: string;
+    sex?: string;
+    spayNeuter?: string;
+    activeTreatments?: string;
+    group?: string;
+  },
+  ordering?: string
+): Promise<PaginatedResponse<Patient>> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    page_size: pageSize.toString(),
+  });
+
+  // Add search parameter
+  if (filters?.search) {
+    params.append('search', filters.search);
+  }
+
+  // Add filter parameters
+  if (filters?.color) {
+    params.append('color', filters.color);
+  }
+  if (filters?.sex) {
+    params.append('sex', filters.sex);
+  }
+  if (filters?.spayNeuter) {
+    if (filters.spayNeuter === 'yes') {
+      params.append('spay_neuter_status', 'true');
+    } else if (filters.spayNeuter === 'no') {
+      params.append('spay_neuter_status', 'false');
+    }
+  }
+  if (filters?.activeTreatments) {
+    params.append('active_treatments', filters.activeTreatments);
+  }
+  if (filters?.group) {
+    params.append('group', filters.group);
+  }
+
+  // Add ordering parameter
+  if (ordering) {
+    params.append('ordering', ordering);
+  }
+
+  const response = await fetch(`${API_URL}/patients/?${params.toString()}`, {
     headers: {
       'Accept': 'application/json',
     },
@@ -96,7 +144,27 @@ export default function PatientsPage() {
   const [groupFilter, setGroupFilter] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
   const queryClient = useQueryClient();
+
+  // Build ordering string from sort field and order
+  const ordering = useMemo(() => {
+    if (!sortField) return undefined;
+    const prefix = sortOrder === 'descend' ? '-' : '';
+    // Map frontend field names to API field names
+    const fieldMap: Record<string, string> = {
+      'name': 'name',
+      'color': 'color',
+      'sex_display': 'sex',
+      'birth_date': 'birth_date',
+      'spay_neuter_status': 'spay_neuter_status',
+      'active_treatment_schedules_count': 'active_count',
+      'group': 'group__name',
+    };
+    const apiField = fieldMap[sortField] || sortField;
+    return `${prefix}${apiField}`;
+  }, [sortField, sortOrder]);
 
   const { 
     data: paginatedData, 
@@ -104,8 +172,31 @@ export default function PatientsPage() {
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['patients', currentPage, pageSize],
-    queryFn: () => fetchPatients(currentPage, pageSize),
+    queryKey: [
+      'patients', 
+      currentPage, 
+      pageSize, 
+      searchText, 
+      colorFilter, 
+      sexFilter, 
+      spayNeuterFilter, 
+      activeTreatmentsFilter, 
+      groupFilter,
+      ordering
+    ],
+    queryFn: () => fetchPatients(
+      currentPage, 
+      pageSize,
+      {
+        search: searchText || undefined,
+        color: colorFilter,
+        sex: sexFilter,
+        spayNeuter: spayNeuterFilter,
+        activeTreatments: activeTreatmentsFilter,
+        group: groupFilter,
+      },
+      ordering
+    ),
   });
 
   const { data: patientGroups, isLoading: groupsLoading } = useQuery({
@@ -114,6 +205,30 @@ export default function PatientsPage() {
   });
 
   const patients = paginatedData?.results || [];
+
+  // Handle table change (sorting, pagination)
+  const handleTableChange = (
+    pagination: any,
+    filters: any,
+    sorter: any
+  ) => {
+    if (pagination) {
+      if (pagination.current !== undefined) {
+        setCurrentPage(pagination.current);
+      }
+      if (pagination.pageSize !== undefined) {
+        setPageSize(pagination.pageSize);
+      }
+    }
+    
+    if (sorter && sorter.field) {
+      setSortField(sorter.field);
+      setSortOrder(sorter.order);
+    } else {
+      setSortField(undefined);
+      setSortOrder(undefined);
+    }
+  };
 
   // Mutation to delete patient
   const deletePatientMutation = useMutation({
@@ -198,78 +313,42 @@ export default function PatientsPage() {
     });
   };
 
-  // Filter patients based on search text and filters
-  const filteredPatients = useMemo(() => {
-    if (!patients) return [];
+  // Get unique colors for filter dropdown (from all patients, not just current page)
+  // Note: This would ideally come from a separate API endpoint, but for now we'll fetch all
+  const { data: allPatients } = useQuery({
+    queryKey: ['patients_all_for_colors'],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/patients/all/`, {
+        headers: { 'Accept': 'application/json' },
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
-    let filtered = patients;
-
-    // Search filter
-    if (searchText) {
-      const lowerSearchText = searchText.toLowerCase();
-      filtered = filtered.filter((patient: Patient) => 
-        patient.name.toLowerCase().includes(lowerSearchText) ||
-        (patient.color && patient.color.toLowerCase().includes(lowerSearchText))
-      );
-    }
-
-    // Color filter
-    if (colorFilter) {
-      filtered = filtered.filter((patient: Patient) => patient.color === colorFilter);
-    }
-
-    // Sex filter
-    if (sexFilter) {
-      filtered = filtered.filter((patient: Patient) => 
-        patient.sex === parseInt(sexFilter)
-      );
-    }
-
-    // Spay/Neuter filter
-    if (spayNeuterFilter === 'yes') {
-      filtered = filtered.filter((patient: Patient) => patient.spay_neuter_status === true);
-    } else if (spayNeuterFilter === 'no') {
-      filtered = filtered.filter((patient: Patient) => patient.spay_neuter_status === false);
-    }
-
-    // Active treatments filter
-    if (activeTreatmentsFilter === 'yes') {
-      filtered = filtered.filter((patient: Patient) => patient.active_treatment_schedules_count > 0);
-    } else if (activeTreatmentsFilter === 'no') {
-      filtered = filtered.filter((patient: Patient) => patient.active_treatment_schedules_count === 0);
-    }
-
-    // Group filter
-    if (groupFilter) {
-      const groupId = parseInt(groupFilter);
-      filtered = filtered.filter((patient: Patient) => patient.group_id === groupId);
-    }
-
-    return filtered;
-  }, [patients, searchText, colorFilter, sexFilter, spayNeuterFilter, activeTreatmentsFilter, groupFilter]);
-
-  // Get unique colors for filter
   const uniqueColors = useMemo(() => {
-    if (!patients) return [];
-    const colors = new Set(patients.map((p: Patient) => p.color).filter(Boolean));
+    if (!allPatients) return [];
+    const colors = new Set(allPatients.map((p: Patient) => p.color).filter(Boolean));
     return Array.from(colors).sort();
-  }, [patients]);
+  }, [allPatients]);
 
   const columns: ColumnsType<Patient> = [
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
-      defaultSortOrder: 'ascend',
+      defaultSortOrder: 'ascend' as const,
     },
     {
       title: 'Color',
       dataIndex: 'color',
       key: 'color',
       render: (color: string | null) => color || 'N/A',
-      sorter: (a, b) => (a.color || '').localeCompare(b.color || ''),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
     },
     {
@@ -277,7 +356,7 @@ export default function PatientsPage() {
       dataIndex: 'sex_display',
       key: 'sex_display',
       render: (sex: string) => sex || 'N/A',
-      sorter: (a, b) => (a.sex_display || '').localeCompare(b.sex_display || ''),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
     },
     {
@@ -285,12 +364,7 @@ export default function PatientsPage() {
       dataIndex: 'birth_date',
       key: 'birth_date',
       render: (date: string | null) => formatDate(date),
-      sorter: (a, b) => {
-        if (!a.birth_date && !b.birth_date) return 0;
-        if (!a.birth_date) return 1;
-        if (!b.birth_date) return -1;
-        return new Date(a.birth_date).getTime() - new Date(b.birth_date).getTime();
-      },
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
     },
     {
@@ -298,7 +372,7 @@ export default function PatientsPage() {
       dataIndex: 'spay_neuter_status',
       key: 'spay_neuter_status',
       align: 'center',
-      sorter: (a, b) => Number(a.spay_neuter_status) - Number(b.spay_neuter_status),
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
       render: (status: boolean) => (
         <Tag color={status ? 'green' : 'orange'}>
@@ -311,7 +385,7 @@ export default function PatientsPage() {
       dataIndex: 'active_treatment_schedules_count',
       key: 'active_treatment_schedules_count',
       align: 'center',
-      sorter: (a, b) => a.active_treatment_schedules_count - b.active_treatment_schedules_count,
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
       render: (count: number) => (
         <Tag color={count > 0 ? 'blue' : 'default'}>
@@ -341,11 +415,7 @@ export default function PatientsPage() {
           options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name })) || []}
         />
       ),
-      sorter: (a, b) => {
-        const aGroup = a.group_name || '';
-        const bGroup = b.group_name || '';
-        return aGroup.localeCompare(bGroup);
-      },
+      sorter: true,
       sortDirections: ['ascend', 'descend'],
     },
     {
@@ -403,7 +473,10 @@ export default function PatientsPage() {
             placeholder="Search by name or color..."
             prefix={<SearchOutlined />}
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+              setCurrentPage(1);
+            }}
             allowClear
             style={{ width: 300 }}
           />
@@ -478,23 +551,16 @@ export default function PatientsPage() {
           />
         </Space>
         <Table
-          dataSource={filteredPatients}
+          dataSource={patients}
           columns={columns}
           rowKey="id"
+          onChange={handleTableChange}
           pagination={{
             current: currentPage,
             pageSize: pageSize,
             total: paginatedData?.count || 0,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} patients`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
-            onShowSizeChange: (current, size) => {
-              setCurrentPage(1);
-              setPageSize(size);
-            },
           }}
           bordered
         />

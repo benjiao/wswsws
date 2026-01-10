@@ -24,10 +24,13 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
     queryset = TreatmentSchedule.objects.select_related('patient', 'medicine')
     serializer_class = TreatmentScheduleSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['patient', 'medicine', 'interval']
+    filterset_fields = ['patient', 'medicine', 'interval', 'is_active']
     search_fields = ['patient__name', 'medicine__name', 'notes']
-    ordering_fields = ['start_time', 'created_at']
-    ordering = ['-created_at']
+    ordering_fields = [
+        'start_time', 'created_at', 'patient__name', 'medicine__name',
+        'frequency', 'doses', 'interval', 'dosage', 'is_active'
+    ]
+    ordering = ['start_time']
     
     def get_serializer_class(self):
         if self.action == 'retrieve':

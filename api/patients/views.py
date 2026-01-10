@@ -2,7 +2,7 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
+from django.db.models import Q, Count
 from .models import Patient, PatientGroup
 from .serializers import PatientSerializer, PatientListSerializer, PatientGroupSerializer
 
@@ -19,19 +19,43 @@ class PatientViewSet(viewsets.ModelViewSet):
     - partial_update: PATCH /api/patients/{id}/
     - destroy: DELETE /api/patients/{id}/
     """
-    queryset = Patient.objects.all().order_by('-created_at')
+    queryset = Patient.objects.all().order_by('name')
     serializer_class = PatientSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['sex', 'color']
+    filterset_fields = ['sex', 'color', 'spay_neuter_status', 'group']
     search_fields = ['name', 'color']
-    ordering_fields = ['name', 'birth_date', 'rescued_date', 'created_at']
-    ordering = ['-created_at']
+    ordering_fields = [
+        'name', 'birth_date', 'rescued_date', 'created_at', 
+        'color', 'sex', 'spay_neuter_status', 'group__name', 'active_count'
+    ]
+    ordering = ['name']
     
     def get_serializer_class(self):
         """Use lighter serializer for list view"""
         if self.action == 'list':
             return PatientListSerializer
         return PatientSerializer
+    
+    def get_queryset(self):
+        """Filter queryset based on query parameters"""
+        queryset = super().get_queryset()
+        
+        # Always annotate active_count for potential filtering and ordering
+        queryset = queryset.annotate(
+            active_count=Count('treatment_schedules', filter=Q(treatment_schedules__is_active=True))
+        )
+        
+        # Filter by active treatment schedules count
+        active_treatments = self.request.query_params.get('active_treatments', None)
+        if active_treatments is not None:
+            if active_treatments.lower() == 'yes':
+                # Has active treatments: count > 0
+                queryset = queryset.filter(active_count__gt=0)
+            elif active_treatments.lower() == 'no':
+                # No active treatments: count = 0
+                queryset = queryset.filter(active_count=0)
+        
+        return queryset
     
     @action(detail=True, methods=['get'])
     def treatment_schedules(self, request, pk=None):
