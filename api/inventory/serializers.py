@@ -6,5 +6,5 @@ class MedicineSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Medicine
-        fields = ['id', 'name', 'stock_status', 'stock_status_display', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'stock_status', 'stock_status_display', 'color', 'notes', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']

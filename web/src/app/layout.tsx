@@ -14,6 +14,7 @@ import {
   UserOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import { PiPawPrint } from "react-icons/pi";
 
@@ -85,6 +86,17 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
       label: <Link href="/patients">Patients</Link>,
     },
     {
+      key: '/inventory',
+      icon: <InboxOutlined />,
+      label: <Link href="/inventory">Inventory</Link>,
+      children: [
+        {
+          key: '/inventory/medicines',
+          label: <Link href="/inventory/medicines">Medicines</Link>,
+        },
+      ],
+    },
+    {
       key: '/paw-count',
       icon: <PiPawPrint />,
       label: <Link href="/paw-count">Paw Count</Link>,
@@ -116,6 +128,9 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
     const newOpenKeys: string[] = [];
     if (pathname && pathname.startsWith('/treatments')) {
       newOpenKeys.push('/treatments');
+    }
+    if (pathname && pathname.startsWith('/inventory')) {
+      newOpenKeys.push('/inventory');
     }
     if (
       pathname &&
