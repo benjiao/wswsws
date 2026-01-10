@@ -24,9 +24,9 @@ export interface TreatmentSchedule {
         updated_at?: string;
     } | null;
     medicine_name: string;
-    start_date: string;
-    end_date: string | null;
+    start_time: string;
     frequency: number | null;
+    doses: number | null;
     interval: 1 | 2 | null;
     interval_display?: string;
     dosage: string | null;

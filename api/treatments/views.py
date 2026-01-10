@@ -26,13 +26,33 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['patient', 'medicine', 'interval']
     search_fields = ['patient__name', 'medicine__name', 'notes']
-    ordering_fields = ['start_date', 'end_date', 'created_at']
+    ordering_fields = ['start_time', 'created_at']
     ordering = ['-created_at']
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return TreatmentScheduleDetailSerializer
         return TreatmentScheduleSerializer
+    
+    def get_queryset(self):
+        """Filter queryset based on active parameter"""
+        queryset = super().get_queryset()
+        
+        # Filter by active status (has non-completed instances)
+        active_param = self.request.query_params.get('active', None)
+        if active_param is not None:
+            if active_param.lower() == 'true':
+                # Active: schedules with pending instances (non-completed)
+                queryset = queryset.filter(
+                    instances__status=TreatmentInstance.STATUS_PENDING
+                ).distinct()
+            elif active_param.lower() == 'false':
+                # Inactive: schedules with no pending instances (all instances are completed)
+                queryset = queryset.exclude(
+                    instances__status=TreatmentInstance.STATUS_PENDING
+                ).distinct()
+        
+        return queryset
     
     @action(detail=True, methods=['post'])
     def generate_instances(self, request, pk=None):
@@ -55,12 +75,10 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def active(self, request):
-        """Get all active treatment schedules"""
-        today = timezone.now().date()
+        """Get all active treatment schedules (schedules with pending instances)"""
         active_schedules = self.get_queryset().filter(
-            Q(end_date__isnull=True) | Q(end_date__gte=today),
-            start_date__lte=today
-        )
+            instances__status=TreatmentInstance.STATUS_PENDING
+        ).distinct()
         serializer = self.get_serializer(active_schedules, many=True)
         return Response(serializer.data)
 

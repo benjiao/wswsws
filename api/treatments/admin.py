@@ -85,16 +85,16 @@ class TreatmentSessionAdmin(ModelAdmin):    # show useful columns in the changel
 
 @admin.register(TreatmentSchedule)
 class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the changelist
-    list_display = ["patient", "medicine", "start_date", "end_date", "frequency", "interval", "dosage", "unit"]
-    list_editable = ["start_date", "end_date", "frequency", "interval", "dosage", "unit"]
+    list_display = ["patient", "medicine", "start_time", "frequency", "doses", "interval", "dosage", "unit"]
+    list_editable = ["start_time", "frequency", "doses", "interval", "dosage", "unit"]
 
     # show a submit button for filters (unfold contrib)
     list_filter_submit = True
 
     list_filter = (
-        ('start_date', RangeDateFilter),
-        ('end_date', RangeDateFilter),
+        ('start_time', RangeDateTimeFilter),
         'frequency',
+        'doses',
         'interval',
         'dosage',
         'unit',
@@ -105,7 +105,7 @@ class TreatmentScheduleAdmin(ModelAdmin):    # show useful columns in the change
 
     # paging and ordering
     list_per_page = 25
-    ordering = ['start_date']
+    ordering = ['-start_time']
 
 @admin.register(TreatmentInstance)
 class TreatmentInstanceAdmin(ModelAdmin):

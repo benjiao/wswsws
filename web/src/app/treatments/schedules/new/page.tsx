@@ -35,12 +35,23 @@ const fetchMedicines = async (): Promise<Medicine[]> => {
 };
 
 const createTreatmentSchedule = async (values: any) => {
+  // Convert datetime-local format to ISO string for API
+  let start_time = null;
+  if (values.start_time) {
+    // datetime-local returns format "YYYY-MM-DDTHH:mm"
+    // Convert to ISO string with timezone
+    const date = new Date(values.start_time);
+    if (!isNaN(date.getTime())) {
+      start_time = date.toISOString();
+    }
+  }
+
   const payload = {
     patient: values.patient,
     medicine: values.medicine || null,
-    start_date: values.start_date || null,
-    end_date: values.end_date || null,
+    start_time: start_time,
     frequency: values.frequency || null,
+    doses: values.doses || null,
     interval: values.interval || null,
     dosage: values.dosage ? String(values.dosage) : null,
     unit: values.unit || 'mL',
@@ -91,6 +102,18 @@ export default function NewSchedulePage() {
     createMutation.mutate(values);
   };
 
+  // Helper function to get default start time with minutes set to 00
+  const getDefaultStartTime = (): string => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = '18';
+    // Minutes always set to 00
+    const minutes = '00';
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   if (patientsLoading || medicinesLoading) {
     return <Spin size="large" />;
   }
@@ -105,6 +128,7 @@ export default function NewSchedulePage() {
           onFinish={onFinish}
           initialValues={{
             unit: 'mL',
+            start_time: getDefaultStartTime(),
           }}
         >
           <Form.Item
@@ -138,24 +162,27 @@ export default function NewSchedulePage() {
           </Form.Item>
 
           <Form.Item
-            name="start_date"
-            label="Start Date"
+            name="start_time"
+            label="Start Time"
+            rules={[{ required: true, message: 'Please select a start time' }]}
           >
-            <Input type="date" style={{ width: '100%' }} />
-          </Form.Item>
-
-          <Form.Item
-            name="end_date"
-            label="End Date"
-          >
-            <Input type="date" style={{ width: '100%' }} />
+            <Input type="datetime-local" style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
             name="frequency"
-            label="Frequency"
+            label="Frequency (doses per day)"
+            rules={[{ required: true, message: 'Please enter frequency' }]}
           >
-            <InputNumber min={0} style={{ width: '100%' }} placeholder="Frequency" />
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="Frequency" />
+          </Form.Item>
+
+          <Form.Item
+            name="doses"
+            label="Total Doses"
+            rules={[{ required: true, message: 'Please enter total number of doses' }]}
+          >
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="Total doses required" />
           </Form.Item>
 
           <Form.Item

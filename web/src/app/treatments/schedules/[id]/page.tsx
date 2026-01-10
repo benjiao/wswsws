@@ -44,13 +44,41 @@ const fetchSchedule = async (id: string): Promise<TreatmentSchedule> => {
   return response.json();
 };
 
+// Helper function to convert ISO datetime to datetime-local format
+const convertToDateTimeLocal = (isoString: string | undefined): string | undefined => {
+  if (!isoString) return undefined;
+  try {
+    const date = new Date(isoString);
+    // Format as YYYY-MM-DDTHH:mm for datetime-local input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch {
+    return undefined;
+  }
+};
+
 const updateTreatmentSchedule = async (id: string, values: any) => {
+  // Convert datetime-local format to ISO string for API
+  let start_time = null;
+  if (values.start_time) {
+    // datetime-local returns format "YYYY-MM-DDTHH:mm"
+    // Convert to ISO string with timezone
+    const date = new Date(values.start_time);
+    if (!isNaN(date.getTime())) {
+      start_time = date.toISOString();
+    }
+  }
+
   const payload = {
     patient: values.patient,
     medicine: values.medicine || null,
-    start_date: values.start_date || null,
-    end_date: values.end_date || null,
+    start_time: start_time,
     frequency: values.frequency || null,
+    doses: values.doses || null,
     interval: values.interval || null,
     dosage: values.dosage ? String(values.dosage) : null,
     unit: values.unit || 'mL',
@@ -123,9 +151,9 @@ export default function EditSchedulePage() {
       form.setFieldsValue({
         patient: schedule.patient?.id || undefined,
         medicine: schedule.medicine?.id || undefined,
-        start_date: schedule.start_date || undefined,
-        end_date: schedule.end_date || undefined,
+        start_time: convertToDateTimeLocal(schedule.start_time),
         frequency: schedule.frequency || undefined,
+        doses: schedule.doses || undefined,
         interval: schedule.interval || undefined,
         dosage: schedule.dosage ? parseFloat(schedule.dosage) : undefined,
         unit: schedule.unit || 'mL',
@@ -166,9 +194,9 @@ export default function EditSchedulePage() {
               ? {
                   patient: schedule.patient?.id || undefined,
                   medicine: schedule.medicine?.id || undefined,
-                  start_date: schedule.start_date || undefined,
-                  end_date: schedule.end_date || undefined,
+                  start_time: convertToDateTimeLocal(schedule.start_time),
                   frequency: schedule.frequency || undefined,
+                  doses: schedule.doses || undefined,
                   interval: schedule.interval || undefined,
                   dosage: schedule.dosage ? parseFloat(schedule.dosage) : undefined,
                   unit: schedule.unit || 'mL',
@@ -210,24 +238,27 @@ export default function EditSchedulePage() {
           </Form.Item>
 
           <Form.Item
-            name="start_date"
-            label="Start Date"
+            name="start_time"
+            label="Start Time"
+            rules={[{ required: true, message: 'Please select a start time' }]}
           >
-            <Input type="date" style={{ width: '100%' }} />
-          </Form.Item>
-
-          <Form.Item
-            name="end_date"
-            label="End Date"
-          >
-            <Input type="date" style={{ width: '100%' }} />
+            <Input type="datetime-local" style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
             name="frequency"
-            label="Frequency"
+            label="Frequency (doses per day)"
+            rules={[{ required: true, message: 'Please enter frequency' }]}
           >
-            <InputNumber min={0} style={{ width: '100%' }} placeholder="Frequency" />
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="Frequency" />
+          </Form.Item>
+
+          <Form.Item
+            name="doses"
+            label="Total Doses"
+            rules={[{ required: true, message: 'Please enter total number of doses' }]}
+          >
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="Total doses required" />
           </Form.Item>
 
           <Form.Item
