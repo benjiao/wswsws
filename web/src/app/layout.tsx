@@ -3,6 +3,7 @@
 import './globals.css';
 
 import React, { useState } from 'react';
+import { APP_VERSION } from '@/utils/version';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -337,7 +338,16 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     </div>
                   </Content>
                   <Footer style={{ textAlign: 'center' }}>
-                     <span style={{ fontFamily: 'Cedarville Cursive' }}>{new Date().getFullYear()} WSWSWS</span>
+                     <div>
+                       <span style={{ fontFamily: 'Cedarville Cursive' }}>{new Date().getFullYear()} WSWSWS</span>
+                       <span style={{ 
+                         fontSize: '9px', 
+                        //  color: '#aaa', 
+                         marginLeft: '8px',
+                         fontWeight: 300,
+                         opacity: 0.7
+                       }}>v{APP_VERSION}</span>
+                     </div>
                   </Footer>
                 </Layout>
               </Layout>
