@@ -1,10 +1,12 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Tag, Select, Button, Modal, Switch } from 'antd';
+import { Table, Input, Space, Spin, Alert, Tag, Select, Button, Modal, Switch, Grid } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
+
+const { useBreakpoint } = Grid;
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { TreatmentSchedule } from '@/types';
@@ -117,6 +119,8 @@ const hasPendingInstances = (schedule: TreatmentSchedule): boolean => {
 
 export default function SchedulesPage() {
   const router = useRouter();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const [searchText, setSearchText] = useState('');
   const [debouncedSearchText, setDebouncedSearchText] = useState('');
   const [intervalFilter, setIntervalFilter] = useState<string | undefined>(undefined);
@@ -302,8 +306,7 @@ export default function SchedulesPage() {
       key: 'patient_name',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
-      fixed: 'left',
-      width: 150,
+      ellipsis: true,
     },
     {
       title: 'Medicine',
@@ -311,7 +314,37 @@ export default function SchedulesPage() {
       key: 'medicine_name',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
-      width: 150,
+      ellipsis: !isMobile,
+      render: (_: any, record: TreatmentSchedule) => {
+        // On mobile, show medicine name + dosage/unit like TreatmentInstanceTable
+        if (isMobile) {
+          return (
+            <span
+              style={{
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                MozUserSelect: 'none',
+                msUserSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                display: 'inline-block',
+                whiteSpace: 'pre-line',
+              }}
+            >
+              {record.medicine_name}
+              {record.dosage && (
+                <>
+                  <br />
+                  <span style={{ color: '#888', fontSize: '90%' }}>
+                    {`${record.dosage} ${record.unit || ''}`}
+                  </span>
+                </>
+              )}
+            </span>
+          );
+        }
+        // On desktop, just show medicine name
+        return record.medicine_name;
+      },
     },
     {
       title: 'Start Time',
@@ -321,7 +354,7 @@ export default function SchedulesPage() {
       sorter: true,
       sortDirections: ['ascend', 'descend'],
       defaultSortOrder: 'ascend' as const,
-      width: 180,
+      responsive: ['md'],
     },
     {
       title: 'Frequency',
@@ -330,8 +363,8 @@ export default function SchedulesPage() {
       render: (freq: number | null) => freq ?? 'N/A',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
-      width: 100,
       align: 'center',
+      responsive: ['md'],
     },
     {
       title: 'Total Doses',
@@ -340,8 +373,8 @@ export default function SchedulesPage() {
       render: (doses: number | null) => doses ?? 'N/A',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
-      width: 100,
       align: 'center',
+      responsive: ['md'],
     },
     {
       title: 'Interval',
@@ -354,7 +387,7 @@ export default function SchedulesPage() {
       ),
       sorter: true,
       sortDirections: ['ascend', 'descend'],
-      width: 130,
+      responsive: ['md'],
     },
     {
       title: 'Dosage',
@@ -364,7 +397,7 @@ export default function SchedulesPage() {
         dosage ? `${dosage} ${record.unit || ''}` : 'N/A',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
-      width: 120,
+      responsive: ['md'],
     },
     {
       title: 'Completed/Pending/Skipped',
@@ -389,14 +422,13 @@ export default function SchedulesPage() {
       },
       // Note: pending_count sorting would require annotation in API
       sorter: false, // Disable sorting for this column as it's a computed field
-      width: 250,
       align: 'center',
+      responsive: ['md'],
     },
     {
       title: 'Is Active',
       dataIndex: 'is_active',
       key: 'is_active',
-      width: 100,
       align: 'center',
       render: (isActive: boolean | undefined, record: TreatmentSchedule) => (
         <Switch
@@ -409,12 +441,13 @@ export default function SchedulesPage() {
       ),
       sorter: true,
       sortDirections: ['ascend', 'descend'],
+      responsive: ['md'],
     },
     {
       title: 'Actions',
       key: 'actions',
-      fixed: 'right',
-      width: 100,
+      // fixed: 'right',
+      // width: 30,
       render: (_: any, record: TreatmentSchedule) => (
         <Space size="small">
           <Button
@@ -452,16 +485,30 @@ export default function SchedulesPage() {
 
   return (
     <div>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Treatment Schedules</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/treatments/schedules/new')}
-        >
-          Create New Schedule
-        </Button>
-      </Space>
+      {isMobile ? (
+        <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
+          <h1 style={{ margin: '0 0 0.5rem 0' }}>Treatment Schedules</h1>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/treatments/schedules/new')}
+            style={{ width: '100%' }}
+          >
+            Create New Schedule
+          </Button>
+        </Space>
+      ) : (
+        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h1 style={{ margin: 0 }}>Treatment Schedules</h1>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/treatments/schedules/new')}
+          >
+            Create New Schedule
+          </Button>
+        </Space>
+      )}
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         <Space wrap>
           <Input
@@ -512,7 +559,6 @@ export default function SchedulesPage() {
             showTotal: (total) => `Total ${total} schedules`,
           }}
           bordered
-          scroll={{ x: 1200 }}
         />
       </Space>
     </div>

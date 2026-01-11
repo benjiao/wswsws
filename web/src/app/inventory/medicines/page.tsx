@@ -1,11 +1,13 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select } from 'antd';
+import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select, Grid } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+const { useBreakpoint } = Grid;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -88,6 +90,8 @@ const fetchMedicines = async (
 
 export default function MedicinesPage() {
   const router = useRouter();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const [searchText, setSearchText] = useState('');
   const [debouncedSearchText, setDebouncedSearchText] = useState('');
   const [stockStatusFilter, setStockStatusFilter] = useState<string | undefined>(undefined);
@@ -277,6 +281,7 @@ export default function MedicinesPage() {
           </div>
         );
       },
+      responsive: ['md'],
     },
     {
       title: 'Notes',
@@ -284,6 +289,7 @@ export default function MedicinesPage() {
       key: 'notes',
       render: (notes: string | null) => notes || 'N/A',
       ellipsis: true,
+      responsive: ['md'],
     },
     {
       title: 'Actions',
@@ -297,6 +303,7 @@ export default function MedicinesPage() {
             icon={<EditOutlined />}
             onClick={() => router.push(`/inventory/medicines/${record.id}`)}
             title="Edit"
+            size={isMobile ? 'small' : 'middle'}
           />
           <Button
             type="text"
@@ -305,6 +312,7 @@ export default function MedicinesPage() {
             onClick={() => handleDeleteMedicine(record)}
             loading={deleteMedicineMutation.isPending}
             title="Delete"
+            size={isMobile ? 'small' : 'middle'}
           />
         </Space>
       ),

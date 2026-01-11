@@ -342,7 +342,6 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                        <span style={{ fontFamily: 'Cedarville Cursive' }}>{new Date().getFullYear()} WSWSWS</span>
                        <span style={{ 
                          fontSize: '9px', 
-                        //  color: '#aaa', 
                          marginLeft: '8px',
                          fontWeight: 300,
                          opacity: 0.7

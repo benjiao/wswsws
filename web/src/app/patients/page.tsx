@@ -1,11 +1,13 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select } from 'antd';
+import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select, Grid } from 'antd';
 import type { TableProps, ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+const { useBreakpoint } = Grid;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -136,6 +138,8 @@ const formatDate = (dateString: string | null) => {
 
 export default function PatientsPage() {
   const router = useRouter();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const [searchText, setSearchText] = useState('');
   const [debouncedSearchText, setDebouncedSearchText] = useState('');
   const [colorFilter, setColorFilter] = useState<string | undefined>(undefined);
@@ -365,6 +369,7 @@ export default function PatientsPage() {
       render: (color: string | null) => color || 'N/A',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
+      responsive: ['md'],
     },
     {
       title: 'Sex',
@@ -373,6 +378,7 @@ export default function PatientsPage() {
       render: (sex: string) => sex || 'N/A',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
+      responsive: ['md'],
     },
     {
       title: 'Birth Date',
@@ -381,6 +387,7 @@ export default function PatientsPage() {
       render: (date: string | null) => formatDate(date),
       sorter: true,
       sortDirections: ['ascend', 'descend'],
+      responsive: ['md'],
     },
     {
       title: 'Spay/Neuter',
@@ -394,6 +401,7 @@ export default function PatientsPage() {
           {status ? 'Yes' : 'No'}
         </Tag>
       ),
+      responsive: ['md'],
     },
     {
       title: 'Active Treatments',
@@ -432,6 +440,7 @@ export default function PatientsPage() {
       ),
       sorter: true,
       sortDirections: ['ascend', 'descend'],
+      responsive: ['md'],
     },
     {
       title: 'Actions',
@@ -445,6 +454,7 @@ export default function PatientsPage() {
             icon={<EditOutlined />}
             onClick={() => router.push(`/patients/${record.id}`)}
             title="Edit"
+            size={isMobile ? 'small' : 'middle'}
           />
           <Button
             type="text"
@@ -453,6 +463,7 @@ export default function PatientsPage() {
             onClick={() => handleDeletePatient(record)}
             loading={deletePatientMutation.isPending}
             title="Delete"
+            size={isMobile ? 'small' : 'middle'}
           />
         </Space>
       ),
