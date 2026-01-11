@@ -314,36 +314,30 @@ export default function SchedulesPage() {
       key: 'medicine_name',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
-      ellipsis: !isMobile,
       render: (_: any, record: TreatmentSchedule) => {
-        // On mobile, show medicine name + dosage/unit like TreatmentInstanceTable
-        if (isMobile) {
-          return (
-            <span
-              style={{
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                MozUserSelect: 'none',
-                msUserSelect: 'none',
-                WebkitTapHighlightColor: 'transparent',
-                display: 'inline-block',
-                whiteSpace: 'pre-line',
-              }}
-            >
-              {record.medicine_name}
-              {record.dosage && (
-                <>
-                  <br />
-                  <span style={{ color: '#888', fontSize: '90%' }}>
-                    {`${record.dosage} ${record.unit || ''}`}
-                  </span>
-                </>
-              )}
-            </span>
-          );
-        }
-        // On desktop, just show medicine name
-        return record.medicine_name;
+        return (
+          <span
+            style={{
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              display: 'inline-block',
+              whiteSpace: 'pre-line',
+            }}
+          >
+            {record.medicine_name}
+            {record.dosage && (
+              <>
+                <br />
+                <span style={{ color: '#888', fontSize: '90%' }}>
+                  {`${record.dosage} ${record.unit || ''}`}
+                </span>
+              </>
+            )}
+          </span>
+        );
       },
     },
     {
@@ -367,16 +361,6 @@ export default function SchedulesPage() {
       responsive: ['md'],
     },
     {
-      title: 'Total Doses',
-      dataIndex: 'doses',
-      key: 'doses',
-      render: (doses: number | null) => doses ?? 'N/A',
-      sorter: true,
-      sortDirections: ['ascend', 'descend'],
-      align: 'center',
-      responsive: ['md'],
-    },
-    {
       title: 'Interval',
       dataIndex: 'interval_display',
       key: 'interval_display',
@@ -390,17 +374,17 @@ export default function SchedulesPage() {
       responsive: ['md'],
     },
     {
-      title: 'Dosage',
-      dataIndex: 'dosage',
-      key: 'dosage',
-      render: (dosage: string | null, record: TreatmentSchedule) => 
-        dosage ? `${dosage} ${record.unit || ''}` : 'N/A',
+      title: 'Total Doses',
+      dataIndex: 'doses',
+      key: 'doses',
+      render: (doses: number | null) => doses ?? 'N/A',
       sorter: true,
       sortDirections: ['ascend', 'descend'],
+      align: 'center',
       responsive: ['md'],
     },
     {
-      title: 'Completed/Pending/Skipped',
+      title: 'Status',
       key: 'status',
       render: (_: any, record: TreatmentSchedule) => {
         const completed = record.completed_count ?? 0;
@@ -414,9 +398,9 @@ export default function SchedulesPage() {
         
         return (
           <Space size="small">
-            <Tag color="green">{completed} Completed</Tag>
-            <Tag color="default">{pending} Pending</Tag>
-            <Tag color="red">{skipped} Skipped</Tag>
+            <Tag color="green">{completed}</Tag>
+            <Tag color="default">{pending}</Tag>
+            <Tag color="red">{skipped}</Tag>
           </Space>
         );
       },

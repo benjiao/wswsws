@@ -5,7 +5,7 @@ import MedicinePrepTable from '@/components/MedicinePrepTable';
 
 import { useQuery } from '@tanstack/react-query';
 import { Card, Spin, Alert, Flex, Progress, Breadcrumb, Select, Space} from 'antd';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -50,8 +50,14 @@ const fetchTreatmentSessionsByDate = async (date: string, groupId?: number | nul
 
 export default function TreatmentSessionsByDatePage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { date } = params as { date: string | undefined };
-  const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>(undefined);
+  
+  // Initialize selectedGroupId from URL query parameter
+  const groupParam = searchParams?.get('group');
+  const initialGroupId = groupParam ? parseInt(groupParam, 10) : undefined;
+  const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>(initialGroupId);
 
   // Handle the case where params might be null
   if (!params) {
@@ -69,6 +75,23 @@ export default function TreatmentSessionsByDatePage() {
       </div>
     );
   }
+
+  // Handler to update both state and URL when group filter changes
+  const handleGroupChange = (value: number | undefined) => {
+    setSelectedGroupId(value);
+    
+    // Update URL query parameter
+    if (!searchParams) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (value !== undefined) {
+      params.set('group', value.toString());
+    } else {
+      params.delete('group');
+    }
+    const newSearch = params.toString();
+    const newUrl = newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname;
+    router.replace(newUrl, { scroll: false });
+  };
 
   const { data: patientGroups, isLoading: groupsLoading } = useQuery({
     queryKey: ['patient_groups'],
@@ -112,7 +135,7 @@ export default function TreatmentSessionsByDatePage() {
           placeholder="Filter by Patient Group"
           allowClear
           value={selectedGroupId}
-          onChange={(value) => setSelectedGroupId(value)}
+          onChange={handleGroupChange}
           loading={groupsLoading}
           showSearch
           filterOption={(input, option) =>
