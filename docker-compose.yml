@@ -21,6 +21,8 @@ services:
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:3000}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+    volumes:
+      - /mnt/wswsws_backups:/mnt/backups
     restart: unless-stopped
     networks:
       - wswsws_network
@@ -33,6 +35,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql
+      - /mnt/wswsws_backups:/mnt/backups
     restart: unless-stopped
     networks:
       - wswsws_network
@@ -132,6 +135,7 @@ services:
 
 volumes:
   postgres_data:
+  backup_data:
 
 networks:
   wswsws_network:
