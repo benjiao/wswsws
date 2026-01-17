@@ -15,6 +15,22 @@ If you're using VSCode, you'll need to install `node_modules` on the host machin
 2. Install yarn. `npm install -g yarn`
 3. Run yarn. `cd web && yarn install`
 
+### Backups
+Run this through the Portainer console:
+```
+python manage.py dumpdata patients inventory treatments \
+  --exclude auth.permission \
+  --exclude contenttypes \
+  --exclude sessions \
+  --exclude admin \
+  --output /mnt/backups/wswsws_$(date +%Y%m%d_%H%M%S).json
+```
+
+Load database dump: 
+```
+ docker compose exec api python manage.py loadd
+ata data/wswsws_20260117_173806.json
+```
 
 ## How does it work?
 

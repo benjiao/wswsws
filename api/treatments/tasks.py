@@ -57,8 +57,17 @@ def generate_treatment_instances(schedule_id):
     
     doses_created = 0
     days_processed = 0
+
+    # Count the number of non-pending treatment instances for this schedule
+    non_pending_count = TreatmentInstance.objects.filter(
+        treatment_schedule=schedule
+    ).exclude(
+        status=TreatmentInstance.STATUS_PENDING
+    ).count()
+    logger.info(f"Non-pending instances under schedule {schedule_id}: {non_pending_count}")
     
-    # Generate instances until we reach the required number of doses
+    doses_created += non_pending_count
+
     while doses_created < schedule.doses:
         # Determine if we should schedule on this day based on interval
         should_schedule_today = True
@@ -99,6 +108,8 @@ def generate_treatment_instances(schedule_id):
                         scheduled_time=dose_datetime
                     )
                     doses_created += 1
+                else:
+                    logger.debug(f"TreatmentInstance {dose_datetime} already exists")
         
         # Move to next day
         current_date += timedelta(days=1)
