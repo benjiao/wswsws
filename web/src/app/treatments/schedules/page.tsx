@@ -351,6 +351,15 @@ export default function SchedulesPage() {
       responsive: ['md'],
     },
     {
+      title: 'End Time',
+      dataIndex: 'last_instance',
+      key: 'last_instance',
+      render: (date: string | null) => formatDateTime(date),
+      sorter: true,
+      sortDirections: ['ascend', 'descend'],
+      responsive: ['md'],
+    },
+    {
       title: 'Frequency',
       dataIndex: 'frequency',
       key: 'frequency',
