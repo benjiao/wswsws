@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Switch } from 'antd';
 import { useRouter, useParams } from 'next/navigation';
 import { TreatmentSchedule, TreatmentInstance } from '@/types';
-import TreatmentInstanceTable from '@/components/TreatmentInstanceTable';
+import TreatmentInstancesBySchedule from '@/components/TreatmentInstancesBySchedule';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -349,7 +349,7 @@ export default function EditSchedulePage() {
       {instances && instances.length > 0 && (
         <Card style={{ marginTop: 24 }}>
           <h2>Treatment Instances</h2>
-          <TreatmentInstanceTable
+          <TreatmentInstancesBySchedule
             data={instances}
             loading={instancesLoading}
             error={instancesError}

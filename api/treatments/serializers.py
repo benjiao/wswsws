@@ -11,13 +11,15 @@ class TreatmentScheduleSerializer(serializers.ModelSerializer):
     pending_count = serializers.SerializerMethodField()
     completed_count = serializers.SerializerMethodField()
     skipped_count = serializers.SerializerMethodField()
+    last_instance = serializers.SerializerMethodField()
     
     class Meta:
         model = TreatmentSchedule
         fields = ['id', 'patient', 'patient_name', 'medicine', 'medicine_name', 
                  'start_time', 'frequency', 'interval', 'interval_display', 'doses',
                  'dosage', 'unit', 'notes', 'is_active', 'created_at', 'updated_at',
-                 'instances_count', 'pending_count', 'completed_count', 'skipped_count']
+                 'instances_count', 'pending_count', 'completed_count', 'skipped_count',
+                 'last_instance']
         read_only_fields = ['created_at', 'updated_at']
     
     def get_instances_count(self, obj):
@@ -31,6 +33,13 @@ class TreatmentScheduleSerializer(serializers.ModelSerializer):
     
     def get_skipped_count(self, obj):
         return obj.instances.filter(status=TreatmentInstance.STATUS_SKIPPED).count()
+    
+    def get_last_instance(self, obj):
+        """Get the datetime of the last (most recent) treatment instance for this schedule"""
+        last_instance = obj.instances.order_by('-scheduled_time').first()
+        if last_instance and last_instance.scheduled_time:
+            return last_instance.scheduled_time
+        return None
 
 class TreatmentScheduleDetailSerializer(TreatmentScheduleSerializer):
     """Detailed serializer with nested objects"""

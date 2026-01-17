@@ -1,5 +1,5 @@
 'use client';
-import TreatmentInstanceTable from '@/components/TreatmentInstanceTable';
+import TreatmentInstancesByPatientTable from '@/components/TreatmentInstancesByPatientTable';
 import PrepList from '@/components/PrepList';
 import MedicinePrepTable from '@/components/MedicinePrepTable';
 
@@ -192,7 +192,7 @@ export default function TreatmentSessionsByDatePage() {
                   refetch={refetchTreatmentSessions}
                   />
                 </div>
-              <TreatmentInstanceTable 
+              <TreatmentInstancesByPatientTable 
                 data={session?.instances ?? []}
                 loading={treatmentSessionsLoading} 
                 error={treatmentSessionsError}

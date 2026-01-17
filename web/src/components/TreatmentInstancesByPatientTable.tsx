@@ -63,14 +63,14 @@ const formatDate = (dateString: string) => {
 };
 
 
-interface TreatmentInstanceTableProps {
+interface TreatmentInstancesByPatientTableProps {
   data: TreatmentInstance[] | undefined;
   loading: boolean;
   error: any;
   refetch: () => void;
 }
 
-export default function TreatmentInstanceTable({ data, loading, error, refetch }: TreatmentInstanceTableProps) {
+export default function TreatmentInstancesByPatientTable({ data, loading, error, refetch }: TreatmentInstancesByPatientTableProps) {
     const router = useRouter();
 
     const updateTreatmentStatus = async (instanceId: number, newStatus: number) => {
@@ -155,6 +155,23 @@ export default function TreatmentInstanceTable({ data, loading, error, refetch }
                     </span>
                 );
             },
+        },
+        {
+            title: 'Last Dose',
+            dataIndex: ['treatment_schedule', 'last_instance'],
+            key: 'last_instance',
+            render: (lastInstance: string | null | undefined, record: TreatmentInstance) => {
+                if (!lastInstance) return 'N/A';
+                return formatDateTime(lastInstance);
+            },
+            responsive: ['md'],
+            width: 180,
+            sorter: (a: TreatmentInstance, b: TreatmentInstance) => {
+                const aTime = a.treatment_schedule?.last_instance ? new Date(a.treatment_schedule.last_instance).getTime() : 0;
+                const bTime = b.treatment_schedule?.last_instance ? new Date(b.treatment_schedule.last_instance).getTime() : 0;
+                return aTime - bTime;
+            },
+            sortDirections: ['ascend', 'descend'],
         },
         {
             title: 'Status',

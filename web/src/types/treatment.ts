@@ -39,6 +39,7 @@ export interface TreatmentSchedule {
     pending_count?: number;
     completed_count?: number;
     skipped_count?: number;
+    last_instance?: string | null;
 }
 
 export interface TreatmentInstance {
