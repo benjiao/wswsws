@@ -3,6 +3,7 @@
 import { Spin, Alert, Table, Tag } from 'antd';
 import type { TableProps } from 'antd';
 import { TreatmentInstance } from '@/types';
+import { useRouter } from 'next/navigation';
 
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -70,6 +71,7 @@ interface TreatmentInstanceTableProps {
 }
 
 export default function TreatmentInstanceTable({ data, loading, error, refetch }: TreatmentInstanceTableProps) {
+    const router = useRouter();
 
     const updateTreatmentStatus = async (instanceId: number, newStatus: number) => {
         try {
@@ -124,26 +126,35 @@ export default function TreatmentInstanceTable({ data, loading, error, refetch }
             sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
                 (a.treatment_schedule?.medicine_name || '').localeCompare(b.treatment_schedule?.medicine_name || ''),
             sortDirections: ['ascend', 'descend'],
-            render:  (_: any, record: TreatmentInstance) => (
-                <span
-                    style={{
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        MozUserSelect: 'none',
-                        msUserSelect: 'none',
-                        WebkitTapHighlightColor: 'transparent',
-                        display: 'inline-block',
-                        whiteSpace: 'pre-line',
-                    }}
-                >
-                    {record.treatment_schedule.medicine_name}
+            render:  (_: any, record: TreatmentInstance) => {
+                const scheduleId = record.treatment_schedule?.id;
+                return (
+                    <span
+                        onClick={() => {
+                            if (scheduleId) {
+                                router.push(`/treatments/schedules/${scheduleId}`);
+                            }
+                        }}
+                        style={{
+                            cursor: scheduleId ? 'pointer' : 'default',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none',
+                            MozUserSelect: 'none',
+                            msUserSelect: 'none',
+                            WebkitTapHighlightColor: 'transparent',
+                            display: 'inline-block',
+                            whiteSpace: 'pre-line',
+                        }}
+                    >
+                        {record.treatment_schedule.medicine_name}
 
-                    <br />
-                    <span style={{ color: '#888', fontSize: '90%' }}>
-                        {`${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`}
+                        <br />
+                        <span style={{ color: '#888', fontSize: '90%' }}>
+                            {`${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`}
+                        </span>
                     </span>
-                </span>
-            ),
+                );
+            },
         },
         {
             title: 'Status',
