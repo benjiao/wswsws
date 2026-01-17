@@ -149,3 +149,72 @@ def generate_treatment_session(instance_id):
     else:
         logger.debug(f"TreatmentInstance {t.id} already has a session")
     return True
+
+@shared_task
+def regenerate_all_treatment_instances(active_only=True):
+    """
+    Regenerate treatment instances for all existing schedules.
+    
+    Args:
+        active_only (bool): If True, only regenerate instances for active schedules (is_active=True).
+                          If False, regenerate for all schedules.
+    
+    Returns:
+        dict: Summary of the regeneration process with counts of processed schedules.
+    """
+    logger.info(f"Starting regeneration of treatment instances (active_only={active_only})")
+    
+    # Get all schedules, optionally filtered by is_active
+    if active_only:
+        schedules = TreatmentSchedule.objects.filter(is_active=True)
+    else:
+        schedules = TreatmentSchedule.objects.all()
+    
+    total_schedules = schedules.count()
+    logger.info(f"Found {total_schedules} schedule(s) to process")
+    
+    successful = 0
+    failed = 0
+    skipped = 0
+    
+    for schedule in schedules:
+        try:
+            # Check if schedule has required fields
+            if not schedule.start_time:
+                logger.warning(f"Skipping schedule {schedule.id} (patient: {schedule.patient.name}): missing start_time")
+                skipped += 1
+                continue
+            
+            if not schedule.doses or schedule.doses <= 0:
+                logger.warning(f"Skipping schedule {schedule.id} (patient: {schedule.patient.name}): missing or invalid doses")
+                skipped += 1
+                continue
+            
+            if not schedule.frequency or schedule.frequency <= 0:
+                logger.warning(f"Skipping schedule {schedule.id} (patient: {schedule.patient.name}): missing or invalid frequency")
+                skipped += 1
+                continue
+            
+            # Call the existing generate_treatment_instances task
+            result = generate_treatment_instances(schedule.id)
+            
+            if result is not None:
+                successful += 1
+                logger.info(f"Successfully regenerated instances for schedule {schedule.id} (patient: {schedule.patient.name})")
+            else:
+                failed += 1
+                logger.error(f"Failed to regenerate instances for schedule {schedule.id} (patient: {schedule.patient.name})")
+                
+        except Exception as e:
+            failed += 1
+            logger.error(f"Error regenerating instances for schedule {schedule.id} (patient: {schedule.patient.name}): {str(e)}")
+    
+    summary = {
+        'total_schedules': total_schedules,
+        'successful': successful,
+        'failed': failed,
+        'skipped': skipped
+    }
+    
+    logger.info(f"Completed regeneration: {summary}")
+    return summary
