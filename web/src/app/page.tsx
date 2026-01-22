@@ -3,6 +3,7 @@ import MedicineDosageTimeline from '@/components/MedicineDosageTimeline';
 import TodaysSessionsCard from '@/components/TodaysSessionsCard';
 import InventoryStatusCard from '@/components/InventoryStatusCard';
 import MedicineAdherenceCard from '@/components/MedicineAdherenceCard';
+import SpayNeuterStatusCard from '@/components/SpayNeuterStatusCard';
 import ArrowUpOutlined from '@ant-design/icons/lib/icons/ArrowUpOutlined';
 import ArrowDownOutlined from '@ant-design/icons/lib/icons/ArrowDownOutlined';
 
@@ -31,14 +32,7 @@ export default function FrontPage() {
                 suffix="%"
               />
               </Card>
-              <Card>
-                <Statistic
-                  title="Spay/Neuter Status"
-                  value={0}
-                  precision={2}
-                  suffix="%"
-                />
-              </Card>
+              <SpayNeuterStatusCard />
             </Space>
           </Col>
         </Row>
