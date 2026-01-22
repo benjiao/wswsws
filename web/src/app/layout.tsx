@@ -150,8 +150,8 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
   // Handle menu click - close mobile menu after clicking
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     // Prevent navigation for parent menu items with children (they should only toggle submenus)
-    const menuItem = menuItems.find(item => item.key === e.key);
-    if (menuItem && menuItem.children) {
+    const menuItem = menuItems.find(item => item && item.key === e.key);
+    if (menuItem && 'children' in menuItem && menuItem.children) {
       // Don't navigate, just toggle the submenu
       return;
     }

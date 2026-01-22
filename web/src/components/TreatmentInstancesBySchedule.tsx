@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Spin, Alert, Table, Tag } from 'antd';
 import type { TableProps } from 'antd';
 import { TreatmentInstance } from '@/types';
@@ -19,8 +20,10 @@ export default function TreatmentInstancesBySchedule({
   error, 
   refetch 
 }: TreatmentInstancesByScheduleProps) {
+  const [loadingInstanceId, setLoadingInstanceId] = useState<number | null>(null);
 
   const updateTreatmentStatus = async (instanceId: number, newStatus: number) => {
+    setLoadingInstanceId(instanceId);
     try {
       const response = await fetch(`${API_URL}/treatment-instances/${instanceId}/`, {
         method: 'PATCH',
@@ -38,6 +41,8 @@ export default function TreatmentInstancesBySchedule({
       refetch();
     } catch (error) {
       console.error('Failed to update treatment:', error);
+    } finally {
+      setLoadingInstanceId(null);
     }
   };
 
@@ -88,37 +93,50 @@ export default function TreatmentInstancesBySchedule({
       dataIndex: 'status',
       key: 'status',
       width: 90,
+      minWidth: 90,
       align: 'center',
       sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
         (a.status ?? 0) - (b.status ?? 0),
       sortDirections: ['ascend', 'descend'],
-      render: (_: any, record: TreatmentInstance) => (
-        <Tag
-          color={
-            record.status === 1
-              ? 'default'
-              : record.status === 2
-              ? 'green'
-              : record.status === 3
-              ? 'orange'
-              : 'default'
-          }
-          style={{
-            cursor: 'pointer',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            MozUserSelect: 'none',
-            msUserSelect: 'none',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-          onClick={() => {
-            const newStatus = (record.status % 3) + 1;
-            updateTreatmentStatus(record.id, newStatus);
-          }}
-        >
-          {record.status_display}
-        </Tag>
-      ),
+      render: (_: any, record: TreatmentInstance) => {
+        const isLoading = loadingInstanceId === record.id;
+        return (
+          <Tag
+            color={
+              record.status === 1
+                ? 'default'
+                : record.status === 2
+                ? 'green'
+                : record.status === 3
+                ? 'orange'
+                : 'default'
+            }
+            style={{
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              opacity: isLoading ? 0.6 : 1,
+              whiteSpace: 'nowrap',
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+            onClick={() => {
+              if (!isLoading) {
+                const newStatus = (record.status % 3) + 1;
+                updateTreatmentStatus(record.id, newStatus);
+              }
+            }}
+          >
+            {isLoading ? (
+              <Spin size="small" style={{ marginRight: 4 }} />
+            ) : null}
+            {record.status_display}
+          </Tag>
+        );
+      },
     },
   ];
 
