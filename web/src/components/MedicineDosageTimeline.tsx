@@ -93,14 +93,14 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
     // Build a map of medicine names
     const medicineNames = treatmentSessions.medicines.map((medicine: any) => medicine.medicine_name);
 
-    // Build a date -> medicine -> dosage map
-    const dateMedicineDosageMap: { [date: string]: { [medicineName: string]: number } } = {};
+    // Build a date -> medicine -> instance count map
+    const dateMedicineInstanceCountMap: { [date: string]: { [medicineName: string]: number } } = {};
     treatmentSessions.medicines.forEach((medicine: any) => {
       (medicine.daily_breakdown || []).forEach((stat: any) => {
-        if (!dateMedicineDosageMap[stat.date]) {
-          dateMedicineDosageMap[stat.date] = {};
+        if (!dateMedicineInstanceCountMap[stat.date]) {
+          dateMedicineInstanceCountMap[stat.date] = {};
         }
-        dateMedicineDosageMap[stat.date][medicine.medicine_name] = stat.total_dosage_scheduled;
+        dateMedicineInstanceCountMap[stat.date][medicine.medicine_name] = stat.instance_count || 0;
       });
     });
 
@@ -113,10 +113,10 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
       const entry: DailyDosage = { date, actualData: false };
       medicineNames.forEach((name: string) => {
       if (
-        dateMedicineDosageMap[date] &&
-        typeof dateMedicineDosageMap[date][name] === 'number'
+        dateMedicineInstanceCountMap[date] &&
+        typeof dateMedicineInstanceCountMap[date][name] === 'number'
       ) {
-        entry[name] = dateMedicineDosageMap[date][name];
+        entry[name] = dateMedicineInstanceCountMap[date][name];
         entry.actualData = true;
       } else {
         entry[name] = 0;
@@ -160,10 +160,45 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
           />
 
           <YAxis
-            label={{ value: 'Dosage (mL)', angle: -90, position: 'insideLeft' }}
+            label={{ value: 'Treatments', angle: -90, position: 'insideLeft' }}
             fontSize={12}
           />
-          <Tooltip />
+          <Tooltip
+            content={({ active, payload }) => {
+              if (!active || !payload || !payload.length) {
+                return null;
+              }
+              // Filter out items with zero count
+              const filteredPayload = payload.filter((item: any) => {
+                const value = item.value;
+                return typeof value === 'number' && value > 0;
+              });
+              
+              if (filteredPayload.length === 0) {
+                return null;
+              }
+              
+              return (
+                <div style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  padding: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}>
+                  <p style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>
+                    {formatDate(payload[0].payload.date)}
+                  </p>
+                  {filteredPayload.map((entry: any, index: number) => (
+                    <p key={index} style={{ margin: '4px 0', color: entry.color }}>
+                      <span style={{ marginRight: '8px' }}>{entry.name}:</span>
+                      <span style={{ fontWeight: 'bold' }}>{entry.value}</span>
+                    </p>
+                  ))}
+                </div>
+              );
+            }}
+          />
           <Legend />
 
           {/* Reference line for today */}
