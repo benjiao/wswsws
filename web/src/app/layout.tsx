@@ -61,7 +61,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
     {
       key: '/treatments',
       icon: <MedicineBoxOutlined />,
-      label: <Link href="/treatments">Treatments</Link>,
+      label: 'Treatments',
       children: [
         {
           key: '/treatments/sessions/today',
@@ -89,7 +89,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
     {
       key: '/inventory',
       icon: <InboxOutlined />,
-      label: <Link href="/inventory">Inventory</Link>,
+      label: 'Inventory',
       children: [
         {
           key: '/inventory/medicines',
@@ -105,7 +105,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
     {
       key: '/settings',
       icon: <SettingOutlined />,
-      label: <Link href="/settings">Settings</Link>,
+      label: 'Settings',
       children: [
         {
           key: '/users',
@@ -149,6 +149,12 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
 
   // Handle menu click - close mobile menu after clicking
   const handleMenuClick: MenuProps['onClick'] = (e) => {
+    // Prevent navigation for parent menu items with children (they should only toggle submenus)
+    const menuItem = menuItems.find(item => item.key === e.key);
+    if (menuItem && menuItem.children) {
+      // Don't navigate, just toggle the submenu
+      return;
+    }
     // Close mobile menu after navigation
     if (broken) {
       setCollapsed(true);
