@@ -87,6 +87,20 @@ class PatientViewSet(viewsets.ModelViewSet):
         patients = self.queryset.all()
         serializer = PatientListSerializer(patients, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def spay_neuter_stats(self, request):
+        """Get spay/neuter statistics"""
+        total_patients = Patient.objects.count()
+        spayed_neutered_count = Patient.objects.filter(spay_neuter_status=True).count()
+        
+        percentage = (spayed_neutered_count / total_patients * 100) if total_patients > 0 else 0
+        
+        return Response({
+            'total_patients': total_patients,
+            'spayed_neutered_count': spayed_neutered_count,
+            'percentage': round(percentage, 2)
+        })
 
 
 class PatientGroupViewSet(viewsets.ModelViewSet):
