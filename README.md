@@ -32,6 +32,22 @@ Load database dump:
 ata data/wswsws_20260117_173806.json
 ```
 
+### Deployment
+
+```
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t registry.benjiao.net/wswsws/web:latest \
+  -t registry.benjiao.net/wswsws/web:2026-01-22 \
+  --push .
+
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t registry.benjiao.net/wswsws/api:latest \
+  -t registry.benjiao.net/wswsws/api:2026-01-22 \
+  --push .
+```
+
 ## How does it work?
 
 ## License
