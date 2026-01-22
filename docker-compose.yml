@@ -41,7 +41,7 @@ services:
       - wswsws_network
 
   migrate:
-    image: registry.benjiao.net/wswsws/api:latest
+    build: api/
     command: python manage.py migrate --noinput
     depends_on:
       - db
