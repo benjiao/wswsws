@@ -3,14 +3,14 @@
 # Build and push script for wswsws Docker images
 # Usage: ./build-and-push.sh [tag] [platform] [api_url]
 # If no tag is provided, uses 'latest'
-# If no platform is provided, uses 'linux/amd64'
+# If no platform is provided, uses 'linux/arm64'
 # If no api_url is provided, uses 'https://api.wswsws.benjiao.net'
 
 set -e  # Exit on error
 
 REGISTRY="registry.benjiao.net"
 TAG="${1:-latest}"
-PLATFORM="${2:-linux/amd64}"
+PLATFORM="${2:-linux/arm64}"
 NEXT_PUBLIC_API_URL="${3:-https://api.wswsws.benjiao.net}"
 API_IMAGE="${REGISTRY}/wswsws/api:${TAG}"
 WEB_IMAGE="${REGISTRY}/wswsws/web:${TAG}"

@@ -37,12 +37,14 @@ ata data/wswsws_20260117_173806.json
 ```
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t registry.benjiao.net/wswsws/web:latest \
-  -t registry.benjiao.net/wswsws/web:2026-01-22 \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.wswsws.benjiao.net \
+  --tag registry.benjiao.net/wswsws/web:latest \
+  --tag registry.benjiao.net/wswsws/web:2026-01-22 \
   --push .
 
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.wswsws.benjiao.net \
   -t registry.benjiao.net/wswsws/api:latest \
   -t registry.benjiao.net/wswsws/api:2026-01-22 \
   --push .
