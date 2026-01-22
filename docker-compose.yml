@@ -1,6 +1,6 @@
 services:
   api:
-    image: registry.benjiao.net/wswsws/api:latest
+    build: api/
     command: bash -c "python manage.py runserver 0.0.0.0:8000"
     ports:
       - "${API_PORT:-8000}:8000"
@@ -58,7 +58,11 @@ services:
       - wswsws_network
 
   web:
-    image: registry.benjiao.net/wswsws/web:latest
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
@@ -77,7 +81,7 @@ services:
       - wswsws_network
 
   celery-worker:
-    image: registry.benjiao.net/wswsws/api:latest
+    build: api/
     command: celery -A api worker --loglevel=info --concurrency=1
     depends_on:
       - redis
@@ -104,7 +108,7 @@ services:
       - wswsws_network
 
   celery-beat:
-    image: registry.benjiao.net/wswsws/api:latest
+    build: api/
     command: celery -A api beat --loglevel=info
     depends_on:
       - redis
