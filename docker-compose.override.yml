@@ -1,5 +1,6 @@
 services:
   api:
+    build: api/
     volumes:
       - ./api:/app
 
@@ -24,11 +25,14 @@ services:
 
 
   migrate:
+    build: api/
     volumes:
       - ./api:/app
   celery-worker:
+    build: api/
     volumes:
       - ./api:/app  # use override in prod as discussed
   celery-beat:
+    build: api/
     volumes:
       - ./api:/app  # use override in prod as discussed
