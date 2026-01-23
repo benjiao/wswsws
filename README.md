@@ -38,12 +38,12 @@ ata data/wswsws_20260117_173806.json
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --tag registry.benjiao.net/wswsws/web:latest \
-  --push .
+  --push web/
 
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   -t registry.benjiao.net/wswsws/api:latest \
-  --push .
+  --push api/
 ```
 
 ## How does it work?
