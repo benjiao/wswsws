@@ -60,9 +60,9 @@ services:
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL:-/api}"
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
