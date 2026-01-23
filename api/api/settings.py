@@ -194,3 +194,5 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = os.environ.get("TIMEZONE", "UTC")
+STATIC_URL = os.environ.get("STATIC_URL", 'api/static/')
+STATIC_ROOT = os.environ.get("STATIC_ROOT", BASE_DIR / 'staticfiles')

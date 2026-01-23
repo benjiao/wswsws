@@ -26,6 +26,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . /app/
 
+# Collect static files for DRF browsable API
+ENV SECRET_KEY=build-static-secret
+RUN python manage.py collectstatic --noinput
+
 # Expose port
 EXPOSE 8000
 
