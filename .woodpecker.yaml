@@ -8,5 +8,5 @@ steps:
       - echo "Branch: ${CI_COMMIT_BRANCH}"
       - echo "Event: ${CI_BUILD_EVENT}"
     when:
-    - event: push
-    - branch: main
+      - event: push
+      - branch: main
