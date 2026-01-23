@@ -13,6 +13,18 @@ steps:
       - echo "Author: ${CI_COMMIT_AUTHOR}"
       - echo "Message: ${CI_COMMIT_MESSAGE}"
 
+  # Manual trigger step
+  manual-trigger:
+    image: alpine:latest
+    when:
+      - event: manual
+    commands:
+      - echo "=== Manual Trigger Test ==="
+      - echo "Manually triggered pipeline"
+      - echo "Commit: ${CI_COMMIT_SHA}"
+      - echo "Branch: ${CI_COMMIT_BRANCH}"
+      - echo "Event: ${CI_BUILD_EVENT}"
+
   # Always run step to ensure pipeline is found
   always-run:
     image: alpine:latest
@@ -20,3 +32,4 @@ steps:
       - echo "Pipeline is running"
       - echo "Event: ${CI_BUILD_EVENT}"
       - echo "Branch: ${CI_COMMIT_BRANCH}"
+      - echo "Commit: ${CI_COMMIT_SHA}"
