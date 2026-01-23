@@ -1,12 +1,9 @@
+when:
+  - event: push
+    branch: main
 steps:
-  - name: Push Trigger Test
-    image: alpine:latest
+  - name: build
+    image: alpine
     commands:
-      - echo "=== Push Trigger Test ==="
-      - echo "Push triggered pipeline"
-      - echo "Commit: ${CI_COMMIT_SHA}"
-      - echo "Branch: ${CI_COMMIT_BRANCH}"
-      - echo "Event: ${CI_BUILD_EVENT}"
-    when:
-      - event: push
-      - branch: main
+      - echo "This is the build step"
+      - echo "Hello from Woodpecker CI"
