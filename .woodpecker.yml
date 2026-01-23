@@ -13,6 +13,7 @@ steps:
       tags:
         - latest
         - ${WOODPECKER_COMMIT_SHA}
+
   - name: build-and-push-web
     image: woodpeckerci/plugin-docker-buildx:6
     privileged: true
