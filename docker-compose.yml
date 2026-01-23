@@ -58,7 +58,12 @@ services:
       - wswsws_network
 
   web:
-    image: registry.benjiao.net/wswsws/web:latest
+    # image: registry.benjiao.net/wswsws/web:latest
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
