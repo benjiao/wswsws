@@ -7,7 +7,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   CartesianGrid,
   ReferenceLine,
 } from 'recharts';
@@ -199,8 +198,6 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
               );
             }}
           />
-          <Legend />
-
           {/* Reference line for today */}
           <ReferenceLine
             x={today}
