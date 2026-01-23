@@ -9,8 +9,7 @@ steps:
       context: api
       dockerfile: api/Dockerfile
       platforms: linux/arm64
-      repo: wswsws/api
-      registry: registry.benjiao.net
+      registry: registry.benjiao.net/wswsws/web
       tags:
         - latest
         - ${WOODPECKER_COMMIT_SHA}
