@@ -1,0 +1,10 @@
+# Test hooks - these steps test different git event hooks
+steps:
+  - name: Manual Trigger Test
+    image: alpine:latest
+    commands:
+      - echo "=== Manual Trigger Test ==="
+      - echo "Manually triggered pipeline"
+      - echo "Commit: ${CI_COMMIT_SHA}"
+      - echo "Branch: ${CI_COMMIT_BRANCH}"
+      - echo "Event: ${CI_BUILD_EVENT}"
