@@ -9,13 +9,13 @@ services:
       context: ./web
       dockerfile: Dockerfile.dev
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
       - api
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
       - NODE_ENV=${NODE_ENV:-development}
     restart: unless-stopped
     volumes:
