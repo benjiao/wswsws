@@ -1,6 +1,6 @@
 services:
   api:
-    build: api/
+    image: registry.benjiao.net/wswsws/api:latest
     command: bash -c "python manage.py runserver 0.0.0.0:8000"
     ports:
       - "${API_PORT:-8000}:8000"
