@@ -19,7 +19,7 @@ import {
 } from '@ant-design/icons';
 import { PiPawPrint } from "react-icons/pi";
 
-import { Button, Breadcrumb, Layout, Menu, theme, ConfigProvider } from 'antd';
+import { Alert, Button, Breadcrumb, Layout, Menu, theme, ConfigProvider } from 'antd';
 const { Header, Content, Footer, Sider } = Layout;
 
 import Link from 'next/link';
@@ -32,8 +32,10 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
   const [broken, setBroken] = useState(false);
+  const [showDevBanner, setShowDevBanner] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const isDev = process.env.NODE_ENV === 'development';
 
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -330,6 +332,15 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     />
                   </Header>
 
+                  {isDev && showDevBanner && (
+                    <Alert
+                      message={`You are currently on the development server (v${APP_VERSION})`}
+                      type="warning"
+                      banner
+                      closable
+                      onClose={() => setShowDevBanner(false)}
+                    />
+                  )}
                   <Content style={{ margin: broken ? '8px' : '16px' }}>
 
                     <div

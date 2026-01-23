@@ -28,8 +28,7 @@ python manage.py dumpdata patients inventory treatments \
 
 Load database dump: 
 ```
- docker compose exec api python manage.py loadd
-ata data/wswsws_20260117_173806.json
+ docker compose exec api python manage.py loaddata data/wswsws_20260117_173806.json
 ```
 
 ### Deployment
