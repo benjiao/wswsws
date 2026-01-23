@@ -1,4 +1,3 @@
-# Test hooks - these steps test different git event hooks
 steps:
   - name: Manual Trigger Test
     image: alpine:latest
@@ -8,3 +7,5 @@ steps:
       - echo "Commit: ${CI_COMMIT_SHA}"
       - echo "Branch: ${CI_COMMIT_BRANCH}"
       - echo "Event: ${CI_BUILD_EVENT}"
+    when:
+    - event: manual
