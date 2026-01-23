@@ -6,7 +6,7 @@ steps:
     image: woodpeckerci/plugin-docker-buildx:6
     privileged: true
     settings:
-      context: ./api
+      context: api
       dockerfile: Dockerfile
       platforms: linux/arm64
       repo: wswsws/api
