@@ -8,7 +8,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --network-timeout 300000
+RUN yarn cache clean \
+  && yarn install --frozen-lockfile --network-timeout 300000
 
 # Copy source code
 COPY . .
