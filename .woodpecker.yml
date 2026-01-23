@@ -2,8 +2,12 @@ when:
   - event: push
     branch: main
 steps:
-  - name: build
-    image: alpine
-    commands:
-      - echo "This is the build step"
-      - echo "Hello from Woodpecker CI"
+  - name: build-and-push-api
+    image: woodpeckerci/plugin-docker-buildx
+    settings:
+      platforms: linux/arm64
+      repo: wswsws/api
+      registry: registry.benjiao.net
+      tags:
+        - latest
+        - ${WOODPECKER_COMMIT_SHA}
