@@ -4,6 +4,7 @@ when:
 steps:
   - name: build-and-push-api
     image: woodpeckerci/plugin-docker-buildx
+    privileged: true
     settings:
       platforms: linux/arm64
       repo: wswsws/api
