@@ -58,7 +58,6 @@ services:
       - wswsws_network
 
   web:
-    # image: registry.benjiao.net/wswsws/web:latest
     build:
       context: ./web
       dockerfile: Dockerfile.dev
