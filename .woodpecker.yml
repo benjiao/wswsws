@@ -13,11 +13,10 @@ steps:
       - echo "Author: ${CI_COMMIT_AUTHOR}"
       - echo "Message: ${CI_COMMIT_MESSAGE}"
 
-  notify:
-    image: alpine/curl:latest
-    when:
-      - status: success
-      - status: failure
+  # Always run step to ensure pipeline is found
+  always-run:
+    image: alpine:latest
     commands:
-      - echo "Pipeline ${CI_BUILD_STATUS} for commit ${CI_COMMIT_SHA}"
-      - echo "Hook test completed"
+      - echo "Pipeline is running"
+      - echo "Event: ${CI_BUILD_EVENT}"
+      - echo "Branch: ${CI_COMMIT_BRANCH}"
