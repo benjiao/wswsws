@@ -1,0 +1,42 @@
+when:
+  - event: push
+    branch: main
+steps:
+  - name: build-api
+    image: woodpeckerci/plugin-docker-buildx:6
+    depends_on: []
+    privileged: true
+    settings:
+      context: api
+      dockerfile: api/Dockerfile
+      platforms: linux/arm64
+      repo: registry.benjiao.net/wswsws/api
+      tags:
+        - latest
+        - ${WOODPECKER_COMMIT_SHA}
+
+  - name: build-web
+    image: woodpeckerci/plugin-docker-buildx:6
+    depends_on: []
+    privileged: true
+    settings:
+      context: web
+      dockerfile: web/Dockerfile
+      platforms: linux/arm64
+      repo: registry.benjiao.net/wswsws/web
+      tags:
+        - latest
+        - ${WOODPECKER_COMMIT_SHA}
+
+  - name: post-hook
+    image: curlimages/curl:8.6.0
+    depends_on:
+      - build-api
+      - build-web
+    when:
+      status: [ success, failure ]
+    commands:
+      - |
+        curl -sS -X POST "$WEBHOOK_URL" \
+          -H "Content-Type: application/json" \
+          -d "{\"repo\":\"${CI_REPO}\",\"build\":\"${CI_BUILD_NUMBER}\",\"status\":\"${CI_BUILD_STATUS}\",\"branch\":\"${CI_COMMIT_BRANCH}\",\"commit\":\"${CI_COMMIT_SHA}\"}"
