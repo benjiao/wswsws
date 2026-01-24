@@ -7,7 +7,7 @@ steps:
     privileged: true
     settings:
       context: web
-      dockerfile: api/Dockerfile
+      dockerfile: web/Dockerfile
       platforms: linux/arm64
       repo: registry.benjiao.net/wswsws/web
       tags:
