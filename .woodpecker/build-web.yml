@@ -1,0 +1,8 @@
+steps:
+  - name: post-hook
+    image: debian:stable-slim
+    commands:
+      - echo notify n8n
+depends_on:
+  - build-api
+  - build-web

@@ -1,0 +1,15 @@
+when:
+  - event: push
+    branch: main
+steps:
+  - name: build-api
+    image: woodpeckerci/plugin-docker-buildx:6
+    privileged: true
+    settings:
+      context: api
+      dockerfile: api/Dockerfile
+      platforms: linux/arm64
+      repo: registry.benjiao.net/wswsws/api
+      tags:
+        - latest
+        - ${WOODPECKER_COMMIT_SHA}
