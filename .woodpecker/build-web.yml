@@ -1,3 +1,5 @@
+when:
+  - branch: main
 steps:
   - name: post-hook
     image: debian:stable-slim
