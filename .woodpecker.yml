@@ -13,7 +13,7 @@ steps:
       tags:
         - latest
         - ${WOODPECKER_COMMIT_SHA}
-
+  
   - name: build-and-push-web
     image: woodpeckerci/plugin-docker-buildx:6
     privileged: true
@@ -25,3 +25,20 @@ steps:
       tags:
         - latest
         - ${WOODPECKER_COMMIT_SHA}
+
+  - name: notify
+    image: woodpeckerci/plugin-webhook
+    depends_on:
+      - build-and-push-api
+      - build-and-push-web
+    settings:
+      urls:
+        - "${WEBHOOK_URL}"
+      method: POST
+      content_type: application/json
+      template: |
+        {
+          "repo": "{{repo.full_name}}",
+        }
+    when:
+      status: [ success, failure ]
