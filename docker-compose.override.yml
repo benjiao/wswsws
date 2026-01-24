@@ -16,7 +16,6 @@ services:
       - api
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
-      - NODE_ENV=${NODE_ENV:-development}
     restart: unless-stopped
     volumes:
       - ./web:/app

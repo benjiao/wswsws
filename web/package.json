@@ -6,7 +6,8 @@
     "dev": "next dev -H 0.0.0.0 --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build-profile": "NEXT_TELEMETRY_DISABLED=1 next build --profile"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^1.24.0",
