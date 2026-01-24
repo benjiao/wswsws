@@ -1,11 +1,13 @@
-when:
-  - event: push
-    branch: main
 steps:
   - name: post-hook
-    image: debian:stable-slim
+    image: curlimages/curl:8.6.0
+    depends_on:
+      - build-api
+      - build-web
+    when:
+      status: [ success, failure ]
     commands:
-      - echo notify n8n
-depends_on:
-  - build-api
-  - build-web
+      - |
+        curl -sS -X POST "$WEBHOOK_URL" \
+          -H "Content-Type: application/json" \
+          -d "{\"repo\":\"${CI_REPO}\",\"build\":\"${CI_BUILD_NUMBER}\",\"status\":\"${CI_BUILD_STATUS}\",\"branch\":\"${CI_COMMIT_BRANCH}\",\"commit\":\"${CI_COMMIT_SHA}\"}"
