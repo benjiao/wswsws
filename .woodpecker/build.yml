@@ -27,3 +27,11 @@ steps:
       tags:
         - latest
         - ${WOODPECKER_COMMIT_SHA}
+
+  - name: post-hook
+    image: debian:stable-slim
+    commands:
+      - echo notify n8n
+    depends_on:
+      - build-api
+      - build-web
