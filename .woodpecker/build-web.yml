@@ -2,10 +2,14 @@ when:
   - event: push
     branch: main
 steps:
-  - name: post-hook
-    image: debian:stable-slim
-    commands:
-      - echo notify n8n
-depends_on:
-  - build-api
-  - build-web
+  - name: build-web
+    image: woodpeckerci/plugin-docker-buildx:6
+    privileged: true
+    settings:
+      context: web
+      dockerfile: api/Dockerfile
+      platforms: linux/arm64
+      repo: registry.benjiao.net/wswsws/web
+      tags:
+        - latest
+        - ${WOODPECKER_COMMIT_SHA}
