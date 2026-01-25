@@ -20,11 +20,17 @@ export NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-/api}"
 echo "After export - DEPLOYMENT_ENV: ${DEPLOYMENT_ENV}"
 
 # Verify the environment variable is in the environment
-env | grep DEPLOYMENT || echo "WARNING: DEPLOYMENT_ENV not found in environment!"
+echo "Checking environment variables:"
+env | grep -E "(DEPLOYMENT|NODE_ENV|API)" || echo "WARNING: Environment variables not found!"
+
+# List all environment variables for debugging
+echo "All environment variables containing 'DEPLOYMENT':"
+env | grep -i deployment || echo "No DEPLOYMENT variables found"
 
 # For standalone mode, the server.js is in the root after copying
 # The Dockerfile copies .next/standalone to /app/, so server.js is at /app/server.js
-# Pass environment variables explicitly to node
+# Pass environment variables explicitly to node - this ensures they're available
+# Use exec to replace the shell process with node, preserving environment
 exec env DEPLOYMENT_ENV="${DEPLOYMENT_ENV}" \
          NODE_ENV="${NODE_ENV:-production}" \
          API_URL="${API_URL}" \

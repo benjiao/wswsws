@@ -1,13 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  
-  // Ensure runtime environment variables are available
-  // This doesn't restrict them, just documents which ones we use
-  env: {
-    // These will be available at runtime (not build time)
-    // They must be set in the container environment
-  },
 
   transpilePackages: [
     // antd & deps
@@ -49,4 +42,6 @@ const nextConfig = {
   ],
 }
 
+// Wrap with next-runtime-env to enable runtime environment variables
+// This allows DEPLOYMENT_ENV and other vars to be set at runtime
 module.exports = nextConfig

@@ -7,7 +7,7 @@ import { APP_VERSION } from '@/utils/version';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
+import { PublicEnvScript } from 'next-runtime-env';
 
 import {
   DashboardOutlined,
@@ -31,9 +31,7 @@ type MenuItem = Required<MenuProps>['items'][number];
 
 // Component that uses runtime config (must be inside QueryClientProvider)
 const DevBanner = ({ showDevBanner, setShowDevBanner }: { showDevBanner: boolean; setShowDevBanner: (show: boolean) => void }) => {
-  const { isDevelopment, isLoading: configLoading } = useRuntimeConfig();
-  const isDev = isDevelopment || (configLoading ? process.env.NODE_ENV === 'development' : false);
-  
+  const isDev = process.env.NODE_ENV === 'development';
   if (!isDev || !showDevBanner) return null;
   
   return (
@@ -219,6 +217,8 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
           href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&display=swap" 
           rel="stylesheet" 
         />
+
+        <PublicEnvScript />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
         <QueryClientProvider client={queryClient}>
