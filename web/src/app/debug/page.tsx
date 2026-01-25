@@ -16,6 +16,15 @@ const DebugPage = () => {
     { label: 'APP_VERSION', value: APP_VERSION },
   ];
 
+  // Add debug info if available
+  if (config?._debug) {
+    configs.push(
+      { label: 'DEBUG: DEPLOYMENT_ENV (raw)', value: config._debug.DEPLOYMENT_ENV_raw || 'undefined' },
+      { label: 'DEBUG: DEPLOYMENT_ENV is undefined', value: config._debug.DEPLOYMENT_ENV_undefined ? 'true' : 'false' },
+      { label: 'DEBUG: NODE_ENV', value: config._debug.NODE_ENV || 'not set' },
+    );
+  }
+
   return (
     <div>
       <h1>Debug</h1>
