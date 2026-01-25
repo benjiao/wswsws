@@ -7,7 +7,7 @@ import { APP_VERSION } from '@/utils/version';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { PublicEnvScript } from 'next-runtime-env';
+import { PublicEnvScript, env } from 'next-runtime-env';
 
 import {
   DashboardOutlined,
@@ -31,9 +31,9 @@ type MenuItem = Required<MenuProps>['items'][number];
 
 // Component that uses runtime config (must be inside QueryClientProvider)
 const DevBanner = ({ showDevBanner, setShowDevBanner }: { showDevBanner: boolean; setShowDevBanner: (show: boolean) => void }) => {
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev || !showDevBanner) return null;
-  
+  const NEXT_PUBLIC_DEPLOYMENT_ENV = env('NEXT_PUBLIC_DEPLOYMENT_ENV');
+  if (!showDevBanner) return null;
+  if (NEXT_PUBLIC_DEPLOYMENT_ENV !== 'development') return null;
   return (
     <Alert
       message={`You are currently on the development server (v${APP_VERSION})`}
@@ -50,6 +50,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
   const [openKeys, setOpenKeys] = useState<string[]>([]);
   const [broken, setBroken] = useState(false);
   const [showDevBanner, setShowDevBanner] = useState(true);
+  const NEXT_PUBLIC_DEPLOYMENT_ENV = env('NEXT_PUBLIC_DEPLOYMENT_ENV');
   const router = useRouter();
   const pathname = usePathname();
 
