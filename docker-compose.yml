@@ -65,7 +65,7 @@ services:
       - api
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
-      - DEPLOYMENT_ENV=development
+      - DEPLOYMENT_ENV=${DEPLOYMENT_ENV:-production}
     restart: unless-stopped
     networks:
       - wswsws_network
