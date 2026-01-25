@@ -15,10 +15,21 @@ export async function GET() {
   
   const isDevelopment = deploymentEnv === 'development';
   
+  // Debug: Log all environment variables (for troubleshooting)
+  // Remove in production if sensitive data is a concern
+  const envDebug = {
+    DEPLOYMENT_ENV: process.env.DEPLOYMENT_ENV,
+    NODE_ENV: process.env.NODE_ENV,
+    API_URL: process.env.API_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  };
+  
   return NextResponse.json({
     deploymentEnv,
     isDevelopment,
     // Also expose API URL if needed (can be set at runtime)
     apiUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '/api',
+    // Debug info (remove in production)
+    _debug: envDebug,
   });
 }
