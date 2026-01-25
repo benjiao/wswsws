@@ -23,13 +23,5 @@ RUN yarn build
 
 # Expose port
 EXPOSE 3000
-
-# Runtime environment variables (can be overridden at container startup)
-# Set DEPLOYMENT_ENV=development for dev server, DEPLOYMENT_ENV=production for prod
-# If not set, defaults to production
-# Note: This default can be overridden by environment variables set in docker-compose or Portainer
-ENV DEPLOYMENT_ENV=production
-ENV API_URL=/api
-
 # Start the application
 CMD ["yarn", "start"]
