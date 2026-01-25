@@ -16,5 +16,18 @@ export NODE_ENV="${NODE_ENV:-production}"
 export API_URL="${API_URL}"
 export NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-/api}"
 
-# Start Next.js - environment variables will be inherited
-exec node_modules/.bin/next start
+# Log again after export to verify
+echo "After export - DEPLOYMENT_ENV: ${DEPLOYMENT_ENV}"
+
+# Verify the environment variable is in the environment
+env | grep DEPLOYMENT || echo "WARNING: DEPLOYMENT_ENV not found in environment!"
+
+# For standalone mode, we need to use the standalone server
+# The standalone server is at .next/standalone/server.js
+# We need to run it from the app root, not from inside standalone directory
+# Pass environment variables explicitly to node
+exec env DEPLOYMENT_ENV="${DEPLOYMENT_ENV}" \
+         NODE_ENV="${NODE_ENV:-production}" \
+         API_URL="${API_URL}" \
+         NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-/api}" \
+         node .next/standalone/server.js
