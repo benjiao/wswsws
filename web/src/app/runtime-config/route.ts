@@ -12,26 +12,32 @@ export async function GET() {
   // This is NOT prefixed with NEXT_PUBLIC_ so it's only available server-side
   // and can be set at runtime (e.g., via Docker ENV or system environment)
   
-  // Log to server console every time this route is called (for debugging)
-  // Check container logs in Portainer to see these logs
-  console.log('[Runtime Config API] Request received');
-  console.log('[Runtime Config API] process.env.DEPLOYMENT_ENV:', process.env.DEPLOYMENT_ENV);
-  console.log('[Runtime Config API] process.env.DEPLOYMENT_ENV type:', typeof process.env.DEPLOYMENT_ENV);
-  console.log('[Runtime Config API] process.env.DEPLOYMENT_ENV === "development":', process.env.DEPLOYMENT_ENV === 'development');
-  console.log('[Runtime Config API] process.env.NODE_ENV:', process.env.NODE_ENV);
+  // Force log output to stderr (more reliable in production)
+  const log = (msg: string) => {
+    console.error(`[Runtime Config API] ${msg}`);
+    process.stderr.write(`[Runtime Config API] ${msg}\n`);
+  };
+  
+  log('═══════════════════════════════════════════════════════');
+  log('Request received at: ' + new Date().toISOString());
+  log('process.env.DEPLOYMENT_ENV: ' + (process.env.DEPLOYMENT_ENV || 'UNDEFINED'));
+  log('process.env.DEPLOYMENT_ENV type: ' + typeof process.env.DEPLOYMENT_ENV);
+  log('process.env.DEPLOYMENT_ENV === "development": ' + (process.env.DEPLOYMENT_ENV === 'development'));
+  log('process.env.NODE_ENV: ' + (process.env.NODE_ENV || 'UNDEFINED'));
   
   // Get raw value
   const rawDeploymentEnv = process.env.DEPLOYMENT_ENV;
-  console.log('[Runtime Config API] Raw DEPLOYMENT_ENV value:', JSON.stringify(rawDeploymentEnv));
+  log('Raw DEPLOYMENT_ENV value: ' + JSON.stringify(rawDeploymentEnv));
   
   // Determine deployment environment
   const deploymentEnv = rawDeploymentEnv || 
                         (process.env.NODE_ENV === 'development' ? 'development' : 'production');
   
-  console.log('[Runtime Config API] Final deploymentEnv:', deploymentEnv);
+  log('Final deploymentEnv: ' + deploymentEnv);
   
   const isDevelopment = deploymentEnv === 'development';
-  console.log('[Runtime Config API] isDevelopment:', isDevelopment);
+  log('isDevelopment: ' + isDevelopment);
+  log('═══════════════════════════════════════════════════════');
   
   // Debug: Log all environment variables (for troubleshooting)
   // Remove in production if sensitive data is a concern
@@ -54,7 +60,10 @@ export async function GET() {
     _debug: envDebug,
   };
   
-  console.log('[Runtime Config API] Response:', JSON.stringify(response, null, 2));
+  log('Response: ' + JSON.stringify(response, null, 2));
   
-  return NextResponse.json(response);
+  const responseObj = NextResponse.json(response);
+  // Add custom header to verify route was hit
+  responseObj.headers.set('X-Runtime-Config-Route', 'hit');
+  return responseObj;
 }
