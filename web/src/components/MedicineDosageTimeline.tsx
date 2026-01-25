@@ -135,11 +135,30 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
   // Get medicine names from color map
   const medicineNames = Object.keys(colorMap);
 
+  // Detect mobile screen size
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 600);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Calculate vertical offset for YAxis label centering
+  const chartHeight = isMobile ? 200 : 400;
+  const labelOffset = chartHeight / 2 - 20; // Center vertically, adjust for label height
+  const labelHorizontalOffset = isMobile ? 0: -12; // Move label further to the left (negative = left)
+
   return (
     <div className="w-full">
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
         <AreaChart
-          data={dailyDosageList}>
+          data={dailyDosageList}
+          margin={{ top: isMobile ? 30 : 40, right: 0, bottom: 5, left: isMobile ? -20: -10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 
           <XAxis
@@ -151,7 +170,7 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
             fontSize={12}
             interval={
               typeof window !== 'undefined'
-              ? window.innerWidth < 600
+              ? isMobile
                 ? Math.ceil(dailyDosageList.length / 4)
                 : Math.ceil(dailyDosageList.length / 20)
               : 0
@@ -159,8 +178,16 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
           />
 
           <YAxis
-            label={{ value: 'Treatments', angle: -90, position: 'insideLeft' }}
+            label={{ 
+              value: 'Treatments', 
+              angle: -90, 
+              position: 'outsideLeft',
+              offset: labelOffset,
+              dx: labelHorizontalOffset,
+              style: { textAnchor: 'middle' }
+            }}
             fontSize={12}
+            tickCount={isMobile ? 3 : 10}
           />
           <Tooltip
             content={({ active, payload }) => {
@@ -203,7 +230,7 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
             x={today}
             stroke="#ff6b6b"
             strokeDasharray="5 5"
-            label={{ value: "Today", position: "top" }}
+            label={{ value: "Today", position: "top", fontSize: 12 }}
           />
 
           {/* Areas for each medicine */}
