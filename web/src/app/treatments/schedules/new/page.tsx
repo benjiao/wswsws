@@ -99,17 +99,17 @@ export default function NewSchedulePage() {
       queryClient.invalidateQueries({ queryKey: ['treatment_schedules'] });
       
       if (createAnother) {
-        // Keep dosage information but clear patient and start_time
+        // Keep dosage information but clear patient
         const dosageFields = {
           medicine: variables.medicine || undefined,
           dosage: variables.dosage || undefined,
           unit: variables.unit || 'mL',
+          start_time: variables.start_time || undefined,
           frequency: variables.frequency || undefined,
           doses: variables.doses || undefined,
           interval: variables.interval || undefined,
           notes: variables.notes || undefined,
-          is_active: variables.is_active !== undefined ? variables.is_active : true,
-          start_time: getDefaultStartTime(),
+          is_active: variables.is_active !== undefined ? variables.is_active : true
         };
         
         form.resetFields(['patient', 'start_time']);
