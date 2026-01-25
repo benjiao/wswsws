@@ -4,6 +4,15 @@ interface RuntimeConfig {
   deploymentEnv: string;
   isDevelopment: boolean;
   apiUrl: string;
+  _debug?: {
+    DEPLOYMENT_ENV?: string;
+    DEPLOYMENT_ENV_raw?: string;
+    DEPLOYMENT_ENV_undefined?: boolean;
+    DEPLOYMENT_ENV_null?: boolean;
+    NODE_ENV?: string;
+    API_URL?: string;
+    NEXT_PUBLIC_API_URL?: string;
+  };
 }
 
 /**
