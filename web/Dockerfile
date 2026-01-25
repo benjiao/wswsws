@@ -14,6 +14,10 @@ RUN yarn cache clean \
 # Copy source code
 COPY . .
 
+# Copy and make startup script executable (before build so it's included)
+COPY scripts/start.sh /app/scripts/start.sh
+RUN chmod +x /app/scripts/start.sh
+
 # Set build-time API URL
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
@@ -23,5 +27,6 @@ RUN yarn build
 
 # Expose port
 EXPOSE 3000
-# Start the application
-CMD ["yarn", "start"]
+
+# Start the application using the script
+CMD ["/app/scripts/start.sh"]

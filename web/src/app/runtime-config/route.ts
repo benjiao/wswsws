@@ -62,7 +62,22 @@ export async function GET() {
   
   log('Response: ' + JSON.stringify(response, null, 2));
   
-  const responseObj = NextResponse.json(response);
+  // Also include all process.env keys that contain "DEPLOYMENT" (case insensitive)
+  // This helps verify if the variable exists with a different name or casing
+  const allDeploymentVars = Object.keys(process.env)
+    .filter(k => k.toLowerCase().includes('deployment'))
+    .reduce((acc, k) => ({ ...acc, [k]: process.env[k] }), {});
+  
+  log('All env vars containing "deployment": ' + JSON.stringify(allDeploymentVars));
+  
+  const responseObj = NextResponse.json({
+    ...response,
+    _debug: {
+      ...response._debug,
+      allDeploymentVars,
+      processEnvKeys: Object.keys(process.env).filter(k => k.toLowerCase().includes('deployment')),
+    }
+  });
   // Add custom header to verify route was hit
   responseObj.headers.set('X-Runtime-Config-Route', 'hit');
   return responseObj;
