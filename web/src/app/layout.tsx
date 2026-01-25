@@ -7,6 +7,7 @@ import { APP_VERSION } from '@/utils/version';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
 
 import {
   DashboardOutlined,
@@ -28,6 +29,24 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { MenuProps } from 'antd';
 type MenuItem = Required<MenuProps>['items'][number];
 
+// Component that uses runtime config (must be inside QueryClientProvider)
+const DevBanner = ({ showDevBanner, setShowDevBanner }: { showDevBanner: boolean; setShowDevBanner: (show: boolean) => void }) => {
+  const { isDevelopment, isLoading: configLoading } = useRuntimeConfig();
+  const isDev = isDevelopment || (configLoading ? process.env.NODE_ENV === 'development' : false);
+  
+  if (!isDev || !showDevBanner) return null;
+  
+  return (
+    <Alert
+      message={`You are currently on the development server (v${APP_VERSION})`}
+      type="warning"
+      banner
+      closable
+      onClose={() => setShowDevBanner(false)}
+    />
+  );
+};
+
 const RootLayout = ({ children }: React.PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
@@ -35,7 +54,6 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
   const [showDevBanner, setShowDevBanner] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const isDev = process.env.NODE_ENV === 'development';
 
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -332,15 +350,7 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
                     />
                   </Header>
 
-                  {isDev && showDevBanner && (
-                    <Alert
-                      message={`You are currently on the development server (v${APP_VERSION})`}
-                      type="warning"
-                      banner
-                      closable
-                      onClose={() => setShowDevBanner(false)}
-                    />
-                  )}
+                  <DevBanner showDevBanner={showDevBanner} setShowDevBanner={setShowDevBanner} />
                   <Content style={{ margin: broken ? '8px' : '16px' }}>
 
                     <div
