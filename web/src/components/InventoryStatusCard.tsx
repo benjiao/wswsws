@@ -50,7 +50,7 @@ export default function InventoryStatusCard() {
             title={
                 <Flex justify="space-between" align="center">
                     <span>Inventory Status</span>
-                    <Link href={`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory/medicine/`} style={{ fontSize: 14 }}>
+                    <Link href="/inventory/medicines" style={{ fontSize: 14 }}>
                         View All
                     </Link>
                 </Flex>
