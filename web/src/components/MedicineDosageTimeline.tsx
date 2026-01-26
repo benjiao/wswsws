@@ -51,14 +51,17 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
   refetch,
 }) => {
 
-  const today = getUserLocalDate();
-  // Get local time as a string
-  const localTimeString = today.toLocaleString();
-  const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
+  const today = getUserLocalDate(); // Returns YYYY-MM-DD format string
 
-  // Calculate start and end date for the query (last 30 days)
-  const start_date = new Date(new Date(today).getTime() - oneMonthMs).toISOString().slice(0, 10); // YYYY-MM-DD
-  const end_date = new Date(new Date(today).getTime() + 2 * 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10); // 2 months from today in YYYY-MM-DD format
+  // Calculate start date (1 month before today)
+  const startDate = new Date(today);
+  startDate.setMonth(startDate.getMonth() - 1);
+  const start_date = startDate.toISOString().slice(0, 10); // YYYY-MM-DD
+
+  // Calculate end date (2 months after today)
+  const endDate = new Date(today);
+  endDate.setMonth(endDate.getMonth() + 2);
+  const end_date = endDate.toISOString().slice(0, 10); // YYYY-MM-DD format
   
   const { 
     data: treatmentSessions, 
@@ -79,16 +82,24 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
   let dailyDosageList: DailyDosage[] = [];
   let colorMap: { [medicineName: string]: string } = {};
 
-  if (treatmentSessions && treatmentSessions.medicines) {
-    // Assuming treatmentSessions.medicines is an array of medicine objects
-    // Each medicine object has a 'daily_breakdown' array with { date, total_dosage }
-    // Collect all unique dates
-    const allDates = Array.from(
-      new Set(treatmentSessions.medicines
-        .flatMap((medicine: any) => (medicine.daily_breakdown || []).map((stat: any) => stat.date as string))
-      )
-    ).sort() as string[];
+  // Generate all dates from start_date to end_date
+  const generateDateRange = (start: string, end: string): string[] => {
+    const dates: string[] = [];
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+      dates.push(currentDate.toISOString().slice(0, 10));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return dates;
+  };
 
+  const allDatesInRange = generateDateRange(start_date, end_date);
+
+  if (treatmentSessions && treatmentSessions.medicines) {
     // Build a map of medicine names
     const medicineNames = treatmentSessions.medicines.map((medicine: any) => medicine.medicine_name);
 
@@ -107,8 +118,8 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
       colorMap[medicine.medicine_name] = medicine.color || '#4F8A8B';
     });
 
-    // Build the final list
-    dailyDosageList = allDates.map((date: string) => {
+    // Build the final list using all dates in the range
+    dailyDosageList = allDatesInRange.map((date: string) => {
       const entry: DailyDosage = { date, actualData: false };
       medicineNames.forEach((name: string) => {
       if (
@@ -120,6 +131,16 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
       } else {
         entry[name] = 0;
       }
+      });
+      return entry;
+    });
+  } else {
+    // If no data, still generate the date range with empty entries
+    const medicineNames: string[] = [];
+    dailyDosageList = allDatesInRange.map((date: string) => {
+      const entry: DailyDosage = { date, actualData: false };
+      medicineNames.forEach((name: string) => {
+        entry[name] = 0;
       });
       return entry;
     });
