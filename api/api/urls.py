@@ -19,7 +19,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 # Import viewsets
-from patients.views import PatientViewSet, PatientGroupViewSet
+from patients.views import PatientViewSet, PatientGroupViewSet, PatientStatusViewSet
 from treatments.views import TreatmentScheduleViewSet, TreatmentInstanceViewSet, TreatmentSessionViewSet
 from inventory.views import MedicineViewSet
 
@@ -30,6 +30,7 @@ admin.site.index_title = "🐱 wswsws..."
 router = DefaultRouter()
 router.register(r'patients', PatientViewSet)
 router.register(r'patient-groups', PatientGroupViewSet)
+router.register(r'patient-statuses', PatientStatusViewSet)
 router.register(r'treatment-schedules', TreatmentScheduleViewSet)
 router.register(r'treatment-instances', TreatmentInstanceViewSet)
 router.register(r'treatment-sessions', TreatmentSessionViewSet)

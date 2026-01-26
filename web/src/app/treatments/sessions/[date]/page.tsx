@@ -28,11 +28,17 @@ const fetchPatientGroups = async (): Promise<PatientGroup[]> => {
 };
 
 // Updated API fetcher function to accept date and optional group filter
-const fetchTreatmentSessionsByDate = async (date: string, groupId?: number | null): Promise<TreatmentSession[]> => {
-  let url = `${API_URL}/treatment-sessions/by-date/${date}/`;
+const fetchTreatmentSessionsByDate = async (date: string, groupId?: number | null, inCare?: boolean): Promise<TreatmentSession[]> => {
+  const params = new URLSearchParams();
   if (groupId) {
-    url += `?group=${groupId}`;
+    params.append('group', groupId.toString());
   }
+  if (inCare) {
+    params.append('in_care', 'true');
+  }
+  
+  const queryString = params.toString();
+  const url = `${API_URL}/treatment-sessions/by-date/${date}/${queryString ? `?${queryString}` : ''}`;
   
   const response = await fetch(url, {
     headers: {
@@ -98,14 +104,17 @@ export default function TreatmentSessionsByDatePage() {
     queryFn: fetchPatientGroups,
   });
 
+  // Determine if we should use in_care filter (only for today's sessions)
+  const useInCareFilter = date === 'today';
+  
   const { 
     data: treatmentSessions, 
     isLoading: treatmentSessionsLoading, 
     error: treatmentSessionsError,
     refetch: refetchTreatmentSessions 
   } = useQuery({
-    queryKey: ['treatment_sessions', date, selectedGroupId],
-    queryFn: () => fetchTreatmentSessionsByDate(date, selectedGroupId),
+    queryKey: ['treatment_sessions', date, selectedGroupId, useInCareFilter],
+    queryFn: () => fetchTreatmentSessionsByDate(date, selectedGroupId, useInCareFilter),
   });
   
   // Format date for display

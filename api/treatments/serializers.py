@@ -166,8 +166,24 @@ class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
         ]
     
     def get_filtered_instances(self, obj):
-        """Get instances filtered by patient group if provided"""
+        """Get instances filtered by patient group, active schedules, and patient status if provided"""
         instances = obj.instances.all()
+        
+        # Always filter to only include instances from active treatment schedules
+        instances = instances.filter(treatment_schedule__is_active=True)
+        
+        # Filter by patient status when in_care filter is enabled
+        # Only include patients with: Active, Available, Medical Hold, and Quarantine status
+        in_care = self.context.get('in_care', False)
+        
+        if in_care:
+            # Filter by allowed patient statuses (patients currently in care)
+            instances = instances.filter(
+                treatment_schedule__patient__status__name__in=[
+                    'Active', 'Available', 'Medical Hold', 'Quarantine'
+                ]
+            )
+        
         group_id = self.context.get('group_id')
         if group_id is not None:
             instances = instances.filter(treatment_schedule__patient__group_id=group_id)
@@ -186,23 +202,14 @@ class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
         return filtered.filter(status__in=[2, 3]).count()
     
     def to_representation(self, instance):
-        """Override to filter instances based on group_id"""
+        """Override to filter instances based on group_id, active schedules, and patient status"""
         representation = super().to_representation(instance)
-        group_id = self.context.get('group_id')
         
-        if group_id is not None:
-            # Filter instances by patient group
-            filtered_instances = instance.instances.filter(
-                treatment_schedule__patient__group_id=group_id
-            )
-            representation['instances'] = TreatmentInstanceSerializer(
-                filtered_instances, many=True
-            ).data
-        else:
-            # Use default serialization
-            representation['instances'] = TreatmentInstanceSerializer(
-                instance.instances.all(), many=True
-            ).data
+        # Use get_filtered_instances which handles all filtering
+        filtered_instances = self.get_filtered_instances(instance)
+        representation['instances'] = TreatmentInstanceSerializer(
+            filtered_instances, many=True
+        ).data
         
         return representation
 

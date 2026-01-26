@@ -373,8 +373,10 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
         """
         Fetch a TreatmentInstance by session_date and session_type_display.
         Expects URL: treatment-session/by_date/<session_date>/
+        Query params:
+        - in_care: Filter to only include patients currently in care (Active, Available, Medical Hold, Quarantine)
+        - group: Filter by patient group ID
         """
-
         if session_date == "today":
             session_date = timezone.localtime(timezone.now()).date().strftime('%Y-%m-%d')
         if session_date == "tomorrow":
@@ -384,14 +386,19 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
 
         today_sessions = self.get_queryset().filter(session_date=session_date).order_by('session_type')
         
-        # Get patient group filter from query params
+        # Get filters from query params
         group_id = request.query_params.get('group', None)
+        in_care = request.query_params.get('in_care', 'false').lower() == 'true'
         
-        # Pass group_id to serializer context for filtering
+        # Pass filters to serializer context
         serializer = TreatmentSessionDetailSerializer(
             today_sessions, 
             many=True,
-            context={'group_id': int(group_id) if group_id else None}
+            context={
+                'group_id': int(group_id) if group_id else None,
+                'session_date': session_date,
+                'in_care': in_care
+            }
         )
         return Response(serializer.data)
 

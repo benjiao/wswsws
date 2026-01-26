@@ -4,8 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { getUserLocalDate } from '@/utils/DateUtils';
 
-const fetchTodaysSessions = async (date: string) => {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/treatment-sessions/by-date/${date}/`;
+const fetchTodaysSessions = async () => {
+    // Use "today" as the parameter and in_care=true to filter for active schedules and patients in care
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/treatment-sessions/by-date/today/?in_care=true`;
     const response = await fetch(url, 
     {
       headers: {
@@ -24,11 +25,9 @@ const fetchTodaysSessions = async (date: string) => {
 };
 
 export default function TodaysSessionsCard() {
-    const today = getUserLocalDate();
-    
     const { data: sessions, isLoading, error } = useQuery({
-        queryKey: ['todays_sessions', today],
-        queryFn: () => fetchTodaysSessions(today),
+        queryKey: ['todays_sessions'],
+        queryFn: fetchTodaysSessions,
     });
 
     if (isLoading) return (

@@ -17,6 +17,12 @@ interface PatientGroup {
   description?: string;
 }
 
+interface PatientStatus {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 interface Patient {
   id: number;
   name: string;
@@ -28,6 +34,8 @@ interface Patient {
   active_treatment_schedules_count: number;
   group_id?: number | null;
   group_name?: string | null;
+  status_id?: number | null;
+  status_name?: string | null;
 }
 
 interface PaginatedResponse<T> {
@@ -125,6 +133,15 @@ const fetchPatientGroups = async (): Promise<PatientGroup[]> => {
   return Array.isArray(data) ? data : [];
 };
 
+const fetchPatientStatuses = async (): Promise<PatientStatus[]> => {
+  const response = await fetch(`${API_URL}/patient-statuses/all/`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'N/A';
   
@@ -176,6 +193,7 @@ export default function PatientsPage() {
       'spay_neuter_status': 'spay_neuter_status',
       'active_treatment_schedules_count': 'active_count',
       'group': 'group__name',
+      'status': 'status__name',
     };
     const apiField = fieldMap[sortField] || sortField;
     return `${prefix}${apiField}`;
@@ -221,6 +239,11 @@ export default function PatientsPage() {
   const { data: patientGroups, isLoading: groupsLoading } = useQuery({
     queryKey: ['patient_groups'],
     queryFn: fetchPatientGroups,
+  });
+
+  const { data: patientStatuses, isLoading: statusesLoading } = useQuery({
+    queryKey: ['patient_statuses'],
+    queryFn: fetchPatientStatuses,
   });
 
   const patients = (paginatedData?.results || []) as Patient[];
@@ -301,6 +324,34 @@ export default function PatientsPage() {
     onError: (error) => {
       Modal.error({
         title: 'Error updating patient group',
+        content: error instanceof Error ? error.message : 'Unknown error',
+      });
+    },
+  });
+
+  // Mutation to update patient status
+  const updatePatientStatusMutation = useMutation({
+    mutationFn: async ({ patientId, statusId }: { patientId: number; statusId: number | null }) => {
+      const response = await fetch(`${API_URL}/patients/${patientId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ status_id: statusId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+    },
+    onError: (error) => {
+      Modal.error({
+        title: 'Error updating patient status',
         content: error instanceof Error ? error.message : 'Unknown error',
       });
     },
@@ -415,6 +466,32 @@ export default function PatientsPage() {
           {count}
         </Tag>
       ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status_id',
+      key: 'status',
+      width: 180,
+      render: (statusId: number | null | undefined, record: Patient) => (
+        <Select
+          value={statusId ?? undefined}
+          placeholder="Select status"
+          allowClear
+          showSearch
+          loading={statusesLoading}
+          style={{ width: '100%' }}
+          onChange={(value) => {
+            updatePatientStatusMutation.mutate({ patientId: record.id, statusId: value ?? null });
+          }}
+          filterOption={(input, option) =>
+            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+          }
+          options={patientStatuses?.map((s: PatientStatus) => ({ value: s.id, label: s.name })) || []}
+        />
+      ),
+      sorter: true,
+      sortDirections: ['ascend', 'descend'],
+      responsive: ['md'],
     },
     {
       title: 'Group',

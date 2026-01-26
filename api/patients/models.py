@@ -1,5 +1,15 @@
 from django.db import models
 
+
+class PatientStatus(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
 class PatientGroup(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
@@ -28,6 +38,10 @@ class Patient(models.Model):
     spay_neuter_clinic = models.CharField(max_length=255, null=True, blank=True)
 
     group = models.ForeignKey(PatientGroup, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(PatientStatus, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def get_status_display(self):
+        return self.status.name if self.status else None
 
     def __str__(self):
         return self.name
