@@ -60,7 +60,7 @@ const MedicineDosageTimeline: React.FC<MedicineDosageTimelineProps> = ({
 
   // Calculate end date (2 months after today)
   const endDate = new Date(today);
-  endDate.setMonth(endDate.getMonth() + 2);
+  endDate.setMonth(endDate.getMonth() + 1);
   const end_date = endDate.toISOString().slice(0, 10); // YYYY-MM-DD format
   
   const { 
