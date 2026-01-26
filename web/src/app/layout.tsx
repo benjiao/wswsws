@@ -12,6 +12,7 @@ import { PublicEnvScript, env } from 'next-runtime-env';
 import {
   DashboardOutlined,
   MedicineBoxOutlined,
+  SafetyCertificateOutlined,
   SettingOutlined,
   UserOutlined,
   MenuFoldOutlined,
@@ -106,6 +107,21 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
       label: <Link href="/patients">Patients</Link>,
     },
     {
+      key: '/vaccinations',
+      icon: <SafetyCertificateOutlined />,
+      label: 'Vaccinations',
+      children: [
+        {
+          key: '/vaccinations/vaccine-types',
+          label: <Link href="/vaccinations/vaccine-types">Vaccine Types</Link>,
+        },
+        {
+          key: '/vaccinations/vaccine-doses',
+          label: <Link href="/vaccinations/vaccine-doses">Vaccine Doses</Link>,
+        },
+      ],
+    },
+    {
       key: '/inventory',
       icon: <InboxOutlined />,
       label: 'Inventory',
@@ -151,6 +167,9 @@ const RootLayout = ({ children }: React.PropsWithChildren) => {
     }
     if (pathname && pathname.startsWith('/inventory')) {
       newOpenKeys.push('/inventory');
+    }
+    if (pathname && pathname.startsWith('/vaccinations')) {
+      newOpenKeys.push('/vaccinations');
     }
     if (
       pathname &&

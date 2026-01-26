@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'patients',
     'inventory',
     'treatments',
+    'vaccinations',
 
     # Third party apps
     'rest_framework',

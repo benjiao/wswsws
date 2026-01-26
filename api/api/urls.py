@@ -22,6 +22,7 @@ from rest_framework.routers import DefaultRouter
 from patients.views import PatientViewSet, PatientGroupViewSet, PatientStatusViewSet
 from treatments.views import TreatmentScheduleViewSet, TreatmentInstanceViewSet, TreatmentSessionViewSet
 from inventory.views import MedicineViewSet
+from vaccinations.views import VaccineTypeViewSet, VaccineDoseViewSet
 
 admin.site.site_header = "wswsws admin"
 admin.site.site_title = "wswsws admin"
@@ -36,6 +37,8 @@ router.register(r'treatment-instances', TreatmentInstanceViewSet)
 router.register(r'treatment-sessions', TreatmentSessionViewSet)
 
 router.register(r'medicines', MedicineViewSet)
+router.register(r'vaccine-types', VaccineTypeViewSet)
+router.register(r'vaccine-doses', VaccineDoseViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
