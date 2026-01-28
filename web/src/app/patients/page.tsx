@@ -499,14 +499,6 @@ export default function PatientsPage() {
               }
               options={patientStatuses?.map((s: PatientStatus) => ({ value: s.id, label: s.name })) || []}
             />
-            {status && status.is_in_care !== undefined && (
-              <Tag 
-                color={status.is_in_care ? 'green' : 'red'} 
-                style={{ marginTop: 4, fontSize: '10px' }}
-              >
-                {status.is_in_care ? 'In Care' : 'Not In Care'}
-              </Tag>
-            )}
           </div>
         );
       },
