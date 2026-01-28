@@ -172,16 +172,13 @@ class TreatmentSessionDetailSerializer(serializers.ModelSerializer):
         # Always filter to only include instances from active treatment schedules
         instances = instances.filter(treatment_schedule__is_active=True)
         
-        # Filter by patient status when in_care filter is enabled
-        # Only include patients with: Active, Available, Medical Hold, and Quarantine status
         in_care = self.context.get('in_care', False)
         
         if in_care:
-            # Filter by allowed patient statuses (patients currently in care)
+            # Filter to only include instances where the patient's current status
+            # is marked as \"in care\" on the PatientStatus model
             instances = instances.filter(
-                treatment_schedule__patient__status__name__in=[
-                    'Active', 'Available', 'Medical Hold', 'Quarantine'
-                ]
+                treatment_schedule__patient__status__is_in_care=True
             )
         
         group_id = self.context.get('group_id')

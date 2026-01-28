@@ -54,8 +54,7 @@ export default function MedicinePrepTable({ data, loading, error, refetch }: Med
             render: (_: any, record: PrepListItem) => (
                 <span>
                     {record.medicine_name}
-                    {record.dosage ? ` ${record.dosage}` : ''}
-                    {record.unit ? ` ${record.unit}` : ''}
+                    {record.dosage && record.unit ? ` ${record.dosage} ${record.unit}` : ''}
                 </span>
             ),
         },

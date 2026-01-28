@@ -17,7 +17,7 @@ from .serializers import (
 from .tasks import generate_treatment_instances
 
 import logging
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Max
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
     search_fields = ['patient__name', 'medicine__name', 'notes']
     ordering_fields = [
         'start_time', 'created_at', 'patient__name', 'medicine__name',
-        'frequency', 'doses', 'interval', 'dosage', 'is_active'
+        'frequency', 'doses', 'interval', 'dosage', 'is_active', 'last_instance_time'
     ]
     ordering = ['start_time']
     
@@ -53,8 +53,13 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
         serializer.save()
     
     def get_queryset(self):
-        """Filter queryset based on active parameter"""
+        """Filter queryset based on active parameter and annotate last_instance_time"""
         queryset = super().get_queryset()
+        
+        # Annotate with the maximum scheduled_time from related instances (for sorting by end time)
+        queryset = queryset.annotate(
+            last_instance_time=Max('instances__scheduled_time')
+        )
         
         # Filter by is_active field
         active_param = self.request.query_params.get('active', None)
@@ -374,7 +379,7 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
         Fetch a TreatmentInstance by session_date and session_type_display.
         Expects URL: treatment-session/by_date/<session_date>/
         Query params:
-        - in_care: Filter to only include patients currently in care (Active, Available, Medical Hold, Quarantine)
+        - in_care: Filter to only include patients with status marked as in_care=True
         - group: Filter by patient group ID
         """
         if session_date == "today":

@@ -55,6 +55,16 @@ class PatientViewSet(viewsets.ModelViewSet):
                 # No active treatments: count = 0
                 queryset = queryset.filter(active_count=0)
         
+        # Filter by patient status is_in_care
+        status_in_care = self.request.query_params.get('status__is_in_care', None)
+        if status_in_care is not None:
+            if status_in_care.lower() == 'true':
+                # Only patients with status marked as in care
+                queryset = queryset.filter(status__is_in_care=True)
+            elif status_in_care.lower() == 'false':
+                # Only patients with status marked as not in care
+                queryset = queryset.filter(status__is_in_care=False)
+        
         return queryset
     
     @action(detail=True, methods=['get'])
@@ -129,8 +139,9 @@ class PatientStatusViewSet(viewsets.ModelViewSet):
     queryset = PatientStatus.objects.all().order_by('name')
     serializer_class = PatientStatusSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['is_in_care']
     search_fields = ['name', 'description']
-    ordering_fields = ['name', 'created_at', 'updated_at']
+    ordering_fields = ['name', 'is_in_care', 'created_at', 'updated_at']
     ordering = ['name']
     
     @action(detail=False, methods=['get'])

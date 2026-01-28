@@ -4,7 +4,7 @@ from .models import Patient, PatientGroup, PatientStatus
 class PatientStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientStatus
-        fields = ['id', 'name', 'description', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'is_in_care', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
 
 class PatientGroupSerializer(serializers.ModelSerializer):

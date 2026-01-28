@@ -150,6 +150,7 @@ export default function SchedulesPage() {
       'patient_name': 'patient__name',
       'medicine_name': 'medicine__name',
       'start_time': 'start_time',
+      'last_instance': 'last_instance_time',
       'frequency': 'frequency',
       'doses': 'doses',
       'interval': 'interval',
