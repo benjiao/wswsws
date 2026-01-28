@@ -60,6 +60,7 @@ const fetchPatients = async (
     activeTreatments?: string;
     group?: string;
     status?: string;
+    statusInCare?: string;
   },
   ordering?: string
 ): Promise<PaginatedResponse<Patient>> => {
@@ -95,6 +96,13 @@ const fetchPatients = async (
   }
   if (filters?.status) {
     params.append('status', filters.status);
+  }
+  if (filters?.statusInCare) {
+    if (filters.statusInCare === 'yes') {
+      params.append('status__is_in_care', 'true');
+    } else if (filters.statusInCare === 'no') {
+      params.append('status__is_in_care', 'false');
+    }
   }
 
   // Add ordering parameter
@@ -170,6 +178,7 @@ export default function PatientsPage() {
   const [activeTreatmentsFilter, setActiveTreatmentsFilter] = useState<string | undefined>(undefined);
   const [groupFilter, setGroupFilter] = useState<string | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusInCareFilter, setStatusInCareFilter] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortField, setSortField] = useState<string | undefined>(undefined);
@@ -222,6 +231,7 @@ export default function PatientsPage() {
       activeTreatmentsFilter, 
       groupFilter,
       statusFilter,
+      statusInCareFilter,
       ordering
     ],
     queryFn: () => fetchPatients(
@@ -235,6 +245,7 @@ export default function PatientsPage() {
         activeTreatments: activeTreatmentsFilter,
         group: groupFilter,
         status: statusFilter,
+        statusInCare: statusInCareFilter,
       },
       ordering
     ),
@@ -681,6 +692,19 @@ export default function PatientsPage() {
             style={{ width: 180 }}
             options={patientGroups?.map((g: PatientGroup) => ({ value: String(g.id), label: g.name })) || []}
           />
+          <Select
+            placeholder="Status In Care"
+            allowClear
+            value={statusInCareFilter}
+            onChange={(value) => {
+              setStatusInCareFilter(value);
+              setCurrentPage(1);
+            }}
+            style={{ width: 150 }}
+          >
+            <Select.Option value="yes">Status In Care</Select.Option>
+            <Select.Option value="no">Status Not In Care</Select.Option>
+          </Select>
         </Space>
         <Table
           dataSource={patients}
