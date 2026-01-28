@@ -58,6 +58,7 @@ const fetchPatients = async (
     spayNeuter?: string;
     activeTreatments?: string;
     group?: string;
+    status?: string;
   },
   ordering?: string
 ): Promise<PaginatedResponse<Patient>> => {
@@ -90,6 +91,9 @@ const fetchPatients = async (
   }
   if (filters?.group) {
     params.append('group', filters.group);
+  }
+  if (filters?.status) {
+    params.append('status', filters.status);
   }
 
   // Add ordering parameter
@@ -164,6 +168,7 @@ export default function PatientsPage() {
   const [spayNeuterFilter, setSpayNeuterFilter] = useState<string | undefined>(undefined);
   const [activeTreatmentsFilter, setActiveTreatmentsFilter] = useState<string | undefined>(undefined);
   const [groupFilter, setGroupFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortField, setSortField] = useState<string | undefined>(undefined);
@@ -215,6 +220,7 @@ export default function PatientsPage() {
       spayNeuterFilter, 
       activeTreatmentsFilter, 
       groupFilter,
+      statusFilter,
       ordering
     ],
     queryFn: () => fetchPatients(
@@ -227,6 +233,7 @@ export default function PatientsPage() {
         spayNeuter: spayNeuterFilter,
         activeTreatments: activeTreatmentsFilter,
         group: groupFilter,
+        status: statusFilter,
       },
       ordering
     ),
@@ -636,6 +643,22 @@ export default function PatientsPage() {
             <Select.Option value="yes">Has Active Treatments</Select.Option>
             <Select.Option value="no">No Active Treatments</Select.Option>
           </Select>
+          <Select
+            placeholder="Filter by Status"
+            allowClear
+            value={statusFilter}
+            onChange={(value) => {
+              setStatusFilter(value);
+              setCurrentPage(1);
+            }}
+            loading={statusesLoading}
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            style={{ width: 180 }}
+            options={patientStatuses?.map((s: PatientStatus) => ({ value: String(s.id), label: s.name })) || []}
+          />
           <Select
             placeholder="Filter by Group"
             allowClear

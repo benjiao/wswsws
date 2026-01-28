@@ -1,0 +1,35 @@
+when:
+  - event: push
+    branch: dev
+steps:
+  - name: build-api
+    image: woodpeckerci/plugin-docker-buildx:6
+    depends_on: []
+    privileged: true
+    settings:
+      context: api
+      dockerfile: api/Dockerfile
+      platforms: linux/arm64
+      repo: registry.benjiao.net/wswsws/api
+      tags:
+        - dev
+
+  - name: build-web
+    image: woodpeckerci/plugin-docker-buildx:6
+    depends_on: []
+    privileged: true
+    settings:
+      context: web
+      dockerfile: web/Dockerfile
+      platforms: linux/arm64
+      repo: registry.benjiao.net/wswsws/web
+      tags:
+        - dev
+
+  - name: post-hook
+    image: debian:stable-slim
+    commands:
+      - echo notify n8n
+    depends_on:
+      - build-api
+      - build-web

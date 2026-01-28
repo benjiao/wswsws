@@ -22,11 +22,11 @@ class PatientViewSet(viewsets.ModelViewSet):
     queryset = Patient.objects.all().order_by('name')
     serializer_class = PatientSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['sex', 'color', 'spay_neuter_status', 'group']
+    filterset_fields = ['sex', 'color', 'spay_neuter_status', 'group', 'status']
     search_fields = ['name', 'color']
     ordering_fields = [
         'name', 'birth_date', 'rescued_date', 'created_at', 
-        'color', 'sex', 'spay_neuter_status', 'group__name', 'active_count'
+        'color', 'sex', 'spay_neuter_status', 'group__name', 'status__name', 'active_count'
     ]
     ordering = ['name']
     
