@@ -206,7 +206,30 @@ export default function EditSchedulePage() {
   return (
     <div>
       <h1>Edit Treatment Schedule</h1>
+      {instances && instances.length > 0 && (
+        <Card style={{ marginBottom: 24 }}>
+          <h2>Treatment Instances</h2>
+          <TreatmentInstancesBySchedule
+            data={instances}
+            loading={instancesLoading}
+            error={instancesError}
+            refetch={refetchInstances}
+          />
+        </Card>
+      )}
+
+      {instances && instances.length === 0 && !instancesLoading && (
+        <Card style={{ marginBottom: 24 }}>
+          <Alert
+            message="No instances found"
+            description="This schedule doesn't have any treatment instances yet. Generate instances using the generate instances action."
+            type="info"
+            showIcon
+          />
+        </Card>
+      )}
       <Card>
+        <h2>Details</h2>
         <Form
           form={form}
           layout="vertical"
@@ -345,29 +368,6 @@ export default function EditSchedulePage() {
           />
         )}
       </Card>
-
-      {instances && instances.length > 0 && (
-        <Card style={{ marginTop: 24 }}>
-          <h2>Treatment Instances</h2>
-          <TreatmentInstancesBySchedule
-            data={instances}
-            loading={instancesLoading}
-            error={instancesError}
-            refetch={refetchInstances}
-          />
-        </Card>
-      )}
-
-      {instances && instances.length === 0 && !instancesLoading && (
-        <Card style={{ marginTop: 24 }}>
-          <Alert
-            message="No instances found"
-            description="This schedule doesn't have any treatment instances yet. Generate instances using the generate instances action."
-            type="info"
-            showIcon
-          />
-        </Card>
-      )}
     </div>
   );
 }

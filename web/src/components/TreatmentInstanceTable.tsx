@@ -152,11 +152,14 @@ export default function TreatmentInstanceTable({ data, loading, error, refetch }
                         }}
                     >
                         {record.treatment_schedule.medicine_name}
-
-                        <br />
-                        <span style={{ color: '#888', fontSize: '90%' }}>
-                            {`${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`}
-                        </span>
+                        {record.treatment_schedule.dosage && record.treatment_schedule.unit && (
+                            <>
+                                <br />
+                                <span style={{ color: '#888', fontSize: '90%' }}>
+                                    {`${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`}
+                                </span>
+                            </>
+                        )}
                     </span>
                 );
             },
