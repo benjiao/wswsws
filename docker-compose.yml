@@ -1,6 +1,6 @@
 services:
   api:
-    image: registry.benjiao.net/wswsws/api:latest
+    image: registry.benjiao.net/wswsws/api:${DEPLOYMENT_TAG:-latest}
     command: bash -c "python manage.py runserver 0.0.0.0:8000"
     ports:
       - "${API_PORT:-8000}:8000"
@@ -41,7 +41,7 @@ services:
       - wswsws_network
 
   migrate:
-    image: registry.benjiao.net/wswsws/api:latest
+    image: registry.benjiao.net/wswsws/api:${DEPLOYMENT_TAG:-latest}
     command: python manage.py migrate --noinput
     depends_on:
       - db
@@ -58,7 +58,7 @@ services:
       - wswsws_network
 
   web:
-    image: registry.benjiao.net/wswsws/web:latest
+    image: registry.benjiao.net/wswsws/web:${DEPLOYMENT_TAG:-latest}
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
@@ -77,7 +77,7 @@ services:
       - wswsws_network
 
   celery-worker:
-    image: registry.benjiao.net/wswsws/api:latest
+    image: registry.benjiao.net/wswsws/api:${DEPLOYMENT_TAG:-latest}
     command: celery -A api worker --loglevel=info --concurrency=1
     depends_on:
       - redis
@@ -104,7 +104,7 @@ services:
       - wswsws_network
 
   celery-beat:
-    image: registry.benjiao.net/wswsws/api:latest
+    image: registry.benjiao.net/wswsws/api:${DEPLOYMENT_TAG:-latest}
     command: celery -A api beat --loglevel=info
     depends_on:
       - redis
