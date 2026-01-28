@@ -60,10 +60,10 @@ class PatientGroupAdmin(ModelAdmin):
 
 @admin.register(PatientStatus)
 class PatientStatusAdmin(ModelAdmin):
-    list_display = ['name', 'description', 'created_at', 'updated_at']
+    list_display = ['name', 'description', 'is_in_care', 'created_at', 'updated_at']
     list_display_links = ['name']
-    list_editable = ['description']
+    list_editable = ['description', 'is_in_care']
     search_fields = ['name', 'description']
-    list_filter = ['created_at', 'updated_at']
+    list_filter = ['is_in_care', 'created_at', 'updated_at']
     list_per_page = 25
     ordering = ['name']

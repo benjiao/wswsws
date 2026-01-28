@@ -21,6 +21,7 @@ interface PatientStatus {
   id: number;
   name: string;
   description?: string;
+  is_in_care?: boolean;
 }
 
 interface Patient {
@@ -479,23 +480,36 @@ export default function PatientsPage() {
       dataIndex: 'status_id',
       key: 'status',
       width: 180,
-      render: (statusId: number | null | undefined, record: Patient) => (
-        <Select
-          value={statusId ?? undefined}
-          placeholder="Select status"
-          allowClear
-          showSearch
-          loading={statusesLoading}
-          style={{ width: '100%' }}
-          onChange={(value) => {
-            updatePatientStatusMutation.mutate({ patientId: record.id, statusId: value ?? null });
-          }}
-          filterOption={(input, option) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-          }
-          options={patientStatuses?.map((s: PatientStatus) => ({ value: s.id, label: s.name })) || []}
-        />
-      ),
+      render: (statusId: number | null | undefined, record: Patient) => {
+        const status = patientStatuses?.find((s: PatientStatus) => s.id === statusId);
+        return (
+          <div>
+            <Select
+              value={statusId ?? undefined}
+              placeholder="Select status"
+              allowClear
+              showSearch
+              loading={statusesLoading}
+              style={{ width: '100%' }}
+              onChange={(value) => {
+                updatePatientStatusMutation.mutate({ patientId: record.id, statusId: value ?? null });
+              }}
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={patientStatuses?.map((s: PatientStatus) => ({ value: s.id, label: s.name })) || []}
+            />
+            {status && status.is_in_care !== undefined && (
+              <Tag 
+                color={status.is_in_care ? 'green' : 'red'} 
+                style={{ marginTop: 4, fontSize: '10px' }}
+              >
+                {status.is_in_care ? 'In Care' : 'Not In Care'}
+              </Tag>
+            )}
+          </div>
+        );
+      },
       sorter: true,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],

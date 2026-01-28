@@ -374,7 +374,7 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
         Fetch a TreatmentInstance by session_date and session_type_display.
         Expects URL: treatment-session/by_date/<session_date>/
         Query params:
-        - in_care: Filter to only include patients currently in care (Active, Available, Medical Hold, Quarantine)
+        - in_care: Filter to only include patients with status marked as in_care=True
         - group: Filter by patient group ID
         """
         if session_date == "today":

@@ -129,8 +129,9 @@ class PatientStatusViewSet(viewsets.ModelViewSet):
     queryset = PatientStatus.objects.all().order_by('name')
     serializer_class = PatientStatusSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['is_in_care']
     search_fields = ['name', 'description']
-    ordering_fields = ['name', 'created_at', 'updated_at']
+    ordering_fields = ['name', 'is_in_care', 'created_at', 'updated_at']
     ordering = ['name']
     
     @action(detail=False, methods=['get'])
