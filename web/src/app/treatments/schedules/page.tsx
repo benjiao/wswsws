@@ -308,6 +308,20 @@ export default function SchedulesPage() {
       sorter: true,
       sortDirections: ['ascend', 'descend'],
       ellipsis: true,
+      render: (name: string, record: TreatmentSchedule) => {
+        const patientId = record.patient?.id ?? (typeof record.patient === 'number' ? record.patient : undefined);
+        if (patientId) {
+          return (
+            <span
+              onClick={() => router.push(`/patients/${patientId}`)}
+              style={{ cursor: 'pointer' }}
+            >
+              {name}
+            </span>
+          );
+        }
+        return name;
+      },
     },
     {
       title: 'Medicine',

@@ -2,8 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Switch, Checkbox, message } from 'antd';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -79,14 +79,26 @@ const createTreatmentSchedule = async (values: any) => {
 
 export default function NewSchedulePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
   const [createAnother, setCreateAnother] = useState(false);
+  const patientIdFromUrl = searchParams?.get('patient');
 
   const { data: patients, isLoading: patientsLoading } = useQuery({
     queryKey: ['patients'],
     queryFn: fetchPatients,
   });
+
+  // Pre-fill patient when opening from patient page (e.g. ?patient=123)
+  useEffect(() => {
+    if (patientIdFromUrl && patients?.length && form) {
+      const id = parseInt(patientIdFromUrl, 10);
+      if (!isNaN(id) && patients.some((p: Patient) => p.id === id)) {
+        form.setFieldValue('patient', id);
+      }
+    }
+  }, [patientIdFromUrl, patients, form]);
 
   const { data: medicines, isLoading: medicinesLoading } = useQuery({
     queryKey: ['medicines'],
@@ -117,6 +129,8 @@ export default function NewSchedulePage() {
         
         // Show success message
         message.success('Schedule created successfully. You can now create another schedule with the same dosage information.', 3);
+      } else if (patientIdFromUrl) {
+        router.push(`/patients/${patientIdFromUrl}`);
       } else {
         router.push('/treatments/schedules');
       }

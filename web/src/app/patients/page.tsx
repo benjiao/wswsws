@@ -6,6 +6,7 @@ import type { TableProps, ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const { useBreakpoint } = Grid;
 
@@ -431,6 +432,11 @@ export default function PatientsPage() {
       sorter: true,
       sortDirections: ['ascend', 'descend'],
       defaultSortOrder: 'ascend' as const,
+      render: (name: string, record: Patient) => (
+        <Link href={`/patients/${record.id}`}>
+          {name}
+        </Link>
+      ),
     },
     {
       title: 'Color',

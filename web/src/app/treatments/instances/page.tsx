@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, Spin, Alert, Table, Tag } from 'antd';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 import { TreatmentInstance, TreatmentSchedule } from '@/types';
@@ -86,6 +87,7 @@ const fetchTreatmentInstances = async (page: number = 1, pageSize: number = 20):
 };
 
 export default function TreatmentInstancesPage() {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -204,10 +206,30 @@ export default function TreatmentInstancesPage() {
         <Table.Column
             title="Task"
             dataIndex={['treatment_schedule', 'patient_name']}
-            key="patient"
-            render={(_, record: TreatmentInstance) =>
-                `${record.treatment_schedule.patient_name} - ${record.treatment_schedule.medicine_name} ${record.treatment_schedule.dosage} ${record.treatment_schedule.unit}`
-            }
+            key="task"
+            render={(_, record: TreatmentInstance) => {
+                const schedule = record.treatment_schedule;
+                const patientId = schedule?.patient?.id;
+                const patientName = schedule?.patient_name ?? '';
+                const rest = schedule?.dosage && schedule?.unit
+                    ? ` - ${schedule.medicine_name} ${schedule.dosage} ${schedule.unit}`
+                    : ` - ${schedule?.medicine_name ?? ''}`;
+                return (
+                    <span>
+                        {patientId ? (
+                            <span
+                                onClick={() => router.push(`/patients/${patientId}`)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                {patientName}
+                            </span>
+                        ) : (
+                            patientName
+                        )}
+                        {rest}
+                    </span>
+                );
+            }}
         />
         <Table.Column
             title="Status"
