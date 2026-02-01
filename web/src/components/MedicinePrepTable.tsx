@@ -93,9 +93,9 @@ export default function MedicinePrepTable({ data, loading, error, refetch }: Med
     );
 
     return (
-        <Table
+        <Table<PrepListItem>
             dataSource={data || []}
-            rowKey="id"
+            rowKey={(record) => `${record.medicine_id}-${record.dosage ?? ''}-${record.unit ?? ''}`}
             pagination={false}
             size="small" 
             bordered

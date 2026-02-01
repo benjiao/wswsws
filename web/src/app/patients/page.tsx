@@ -5,7 +5,7 @@ import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select, Grid } fr
 import type { TableProps, ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const { useBreakpoint } = Grid;
@@ -169,6 +169,8 @@ const formatDate = (dateString: string | null) => {
 
 export default function PatientsPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const [searchText, setSearchText] = useState('');
@@ -182,9 +184,20 @@ export default function PatientsPage() {
   const [statusInCareFilter, setStatusInCareFilter] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortField, setSortField] = useState<string | undefined>(undefined);
-  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
+  const [sortField, setSortField] = useState<string | undefined>(() => searchParams?.get('sort') ?? undefined);
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(() => {
+    const o = searchParams?.get('order');
+    return o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined;
+  });
   const queryClient = useQueryClient();
+
+  // Sync sort from URL when user navigates (e.g. back/forward)
+  useEffect(() => {
+    const s = searchParams?.get('sort');
+    const o = searchParams?.get('order');
+    setSortField(s ?? undefined);
+    setSortOrder(o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined);
+  }, [searchParams]);
 
   // Debounce search text - update debouncedSearchText after user stops typing for 500ms
   useEffect(() => {
@@ -286,9 +299,19 @@ export default function PatientsPage() {
     if (sorter && sorter.field) {
       setSortField(sorter.field);
       setSortOrder(sorter.order);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      params.set('sort', sorter.field);
+      params.set('order', sorter.order === 'descend' ? 'desc' : 'asc');
+      router.replace(`${pathname ?? ''}?${params.toString()}`, { scroll: false });
     } else {
       setSortField(undefined);
       setSortOrder(undefined);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      params.delete('sort');
+      params.delete('order');
+      const qs = params.toString();
+      const base = pathname ?? '';
+      router.replace(qs ? `${base}?${qs}` : base, { scroll: false });
     }
   };
 
@@ -430,6 +453,7 @@ export default function PatientsPage() {
       dataIndex: 'name',
       key: 'name',
       sorter: true,
+      sortOrder: sortField === 'name' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       defaultSortOrder: 'ascend' as const,
       render: (name: string, record: Patient) => (
@@ -444,6 +468,7 @@ export default function PatientsPage() {
       key: 'color',
       render: (color: string | null) => color || 'N/A',
       sorter: true,
+      sortOrder: sortField === 'color' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],
     },
@@ -453,6 +478,7 @@ export default function PatientsPage() {
       key: 'sex_display',
       render: (sex: string) => sex || 'N/A',
       sorter: true,
+      sortOrder: sortField === 'sex_display' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],
     },
@@ -462,6 +488,7 @@ export default function PatientsPage() {
       key: 'birth_date',
       render: (date: string | null) => formatDate(date),
       sorter: true,
+      sortOrder: sortField === 'birth_date' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],
     },
@@ -471,6 +498,7 @@ export default function PatientsPage() {
       key: 'spay_neuter_status',
       align: 'center',
       sorter: true,
+      sortOrder: sortField === 'spay_neuter_status' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       render: (status: boolean) => (
         <Tag color={status ? 'green' : 'orange'}>
@@ -485,6 +513,7 @@ export default function PatientsPage() {
       key: 'active_treatment_schedules_count',
       align: 'center',
       sorter: true,
+      sortOrder: sortField === 'active_treatment_schedules_count' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       render: (count: number) => (
         <Tag color={count > 0 ? 'blue' : 'default'}>
@@ -520,6 +549,7 @@ export default function PatientsPage() {
         );
       },
       sorter: true,
+      sortOrder: sortField === 'status' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],
     },
@@ -546,6 +576,7 @@ export default function PatientsPage() {
         />
       ),
       sorter: true,
+      sortOrder: sortField === 'group' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],
     },

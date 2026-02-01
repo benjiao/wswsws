@@ -206,6 +206,7 @@ export default function TreatmentSessionsByDatePage() {
                 loading={treatmentSessionsLoading} 
                 error={treatmentSessionsError}
                 refetch={refetchTreatmentSessions}
+                sectionKey={session?.session_type_display?.toLowerCase().replace(/\s+/g, '_')}
               />
 
           </div>
