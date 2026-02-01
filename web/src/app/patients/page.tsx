@@ -433,7 +433,7 @@ export default function PatientsPage() {
       sortDirections: ['ascend', 'descend'],
       defaultSortOrder: 'ascend' as const,
       render: (name: string, record: Patient) => (
-        <Link href={`/patients/${record.id}`}>
+        <Link href={`/patients/${record.id}`} style={{ color: 'inherit' }}>
           {name}
         </Link>
       ),
