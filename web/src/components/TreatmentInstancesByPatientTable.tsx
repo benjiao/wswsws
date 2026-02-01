@@ -122,7 +122,26 @@ export default function TreatmentInstancesByPatientTable({ data, loading, error,
             sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
                 (a.treatment_schedule?.patient_name || '').localeCompare(b.treatment_schedule?.patient_name || ''),
             sortDirections: ['ascend', 'descend'],
-            render: (_: any, record: TreatmentInstance) => record.treatment_schedule.patient_name,
+            render: (_: any, record: TreatmentInstance) => {
+                const patient = record.treatment_schedule?.patient;
+                const patientId = typeof patient === 'object' && patient !== null
+                    ? (patient as { id?: number }).id
+                    : typeof patient === 'number'
+                    ? patient
+                    : undefined;
+                const name = record.treatment_schedule?.patient_name ?? '';
+                if (patientId) {
+                    return (
+                        <span
+                            onClick={() => router.push(`/patients/${patientId}`)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {name}
+                        </span>
+                    );
+                }
+                return name;
+            },
         },
         {
             title: 'Medicine',

@@ -133,6 +133,20 @@ export default function VaccineDosesPage() {
       key: 'patient_name',
       sorter: (a, b) => a.patient_name.localeCompare(b.patient_name),
       sortDirections: ['ascend', 'descend'],
+      render: (name: string, record: VaccineDose) => {
+        const patientId = typeof record.patient === 'object' ? record.patient?.id : record.patient;
+        if (patientId) {
+          return (
+            <span
+              onClick={() => router.push(`/patients/${patientId}`)}
+              style={{ cursor: 'pointer' }}
+            >
+              {name}
+            </span>
+          );
+        }
+        return name;
+      },
     },
     {
       title: 'Vaccine',

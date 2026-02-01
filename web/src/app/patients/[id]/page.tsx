@@ -2,8 +2,11 @@
 
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, Button, Space, Spin, Alert, Card, Checkbox } from 'antd';
+import { Form, Input, Select, Button, Space, Spin, Alert, Card, Checkbox, Table, Tag, Switch } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useRouter, useParams } from 'next/navigation';
+import { TreatmentSchedule } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -74,11 +77,44 @@ const updatePatient = async (id: string, values: any) => {
   return response.json();
 };
 
+type ScheduleActiveFilter = 'active' | 'inactive' | 'all';
+
+const fetchTreatmentSchedules = async (
+  patientId: string,
+  activeFilter: ScheduleActiveFilter
+): Promise<TreatmentSchedule[]> => {
+  const params = new URLSearchParams({
+    patient: patientId,
+    page_size: '100',
+  });
+  if (activeFilter === 'active') params.set('active', 'true');
+  if (activeFilter === 'inactive') params.set('active', 'false');
+  const response = await fetch(`${API_URL}/treatment-schedules/?${params.toString()}`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return data.results ?? data ?? [];
+};
+
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 export default function EditPatientPage() {
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
+  const [scheduleActiveFilter, setScheduleActiveFilter] = React.useState<ScheduleActiveFilter>('active');
 
   const { data: patientGroups, isLoading: groupsLoading } = useQuery({
     queryKey: ['patient_groups'],
@@ -109,12 +145,36 @@ export default function EditPatientPage() {
     enabled: !!patientId,
   });
 
+  const { data: schedules = [], isLoading: schedulesLoading } = useQuery({
+    queryKey: ['treatment_schedules', 'patient', patientId, scheduleActiveFilter],
+    queryFn: () => fetchTreatmentSchedules(patientId, scheduleActiveFilter),
+    enabled: !!patientId,
+  });
+
   const updateMutation = useMutation({
     mutationFn: (values: any) => updatePatient(patientId, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       queryClient.invalidateQueries({ queryKey: ['patient', patientId] });
       router.push('/patients');
+    },
+  });
+
+  const toggleScheduleActiveMutation = useMutation({
+    mutationFn: async ({ scheduleId, isActive }: { scheduleId: number; isActive: boolean }) => {
+      const response = await fetch(`${API_URL}/treatment-schedules/${scheduleId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ is_active: isActive }),
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['treatment_schedules'] });
     },
   });
 
@@ -154,9 +214,184 @@ export default function EditPatientPage() {
     );
   }
 
+  const scheduleColumns: ColumnsType<TreatmentSchedule> = [
+    {
+      title: 'Medicine',
+      dataIndex: 'medicine_name',
+      key: 'medicine_name',
+      sorter: (a, b) => (a.medicine_name ?? '').localeCompare(b.medicine_name ?? ''),
+      sortDirections: ['ascend', 'descend'],
+      render: (_: any, record: TreatmentSchedule) => (
+        <span>
+          {record.medicine_name}
+          {record.dosage && record.unit && (
+            <>
+              <br />
+              <span style={{ color: '#888', fontSize: '90%' }}>
+                {`${record.dosage} ${record.unit}`}
+              </span>
+            </>
+          )}
+        </span>
+      ),
+    },
+    {
+      title: 'Start Time',
+      dataIndex: 'start_time',
+      key: 'start_time',
+      sorter: (a, b) => {
+        const at = a.start_time ? new Date(a.start_time).getTime() : 0;
+        const bt = b.start_time ? new Date(b.start_time).getTime() : 0;
+        return at - bt;
+      },
+      sortDirections: ['ascend', 'descend'],
+      render: (date: string | null) => formatDateTime(date),
+    },
+    {
+      title: 'End Time',
+      dataIndex: 'last_instance',
+      key: 'last_instance',
+      sorter: (a, b) => {
+        const at = a.last_instance ? new Date(a.last_instance).getTime() : 0;
+        const bt = b.last_instance ? new Date(b.last_instance).getTime() : 0;
+        return at - bt;
+      },
+      sortDirections: ['ascend', 'descend'],
+      render: (date: string | null) => formatDateTime(date),
+    },
+    {
+      title: 'Frequency',
+      dataIndex: 'frequency',
+      key: 'frequency',
+      sorter: (a, b) => (a.frequency ?? 0) - (b.frequency ?? 0),
+      sortDirections: ['ascend', 'descend'],
+      align: 'center',
+      render: (freq: number | null) => freq ?? 'N/A',
+    },
+    {
+      title: 'Interval',
+      dataIndex: 'interval_display',
+      key: 'interval_display',
+      sorter: (a, b) => (a.interval ?? 0) - (b.interval ?? 0),
+      sortDirections: ['ascend', 'descend'],
+      render: (interval: string, record: TreatmentSchedule) => (
+        <Tag color={record.interval === 1 ? 'blue' : 'cyan'}>{interval || 'N/A'}</Tag>
+      ),
+    },
+    {
+      title: 'Total Doses',
+      dataIndex: 'doses',
+      key: 'doses',
+      sorter: (a, b) => (a.doses ?? 0) - (b.doses ?? 0),
+      sortDirections: ['ascend', 'descend'],
+      align: 'center',
+      render: (doses: number | null) => doses ?? 'N/A',
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      align: 'center',
+      sorter: (a, b) => (a.pending_count ?? 0) - (b.pending_count ?? 0),
+      sortDirections: ['ascend', 'descend'],
+      render: (_: any, record: TreatmentSchedule) => {
+        const completed = record.completed_count ?? 0;
+        const pending = record.pending_count ?? 0;
+        const skipped = record.skipped_count ?? 0;
+        const total = record.instances_count ?? 0;
+        if (total === 0) return <span>No instances</span>;
+        return (
+          <Space size="small">
+            <Tag color="green">{completed}</Tag>
+            <Tag color="default">{pending}</Tag>
+            <Tag color="red">{skipped}</Tag>
+          </Space>
+        );
+      },
+    },
+    {
+      title: 'Active',
+      dataIndex: 'is_active',
+      key: 'is_active',
+      align: 'center',
+      sorter: (a, b) => (a.is_active ? 1 : 0) - (b.is_active ? 1 : 0),
+      sortDirections: ['ascend', 'descend'],
+      render: (isActive: boolean | undefined, record: TreatmentSchedule) => (
+        <Switch
+          checked={isActive !== undefined ? isActive : true}
+          onChange={(checked) => {
+            toggleScheduleActiveMutation.mutate({ scheduleId: record.id, isActive: checked });
+          }}
+          loading={toggleScheduleActiveMutation.isPending}
+        />
+      ),
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 48,
+      render: (_: any, record: TreatmentSchedule) => (
+        <Button
+          type="text"
+          icon={<EditOutlined />}
+          onClick={() => router.push(`/treatments/schedules/${record.id}`)}
+          title="Edit schedule"
+        />
+      ),
+    },
+  ];
+
   return (
     <div>
       <h1>Edit Patient</h1>
+
+      <Card
+        title="Treatment Schedules"
+        size="small"
+        type="inner"
+        style={{ marginBottom: 24 }}
+      >
+        <Space style={{ marginBottom: 12, width: '100%', justifyContent: 'space-between' }}>
+          <Space>
+            <span>Status:</span>
+            <Select
+              value={scheduleActiveFilter}
+              onChange={(v) => setScheduleActiveFilter(v)}
+              options={[
+                { value: 'active', label: 'Active only' },
+                { value: 'inactive', label: 'Inactive only' },
+                { value: 'all', label: 'All' },
+              ]}
+              style={{ width: 140 }}
+            />
+          </Space>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push(`/treatments/schedules/new?patient=${patientId}`)}
+          >
+            Add Schedule
+          </Button>
+        </Space>
+        {schedulesLoading ? (
+          <Spin size="small" />
+        ) : schedules.length === 0 ? (
+          <span style={{ color: '#888' }}>
+            {scheduleActiveFilter === 'active' && 'No active treatment schedules.'}
+            {scheduleActiveFilter === 'inactive' && 'No inactive treatment schedules.'}
+            {scheduleActiveFilter === 'all' && 'No treatment schedules.'}
+          </span>
+        ) : (
+          <Table
+            dataSource={schedules}
+            columns={scheduleColumns}
+            rowKey="id"
+            pagination={false}
+            size="small"
+            bordered
+          />
+        )}
+      </Card>
+
         <Form
           form={form}
           layout="vertical"
