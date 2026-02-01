@@ -7,7 +7,7 @@ import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant
 import { useState, useMemo, useEffect } from 'react';
 
 const { useBreakpoint } = Grid;
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { TreatmentSchedule } from '@/types';
 
@@ -119,6 +119,8 @@ const hasPendingInstances = (schedule: TreatmentSchedule): boolean => {
 
 export default function SchedulesPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const [searchText, setSearchText] = useState('');
@@ -127,9 +129,19 @@ export default function SchedulesPage() {
   const [activeFilter, setActiveFilter] = useState<string | undefined>("active");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortField, setSortField] = useState<string | undefined>(undefined);
-  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
+  const [sortField, setSortField] = useState<string | undefined>(() => searchParams?.get('sort') ?? undefined);
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(() => {
+    const o = searchParams?.get('order');
+    return o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined;
+  });
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const s = searchParams?.get('sort');
+    const o = searchParams?.get('order');
+    setSortField(s ?? undefined);
+    setSortOrder(o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined);
+  }, [searchParams]);
 
   // Debounce search text - update debouncedSearchText after user stops typing for 500ms
   useEffect(() => {
@@ -213,9 +225,19 @@ export default function SchedulesPage() {
     if (sorter && sorter.field) {
       setSortField(sorter.field);
       setSortOrder(sorter.order);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      params.set('sort', sorter.field);
+      params.set('order', sorter.order === 'descend' ? 'desc' : 'asc');
+      router.replace(`${pathname ?? ''}?${params.toString()}`, { scroll: false });
     } else {
       setSortField(undefined);
       setSortOrder(undefined);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      params.delete('sort');
+      params.delete('order');
+      const qs = params.toString();
+      const base = pathname ?? '';
+      router.replace(qs ? `${base}?${qs}` : base, { scroll: false });
     }
   };
 
@@ -306,6 +328,7 @@ export default function SchedulesPage() {
       dataIndex: 'patient_name',
       key: 'patient_name',
       sorter: true,
+      sortOrder: sortField === 'patient_name' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       ellipsis: true,
       render: (name: string, record: TreatmentSchedule) => {
@@ -328,6 +351,7 @@ export default function SchedulesPage() {
       dataIndex: 'medicine_name',
       key: 'medicine_name',
       sorter: true,
+      sortOrder: sortField === 'medicine_name' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       render: (_: any, record: TreatmentSchedule) => {
         return (
@@ -361,6 +385,7 @@ export default function SchedulesPage() {
       key: 'start_time',
       render: (date: string | null) => formatDateTime(date),
       sorter: true,
+      sortOrder: sortField === 'start_time' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       defaultSortOrder: 'ascend' as const,
       responsive: ['md'],
@@ -371,6 +396,7 @@ export default function SchedulesPage() {
       key: 'last_instance',
       render: (date: string | null) => formatDateTime(date),
       sorter: true,
+      sortOrder: sortField === 'last_instance' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],
     },
@@ -380,6 +406,7 @@ export default function SchedulesPage() {
       key: 'frequency',
       render: (freq: number | null) => freq ?? 'N/A',
       sorter: true,
+      sortOrder: sortField === 'frequency' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       align: 'center',
       responsive: ['md'],
@@ -394,6 +421,7 @@ export default function SchedulesPage() {
         </Tag>
       ),
       sorter: true,
+      sortOrder: sortField === 'interval_display' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],
     },
@@ -403,6 +431,7 @@ export default function SchedulesPage() {
       key: 'doses',
       render: (doses: number | null) => doses ?? 'N/A',
       sorter: true,
+      sortOrder: sortField === 'doses' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       align: 'center',
       responsive: ['md'],
@@ -448,6 +477,7 @@ export default function SchedulesPage() {
         />
       ),
       sorter: true,
+      sortOrder: sortField === 'is_active' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       responsive: ['md'],
     },

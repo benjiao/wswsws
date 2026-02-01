@@ -5,7 +5,7 @@ import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select, Grid } fr
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 const { useBreakpoint } = Grid;
 
@@ -90,6 +90,8 @@ const fetchMedicines = async (
 
 export default function MedicinesPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const [searchText, setSearchText] = useState('');
@@ -97,9 +99,19 @@ export default function MedicinesPage() {
   const [stockStatusFilter, setStockStatusFilter] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortField, setSortField] = useState<string | undefined>(undefined);
-  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
+  const [sortField, setSortField] = useState<string | undefined>(() => searchParams?.get('sort') ?? undefined);
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(() => {
+    const o = searchParams?.get('order');
+    return o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined;
+  });
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const s = searchParams?.get('sort');
+    const o = searchParams?.get('order');
+    setSortField(s ?? undefined);
+    setSortOrder(o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined);
+  }, [searchParams]);
 
   // Debounce search text - update debouncedSearchText after user stops typing for 500ms
   useEffect(() => {
@@ -119,6 +131,7 @@ export default function MedicinesPage() {
     const fieldMap: Record<string, string> = {
       'name': 'name',
       'stock_status': 'stock_status',
+      'stock_status_display': 'stock_status',
       'created_at': 'created_at',
     };
     const apiField = fieldMap[sortField] || sortField;
@@ -174,9 +187,19 @@ export default function MedicinesPage() {
     if (sorter && sorter.field) {
       setSortField(sorter.field);
       setSortOrder(sorter.order);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      params.set('sort', sorter.field);
+      params.set('order', sorter.order === 'descend' ? 'desc' : 'asc');
+      router.replace(`${pathname ?? ''}?${params.toString()}`, { scroll: false });
     } else {
       setSortField(undefined);
       setSortOrder(undefined);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      params.delete('sort');
+      params.delete('order');
+      const qs = params.toString();
+      const base = pathname ?? '';
+      router.replace(qs ? `${base}?${qs}` : base, { scroll: false });
     }
   };
 
@@ -245,6 +268,7 @@ export default function MedicinesPage() {
       dataIndex: 'name',
       key: 'name',
       sorter: true,
+      sortOrder: sortField === 'name' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       defaultSortOrder: 'ascend' as const,
     },
@@ -253,6 +277,7 @@ export default function MedicinesPage() {
       dataIndex: 'stock_status_display',
       key: 'stock_status',
       sorter: true,
+      sortOrder: (sortField === 'stock_status' || sortField === 'stock_status_display') ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
       render: (status: string, record: Medicine) => (
         <Tag color={getStockStatusColor(record.stock_status)}>

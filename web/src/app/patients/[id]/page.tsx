@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, Button, Space, Spin, Alert, Card, Checkbox, Table, Tag, Switch } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { Form, Input, Select, Button, Space, Spin, Alert, Card, Checkbox } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useRouter, useParams } from 'next/navigation';
+import PatientSchedulesTable from '@/components/PatientSchedulesTable';
 import { TreatmentSchedule } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -95,18 +95,6 @@ const fetchTreatmentSchedules = async (
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   return data.results ?? data ?? [];
-};
-
-const formatDateTime = (dateString: string | null) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 };
 
 export default function EditPatientPage() {
@@ -214,132 +202,6 @@ export default function EditPatientPage() {
     );
   }
 
-  const scheduleColumns: ColumnsType<TreatmentSchedule> = [
-    {
-      title: 'Medicine',
-      dataIndex: 'medicine_name',
-      key: 'medicine_name',
-      sorter: (a, b) => (a.medicine_name ?? '').localeCompare(b.medicine_name ?? ''),
-      sortDirections: ['ascend', 'descend'],
-      render: (_: any, record: TreatmentSchedule) => (
-        <span>
-          {record.medicine_name}
-          {record.dosage && record.unit && (
-            <>
-              <br />
-              <span style={{ color: '#888', fontSize: '90%' }}>
-                {`${record.dosage} ${record.unit}`}
-              </span>
-            </>
-          )}
-        </span>
-      ),
-    },
-    {
-      title: 'Start Time',
-      dataIndex: 'start_time',
-      key: 'start_time',
-      sorter: (a, b) => {
-        const at = a.start_time ? new Date(a.start_time).getTime() : 0;
-        const bt = b.start_time ? new Date(b.start_time).getTime() : 0;
-        return at - bt;
-      },
-      sortDirections: ['ascend', 'descend'],
-      render: (date: string | null) => formatDateTime(date),
-    },
-    {
-      title: 'End Time',
-      dataIndex: 'last_instance',
-      key: 'last_instance',
-      sorter: (a, b) => {
-        const at = a.last_instance ? new Date(a.last_instance).getTime() : 0;
-        const bt = b.last_instance ? new Date(b.last_instance).getTime() : 0;
-        return at - bt;
-      },
-      sortDirections: ['ascend', 'descend'],
-      render: (date: string | null) => formatDateTime(date),
-    },
-    {
-      title: 'Frequency',
-      dataIndex: 'frequency',
-      key: 'frequency',
-      sorter: (a, b) => (a.frequency ?? 0) - (b.frequency ?? 0),
-      sortDirections: ['ascend', 'descend'],
-      align: 'center',
-      render: (freq: number | null) => freq ?? 'N/A',
-    },
-    {
-      title: 'Interval',
-      dataIndex: 'interval_display',
-      key: 'interval_display',
-      sorter: (a, b) => (a.interval ?? 0) - (b.interval ?? 0),
-      sortDirections: ['ascend', 'descend'],
-      render: (interval: string, record: TreatmentSchedule) => (
-        <Tag color={record.interval === 1 ? 'blue' : 'cyan'}>{interval || 'N/A'}</Tag>
-      ),
-    },
-    {
-      title: 'Total Doses',
-      dataIndex: 'doses',
-      key: 'doses',
-      sorter: (a, b) => (a.doses ?? 0) - (b.doses ?? 0),
-      sortDirections: ['ascend', 'descend'],
-      align: 'center',
-      render: (doses: number | null) => doses ?? 'N/A',
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      align: 'center',
-      sorter: (a, b) => (a.pending_count ?? 0) - (b.pending_count ?? 0),
-      sortDirections: ['ascend', 'descend'],
-      render: (_: any, record: TreatmentSchedule) => {
-        const completed = record.completed_count ?? 0;
-        const pending = record.pending_count ?? 0;
-        const skipped = record.skipped_count ?? 0;
-        const total = record.instances_count ?? 0;
-        if (total === 0) return <span>No instances</span>;
-        return (
-          <Space size="small">
-            <Tag color="green">{completed}</Tag>
-            <Tag color="default">{pending}</Tag>
-            <Tag color="red">{skipped}</Tag>
-          </Space>
-        );
-      },
-    },
-    {
-      title: 'Active',
-      dataIndex: 'is_active',
-      key: 'is_active',
-      align: 'center',
-      sorter: (a, b) => (a.is_active ? 1 : 0) - (b.is_active ? 1 : 0),
-      sortDirections: ['ascend', 'descend'],
-      render: (isActive: boolean | undefined, record: TreatmentSchedule) => (
-        <Switch
-          checked={isActive !== undefined ? isActive : true}
-          onChange={(checked) => {
-            toggleScheduleActiveMutation.mutate({ scheduleId: record.id, isActive: checked });
-          }}
-          loading={toggleScheduleActiveMutation.isPending}
-        />
-      ),
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 48,
-      render: (_: any, record: TreatmentSchedule) => (
-        <Button
-          type="text"
-          icon={<EditOutlined />}
-          onClick={() => router.push(`/treatments/schedules/${record.id}`)}
-          title="Edit schedule"
-        />
-      ),
-    },
-  ];
-
   return (
     <div>
       <h1>Edit Patient</h1>
@@ -372,22 +234,22 @@ export default function EditPatientPage() {
             Add Schedule
           </Button>
         </Space>
-        {schedulesLoading ? (
-          <Spin size="small" />
-        ) : schedules.length === 0 ? (
+        {schedules.length === 0 && !schedulesLoading ? (
           <span style={{ color: '#888' }}>
             {scheduleActiveFilter === 'active' && 'No active treatment schedules.'}
             {scheduleActiveFilter === 'inactive' && 'No inactive treatment schedules.'}
             {scheduleActiveFilter === 'all' && 'No treatment schedules.'}
           </span>
         ) : (
-          <Table
-            dataSource={schedules}
-            columns={scheduleColumns}
-            rowKey="id"
-            pagination={false}
-            size="small"
-            bordered
+          <PatientSchedulesTable
+            data={schedules}
+            loading={schedulesLoading}
+            sectionKey="patient_schedules"
+            onToggleActive={(scheduleId, isActive) =>
+              toggleScheduleActiveMutation.mutate({ scheduleId, isActive })
+            }
+            onEditSchedule={(scheduleId) => router.push(`/treatments/schedules/${scheduleId}`)}
+            isToggling={toggleScheduleActiveMutation.isPending}
           />
         )}
       </Card>
