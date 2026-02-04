@@ -200,31 +200,31 @@ export default function NewVaccineDosePage() {
 
   const selectedVaccineTypeId = Form.useWatch('vaccine_type', form);
 
-  const clinicOptions = useMemo(() => {
+  const clinicOptions = useMemo((): { value: number | string; label: string }[] => {
     const term = clinicSearch.trim().toLowerCase();
     const matching = term
       ? clinics.filter((c: Clinic) => c.name.toLowerCase().includes(term))
       : clinics;
-    const base = matching.map((c: Clinic) => ({ value: c.id, label: c.name }));
+    const base: { value: number | string; label: string }[] = matching.map((c: Clinic) => ({ value: c.id, label: c.name }));
     if (term && !clinics.some((c: Clinic) => c.name.toLowerCase() === term)) {
       base.push({ value: `${CREATE_PREFIX}${clinicSearch.trim()}`, label: `+ Add "${clinicSearch.trim()}"` });
     }
     return base;
   }, [clinics, clinicSearch]);
 
-  const veterinarianOptions = useMemo(() => {
+  const veterinarianOptions = useMemo((): { value: number | string; label: string }[] => {
     const term = veterinarianSearch.trim().toLowerCase();
     const matching = term
       ? veterinarians.filter((v: Veterinarian) => v.name.toLowerCase().includes(term))
       : veterinarians;
-    const base = matching.map((v: Veterinarian) => ({ value: v.id, label: v.name }));
+    const base: { value: number | string; label: string }[] = matching.map((v: Veterinarian) => ({ value: v.id, label: v.name }));
     if (term && !veterinarians.some((v: Veterinarian) => v.name.toLowerCase() === term)) {
       base.push({ value: `${CREATE_PREFIX}${veterinarianSearch.trim()}`, label: `+ Add "${veterinarianSearch.trim()}"` });
     }
     return base;
   }, [veterinarians, veterinarianSearch]);
 
-  const productOptions = useMemo(() => {
+  const productOptions = useMemo((): { value: number | string; label: string }[] => {
     const vaccineTypeId = selectedVaccineTypeId;
     const term = productSearch.trim().toLowerCase();
     const forType = vaccineTypeId
@@ -236,7 +236,7 @@ export default function NewVaccineDosePage() {
           (p.manufacturer && p.manufacturer.toLowerCase().includes(term))
         )
       : forType;
-    const base = matching.map((p: VaccineProduct) => ({
+    const base: { value: number | string; label: string }[] = matching.map((p: VaccineProduct) => ({
       value: p.id,
       label: p.manufacturer ? `${p.product_name} (${p.manufacturer})` : p.product_name,
     }));
