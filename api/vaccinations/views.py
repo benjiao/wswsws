@@ -2,8 +2,9 @@ from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import OuterRef, Subquery, Max, F, Case, When, Value, BooleanField
+from django.db.models import OuterRef, Subquery, Max, F, Case, When, Value, BooleanField, Q
 from datetime import timedelta
+from django.utils import timezone
 from .models import VaccineType, VaccineProduct, VaccineDose
 from .serializers import VaccineTypeSerializer, VaccineProductSerializer, VaccineDoseSerializer, VaccineDoseDetailSerializer
 from .filters import VaccineDoseFilter
@@ -120,10 +121,13 @@ class VaccineDoseViewSet(viewsets.ModelViewSet):
 
         total_slots = in_care_patients_count * required_vaccine_types_count
 
+        today = timezone.now().date()
         covered_pairs = _vaccine_dose_queryset().filter(
             is_latest=True,
             patient__status__is_in_care=True,
             vaccine_type__in=required_vaccine_types,
+        ).filter(
+            Q(expiration_date__isnull=True) | Q(expiration_date__gte=today)
         ).values('patient_id', 'vaccine_type_id').distinct().count()
 
         percentage = (covered_pairs / total_slots * 100) if total_slots > 0 else 0
