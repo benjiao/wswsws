@@ -18,9 +18,10 @@ interface VaccineDose {
   dose_number: number;
   dose_date: string;
   expiration_date: string;
-  clinic_name: string | null;
-  product_name: string | null;
-  manufacturer: string | null;
+  clinic: number | null;
+  clinic_name_display: string | null;
+  veterinarian: number | null;
+  veterinarian_name_display: string | null;
   notes: string | null;
 }
 
@@ -99,9 +100,8 @@ export default function VaccineDosesPage() {
     return vaccineDoses.filter((dose: VaccineDose) =>
       dose.patient_name.toLowerCase().includes(lowerSearchText) ||
       dose.vaccine_type_name.toLowerCase().includes(lowerSearchText) ||
-      (dose.clinic_name && dose.clinic_name.toLowerCase().includes(lowerSearchText)) ||
-      (dose.product_name && dose.product_name.toLowerCase().includes(lowerSearchText)) ||
-      (dose.manufacturer && dose.manufacturer.toLowerCase().includes(lowerSearchText)) ||
+      (dose.clinic_name_display && dose.clinic_name_display.toLowerCase().includes(lowerSearchText)) ||
+      (dose.veterinarian_name_display && dose.veterinarian_name_display.toLowerCase().includes(lowerSearchText)) ||
       (dose.notes && dose.notes.toLowerCase().includes(lowerSearchText))
     );
   }, [vaccineDoses, searchText]);
@@ -180,10 +180,16 @@ export default function VaccineDosesPage() {
       sortDirections: ['ascend', 'descend'],
     },
     {
-      title: 'Product',
-      dataIndex: 'product_name',
-      key: 'product_name',
-      render: (product: string | null) => product || 'N/A',
+      title: 'Clinic',
+      dataIndex: 'clinic_name_display',
+      key: 'clinic',
+      render: (v: string | null) => v || '—',
+    },
+    {
+      title: 'Veterinarian',
+      dataIndex: 'veterinarian_name_display',
+      key: 'veterinarian',
+      render: (v: string | null) => v || '—',
     },
     {
       title: 'Actions',
@@ -236,7 +242,7 @@ export default function VaccineDosesPage() {
       </Space>
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         <Input
-          placeholder="Search by patient, vaccine, clinic, or product..."
+          placeholder="Search by patient, vaccine, clinic, veterinarian, or notes..."
           prefix={<SearchOutlined />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}

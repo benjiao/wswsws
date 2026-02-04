@@ -33,6 +33,26 @@ export default function VaccinationsPage() {
         </Card>
 
         <Card
+          title="Vaccine Products"
+          extra={
+            <Space>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => router.push('/vaccinations/vaccine-products/new')}
+              >
+                Create New Product
+              </Button>
+              <Button onClick={() => router.push('/vaccinations/vaccine-products')}>
+                View All
+              </Button>
+            </Space>
+          }
+        >
+          <p>Manage vaccine products (brand names and manufacturers) linked to vaccine types.</p>
+        </Card>
+
+        <Card
           title="Vaccine Doses"
           extra={
             <Space>

@@ -2,10 +2,10 @@ from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from datetime import timedelta
 from django.db.models import Max
-from .models import VaccineType, VaccineDose
-from .serializers import VaccineTypeSerializer, VaccineDoseSerializer, VaccineDoseDetailSerializer
+from datetime import timedelta
+from .models import VaccineType, VaccineProduct, VaccineDose
+from .serializers import VaccineTypeSerializer, VaccineProductSerializer, VaccineDoseSerializer, VaccineDoseDetailSerializer
 
 
 class VaccineTypeViewSet(viewsets.ModelViewSet):
@@ -23,9 +23,9 @@ class VaccineTypeViewSet(viewsets.ModelViewSet):
     queryset = VaccineType.objects.all().order_by('name')
     serializer_class = VaccineTypeSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['species', 'schedule_mode', 'is_required']
+    filterset_fields = ['species', 'is_required']
     search_fields = ['name', 'notes']
-    ordering_fields = ['name', 'species', 'schedule_mode', 'is_required', 'created_at', 'updated_at']
+    ordering_fields = ['name', 'species', 'is_required', 'created_at', 'updated_at']
     ordering = ['name']
     
     @action(detail=False, methods=['get'])
@@ -33,6 +33,24 @@ class VaccineTypeViewSet(viewsets.ModelViewSet):
         """Get all vaccine types without pagination (for dropdowns/selects)"""
         vaccine_types = self.queryset.all()
         serializer = self.get_serializer(vaccine_types, many=True)
+        return Response(serializer.data)
+
+
+class VaccineProductViewSet(viewsets.ModelViewSet):
+    """ViewSet for VaccineProduct CRUD. Used for product dropdown and creatable on dose form."""
+    queryset = VaccineProduct.objects.select_related('vaccine_type').all().order_by('vaccine_type__name', 'product_name')
+    serializer_class = VaccineProductSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['vaccine_type']
+    search_fields = ['product_name', 'manufacturer']
+    ordering_fields = ['product_name', 'manufacturer', 'created_at', 'updated_at']
+    ordering = ['vaccine_type__name', 'product_name']
+
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        """Get all vaccine products without pagination (for dropdowns/selects)"""
+        products = self.queryset.all()
+        serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
 
 
@@ -48,14 +66,19 @@ class VaccineDoseViewSet(viewsets.ModelViewSet):
     - partial_update: PATCH /api/vaccine-doses/{id}/
     - destroy: DELETE /api/vaccine-doses/{id}/
     """
-    queryset = VaccineDose.objects.select_related('vaccine_type', 'patient').all().order_by('-dose_date', 'patient__name')
+    queryset = VaccineDose.objects.select_related(
+        'vaccine_type', 'patient', 'clinic', 'veterinarian', 'vaccine_product'
+    ).all().order_by('-dose_date', 'patient__name')
     serializer_class = VaccineDoseSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['vaccine_type', 'patient', 'dose_date']
-    search_fields = ['patient__name', 'vaccine_type__name', 'clinic_name', 'product_name', 'manufacturer', 'notes']
+    filterset_fields = ['vaccine_type', 'patient', 'clinic', 'veterinarian', 'vaccine_product', 'dose_date']
+    search_fields = [
+        'patient__name', 'vaccine_type__name', 'clinic__name', 'veterinarian__name',
+        'notes',
+    ]
     ordering_fields = ['dose_date', 'expiration_date', 'dose_number', 'created_at', 'updated_at']
     ordering = ['-dose_date', 'patient__name']
-    
+
     def get_serializer_class(self):
         """Use detailed serializer for retrieve action"""
         if self.action == 'retrieve':
@@ -78,11 +101,7 @@ class VaccineDoseViewSet(viewsets.ModelViewSet):
         if expiration_date is None:
             vaccine_type = validated_data['vaccine_type']
             dose_date = validated_data.get('dose_date')
-            if (
-                dose_date
-                and vaccine_type.schedule_mode == VaccineType.SCHEDULE_MODE_INTERVAL
-                and vaccine_type.interval_days
-            ):
+            if dose_date and vaccine_type.interval_days:
                 expiration_date = dose_date + timedelta(days=vaccine_type.interval_days)
         serializer.save(dose_number=dose_number, expiration_date=expiration_date)
 
