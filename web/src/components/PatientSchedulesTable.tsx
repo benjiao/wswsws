@@ -191,6 +191,7 @@ export default function PatientSchedulesTable({
       title: 'Interval',
       dataIndex: 'interval_display',
       key: 'interval_display',
+      responsive: ['md'],
       sorter: (a, b) => (a.interval ?? 0) - (b.interval ?? 0),
       sortOrder: sectionKey && sortField === 'interval_display' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
@@ -202,6 +203,7 @@ export default function PatientSchedulesTable({
       title: 'Total Doses',
       dataIndex: 'doses',
       key: 'doses',
+      responsive: ['md'],
       sorter: (a, b) => (a.doses ?? 0) - (b.doses ?? 0),
       sortOrder: sectionKey && sortField === 'doses' ? sortOrder : undefined,
       sortDirections: ['ascend', 'descend'],
@@ -269,15 +271,17 @@ export default function PatientSchedulesTable({
   ] as TableProps<TreatmentSchedule>['columns'];
 
   return (
-    <Table<TreatmentSchedule>
-      dataSource={sectionKey ? sortedData : data}
-      columns={columns}
-      rowKey="id"
-      pagination={false}
-      size="small"
-      bordered
-      loading={loading}
-      onChange={sectionKey ? handleTableChange : undefined}
-    />
+    <div style={{ overflowX: 'auto', width: '100%', minWidth: 0 }}>
+      <Table<TreatmentSchedule>
+        dataSource={sectionKey ? sortedData : data}
+        columns={columns}
+        rowKey="id"
+        pagination={false}
+        size="small"
+        bordered
+        loading={loading}
+        onChange={sectionKey ? handleTableChange : undefined}
+      />
+    </div>
   );
 }

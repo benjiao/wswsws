@@ -13,14 +13,8 @@ interface VaccineType {
   id: string;
   name: string;
   species: string;
-  schedule_mode: string;
-  schedule_mode_display: string;
   interval_days: number | null;
   grace_days: number;
-  series_doses: number | null;
-  series_min_age_days: number | null;
-  series_gap_days: number | null;
-  booster_interval_days: number | null;
   is_required: boolean;
   notes: string | null;
 }
@@ -121,12 +115,6 @@ export default function VaccineTypesPage() {
       key: 'species',
       sorter: (a, b) => a.species.localeCompare(b.species),
       sortDirections: ['ascend', 'descend'],
-    },
-    {
-      title: 'Schedule Mode',
-      dataIndex: 'schedule_mode_display',
-      key: 'schedule_mode',
-      render: (mode: string) => <Tag>{mode}</Tag>,
     },
     {
       title: 'Interval Days',

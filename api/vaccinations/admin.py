@@ -8,7 +8,6 @@ class VaccineTypeAdmin(ModelAdmin):
     list_display = [
         'name',
         'species',
-        'schedule_mode',
         'interval_days',
         'grace_days',
         'is_required',
@@ -17,13 +16,12 @@ class VaccineTypeAdmin(ModelAdmin):
     ]
     list_filter = [
         'species',
-        'schedule_mode',
         'is_required',
         'created_at',
         'updated_at'
     ]
     search_fields = ['name', 'notes']
-    list_editable = ['species', 'schedule_mode', 'interval_days', 'grace_days', 'is_required']
+    list_editable = ['species', 'interval_days', 'grace_days', 'is_required']
     readonly_fields = ['id', 'created_at', 'updated_at']
     
     fieldsets = (
@@ -31,20 +29,7 @@ class VaccineTypeAdmin(ModelAdmin):
             'fields': ('id', 'name', 'species', 'is_required', 'notes')
         }),
         ('Scheduling Configuration', {
-            'fields': (
-                'schedule_mode',
-                'interval_days',
-                'grace_days',
-            )
-        }),
-        ('Series Configuration', {
-            'fields': (
-                'series_doses',
-                'series_min_age_days',
-                'series_gap_days',
-                'booster_interval_days',
-            ),
-            'classes': ('collapse',)
+            'fields': ('interval_days', 'grace_days')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -64,12 +49,14 @@ class VaccineDoseAdmin(ModelAdmin):
         'dose_number',
         'dose_date',
         'expiration_date',
-        'clinic_name',
-        'product_name',
+        'clinic',
+        'veterinarian',
         'created_at'
     ]
     list_filter = [
         'vaccine_type',
+        'clinic',
+        'veterinarian',
         'dose_date',
         'expiration_date',
         'created_at',
@@ -78,15 +65,16 @@ class VaccineDoseAdmin(ModelAdmin):
     search_fields = [
         'patient__name',
         'vaccine_type__name',
-        'clinic_name',
-        'product_name',
-        'manufacturer',
+        'clinic__name',
+        'veterinarian__name',
         'notes'
     ]
     list_editable = ['dose_number', 'dose_date', 'expiration_date']
     readonly_fields = ['created_at', 'updated_at']
     date_hierarchy = 'dose_date'
-    
+    autocomplete_fields = ['clinic', 'veterinarian']
+    list_select_related = ['vaccine_type', 'patient', 'clinic', 'veterinarian']
+
     fieldsets = (
         ('Basic Information', {
             'fields': ('vaccine_type', 'patient', 'dose_number')
@@ -95,7 +83,7 @@ class VaccineDoseAdmin(ModelAdmin):
             'fields': ('dose_date', 'expiration_date')
         }),
         ('Vaccine Details', {
-            'fields': ('clinic_name', 'product_name', 'manufacturer')
+            'fields': ('clinic', 'veterinarian')
         }),
         ('Additional Information', {
             'fields': ('notes',),

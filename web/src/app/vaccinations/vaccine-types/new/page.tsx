@@ -10,13 +10,8 @@ const createVaccineType = async (values: any) => {
   const payload = {
     name: values.name,
     species: values.species || 'cat',
-    schedule_mode: values.schedule_mode || 'interval',
     interval_days: values.interval_days || null,
     grace_days: values.grace_days || 0,
-    series_doses: values.series_doses || null,
-    series_min_age_days: values.series_min_age_days || null,
-    series_gap_days: values.series_gap_days || null,
-    booster_interval_days: values.booster_interval_days || null,
     is_required: values.is_required !== undefined ? values.is_required : true,
     notes: values.notes || null,
   };
@@ -65,7 +60,6 @@ export default function NewVaccineTypePage() {
           onFinish={onFinish}
           initialValues={{
             species: 'cat',
-            schedule_mode: 'interval',
             grace_days: 0,
             is_required: true,
           }}
@@ -90,17 +84,6 @@ export default function NewVaccineTypePage() {
           </Form.Item>
 
           <Form.Item
-            name="schedule_mode"
-            label="Schedule Mode"
-            rules={[{ required: true, message: 'Please select a schedule mode' }]}
-          >
-            <Select placeholder="Select schedule mode">
-              <Select.Option value="interval">Interval</Select.Option>
-              <Select.Option value="series">Series</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
             name="interval_days"
             label="Interval Days"
             tooltip="Number of days between doses (e.g., 365 for annual booster)"
@@ -114,38 +97,6 @@ export default function NewVaccineTypePage() {
             tooltip="Allow 'due soon' buffer in days"
           >
             <InputNumber min={0} style={{ width: '100%' }} placeholder="Grace days" />
-          </Form.Item>
-
-          <Form.Item
-            name="series_doses"
-            label="Series Doses"
-            tooltip="Number of doses in the series (e.g., 3)"
-          >
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="Number of doses" />
-          </Form.Item>
-
-          <Form.Item
-            name="series_min_age_days"
-            label="Series Minimum Age (Days)"
-            tooltip="Earliest start age in days"
-          >
-            <InputNumber min={0} style={{ width: '100%' }} placeholder="Minimum age in days" />
-          </Form.Item>
-
-          <Form.Item
-            name="series_gap_days"
-            label="Series Gap Days"
-            tooltip="Days between series doses (e.g., 21-28 days)"
-          >
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="Gap between doses" />
-          </Form.Item>
-
-          <Form.Item
-            name="booster_interval_days"
-            label="Booster Interval Days"
-            tooltip="Days between boosters after series complete"
-          >
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="Booster interval" />
           </Form.Item>
 
           <Form.Item

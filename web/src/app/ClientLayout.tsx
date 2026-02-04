@@ -16,6 +16,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   InboxOutlined,
+  BankOutlined,
 } from '@ant-design/icons';
 import { PiPawPrint } from 'react-icons/pi';
 
@@ -113,12 +114,31 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
       label: 'Vaccinations',
       children: [
         {
+          key: '/vaccinations/vaccine-doses',
+          label: <Link href="/vaccinations/vaccine-doses">Vaccine Doses</Link>,
+        },
+        {
           key: '/vaccinations/vaccine-types',
           label: <Link href="/vaccinations/vaccine-types">Vaccine Types</Link>,
         },
         {
-          key: '/vaccinations/vaccine-doses',
-          label: <Link href="/vaccinations/vaccine-doses">Vaccine Doses</Link>,
+          key: '/vaccinations/vaccine-products',
+          label: <Link href="/vaccinations/vaccine-products">Vaccine Products</Link>,
+        }
+      ],
+    },
+    {
+      key: '/clinical-directory',
+      icon: <BankOutlined />,
+      label: 'Clinical Directory',
+      children: [
+        {
+          key: '/clinical-directory/clinics',
+          label: <Link href="/clinical-directory/clinics">Clinics</Link>,
+        },
+        {
+          key: '/clinical-directory/veterinarians',
+          label: <Link href="/clinical-directory/veterinarians">Veterinarians</Link>,
         },
       ],
     },
@@ -162,6 +182,7 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
     if (pathname?.startsWith('/treatments')) newOpenKeys.push('/treatments');
     if (pathname?.startsWith('/inventory')) newOpenKeys.push('/inventory');
     if (pathname?.startsWith('/vaccinations')) newOpenKeys.push('/vaccinations');
+    if (pathname?.startsWith('/clinical-directory')) newOpenKeys.push('/clinical-directory');
     if (
       pathname &&
       (pathname.startsWith('/settings') || pathname === '/users' || pathname === '/admin')
