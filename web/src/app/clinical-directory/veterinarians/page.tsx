@@ -3,16 +3,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, Input, Space, Spin, Alert, Button, Modal } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import type { TablePaginationConfig } from 'antd/es/table';
+import type { SorterResult } from 'antd/es/table/interface';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-interface Clinic {
-  id: number;
-  name: string;
-}
 
 interface Veterinarian {
   id: number;
@@ -26,24 +23,96 @@ interface Veterinarian {
   updated_at: string;
 }
 
-const fetchVeterinarians = async (): Promise<Veterinarian[]> => {
-  const response = await fetch(`${API_URL}/veterinarians/`, {
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  page_size: number;
+  current_page: number;
+  total_pages: number;
+  results: T[];
+}
+
+const fetchVeterinarians = async (
+  page: number = 1,
+  pageSize: number = 20,
+  search?: string,
+  ordering?: string
+): Promise<PaginatedResponse<Veterinarian>> => {
+  const params = new URLSearchParams({ page: page.toString(), page_size: pageSize.toString() });
+  if (search?.trim()) params.append('search', search.trim());
+  if (ordering) params.append('ordering', ordering);
+
+  const response = await fetch(`${API_URL}/veterinarians/?${params.toString()}`, {
     headers: { Accept: 'application/json' },
   });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
-  return data.results ?? data;
+  if (data.results != null && typeof data.count === 'number') return data;
+  return {
+    count: Array.isArray(data) ? data.length : 0,
+    next: null,
+    previous: null,
+    page_size: pageSize,
+    current_page: 1,
+    total_pages: 1,
+    results: Array.isArray(data) ? data : [],
+  };
 };
 
 export default function VeterinariansPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearchText, setDebouncedSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
   const queryClient = useQueryClient();
 
-  const { data: veterinarians, isLoading, error } = useQuery({
-    queryKey: ['veterinarians'],
-    queryFn: fetchVeterinarians,
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearchText(searchText);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchText]);
+
+  const ordering = useMemo(() => {
+    if (!sortField) return undefined;
+    const prefix = sortOrder === 'descend' ? '-' : '';
+    const fieldMap: Record<string, string> = {
+      name: 'name',
+      clinic_name: 'clinic__name',
+      phone: 'phone',
+      email: 'email',
+    };
+    return `${prefix}${fieldMap[sortField] ?? sortField}`;
+  }, [sortField, sortOrder]);
+
+  const { data: paginatedData, isLoading, error } = useQuery({
+    queryKey: ['veterinarians', currentPage, pageSize, debouncedSearchText, ordering],
+    queryFn: () => fetchVeterinarians(currentPage, pageSize, debouncedSearchText || undefined, ordering),
+    placeholderData: (prev) => prev,
   });
+
+  const veterinarians = (paginatedData?.results ?? []) as Veterinarian[];
+
+  const handleTableChange = (
+    _pagination: TablePaginationConfig,
+    _filters: unknown,
+    sorter: SorterResult<Veterinarian> | SorterResult<Veterinarian>[]
+  ) => {
+    const single = Array.isArray(sorter) ? sorter[0] : sorter;
+    if (single?.field) {
+      setSortField(single.field as string);
+      setSortOrder(single.order ?? undefined);
+      setCurrentPage(1);
+    } else {
+      setSortField(undefined);
+      setSortOrder(undefined);
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -68,20 +137,6 @@ export default function VeterinariansPage() {
     },
   });
 
-  const filteredVeterinarians = useMemo(() => {
-    if (!veterinarians) return [];
-    if (!searchText.trim()) return veterinarians;
-    const lower = searchText.toLowerCase();
-    return veterinarians.filter(
-      (v: Veterinarian) =>
-        v.name.toLowerCase().includes(lower) ||
-        (v.clinic_name && v.clinic_name.toLowerCase().includes(lower)) ||
-        (v.phone && v.phone.toLowerCase().includes(lower)) ||
-        (v.email && v.email.toLowerCase().includes(lower)) ||
-        (v.notes && v.notes.toLowerCase().includes(lower))
-    );
-  }, [veterinarians, searchText]);
-
   const handleDelete = (vet: Veterinarian) => {
     Modal.confirm({
       title: 'Delete Veterinarian',
@@ -93,58 +148,64 @@ export default function VeterinariansPage() {
     });
   };
 
-  const columns: ColumnsType<Veterinarian> = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      sortDirections: ['ascend', 'descend'],
-      defaultSortOrder: 'ascend',
-    },
-    {
-      title: 'Clinic',
-      dataIndex: 'clinic_name',
-      key: 'clinic',
-      render: (v: string | null) => v || '—',
-    },
-    {
-      title: 'Phone',
-      dataIndex: 'phone',
-      key: 'phone',
-      render: (v: string | null) => v || '—',
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-      render: (v: string | null) => v || '—',
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      fixed: 'right',
-      width: 100,
-      render: (_: unknown, record: Veterinarian) => (
-        <Space size="small">
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => router.push(`/clinical-directory/veterinarians/${record.id}`)}
-            title="Edit"
-          />
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
-            loading={deleteMutation.isPending}
-            title="Delete"
-          />
-        </Space>
-      ),
-    },
-  ];
+  const columns: ColumnsType<Veterinarian> = useMemo(
+    () => [
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        key: 'name',
+        sorter: true,
+        sortOrder: sortField === 'name' ? sortOrder : undefined,
+        sortDirections: ['ascend', 'descend'],
+      },
+      {
+        title: 'Clinic',
+        dataIndex: 'clinic_name',
+        key: 'clinic_name',
+        render: (v: string | null) => v || '—',
+        sorter: true,
+        sortOrder: sortField === 'clinic_name' ? sortOrder : undefined,
+        sortDirections: ['ascend', 'descend'],
+      },
+      {
+        title: 'Phone',
+        dataIndex: 'phone',
+        key: 'phone',
+        render: (v: string | null) => v || '—',
+      },
+      {
+        title: 'Email',
+        dataIndex: 'email',
+        key: 'email',
+        render: (v: string | null) => v || '—',
+      },
+      {
+        title: 'Actions',
+        key: 'actions',
+        fixed: 'right',
+        width: 100,
+        render: (_: unknown, record: Veterinarian) => (
+          <Space size="small">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => router.push(`/clinical-directory/veterinarians/${record.id}`)}
+              title="Edit"
+            />
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record)}
+              loading={deleteMutation.isPending}
+              title="Delete"
+            />
+          </Space>
+        ),
+      },
+    ],
+    [sortField, sortOrder, router]
+  );
 
   if (isLoading) return <Spin size="large" />;
   if (error) {
@@ -180,13 +241,23 @@ export default function VeterinariansPage() {
           style={{ maxWidth: 400 }}
         />
         <Table
-          dataSource={filteredVeterinarians}
+          dataSource={veterinarians}
           columns={columns}
           rowKey="id"
+          onChange={handleTableChange}
           pagination={{
-            pageSize: 20,
+            current: currentPage,
+            pageSize,
+            total: paginatedData?.count ?? 0,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} veterinarians`,
+            onChange: (page, newPageSize) => {
+              setCurrentPage(page);
+              if (newPageSize !== undefined && newPageSize !== pageSize) {
+                setPageSize(newPageSize);
+                setCurrentPage(1);
+              }
+            },
           }}
           bordered
         />

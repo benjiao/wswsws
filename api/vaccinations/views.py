@@ -43,7 +43,7 @@ class VaccineProductViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['vaccine_type']
     search_fields = ['product_name', 'manufacturer']
-    ordering_fields = ['product_name', 'manufacturer', 'created_at', 'updated_at']
+    ordering_fields = ['product_name', 'manufacturer', 'vaccine_type__name', 'created_at', 'updated_at']
     ordering = ['vaccine_type__name', 'product_name']
 
     @action(detail=False, methods=['get'])
