@@ -7,6 +7,7 @@ from datetime import timedelta
 from .models import VaccineType, VaccineProduct, VaccineDose
 from .serializers import VaccineTypeSerializer, VaccineProductSerializer, VaccineDoseSerializer, VaccineDoseDetailSerializer
 from .filters import VaccineDoseFilter
+from patients.models import Patient
 
 
 class VaccineTypeViewSet(viewsets.ModelViewSet):
@@ -109,6 +110,31 @@ class VaccineDoseViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return VaccineDoseDetailSerializer
         return VaccineDoseSerializer
+
+    @action(detail=False, methods=['get'])
+    def coverage(self, request):
+        """Get vaccination coverage for in-care cats and required vaccine types."""
+        in_care_patients_count = Patient.objects.filter(status__is_in_care=True).count()
+        required_vaccine_types = VaccineType.objects.filter(is_required=True, species='cat')
+        required_vaccine_types_count = required_vaccine_types.count()
+
+        total_slots = in_care_patients_count * required_vaccine_types_count
+
+        covered_pairs = _vaccine_dose_queryset().filter(
+            is_latest=True,
+            patient__status__is_in_care=True,
+            vaccine_type__in=required_vaccine_types,
+        ).values('patient_id', 'vaccine_type_id').distinct().count()
+
+        percentage = (covered_pairs / total_slots * 100) if total_slots > 0 else 0
+
+        return Response({
+            'in_care_patients': in_care_patients_count,
+            'required_vaccine_types': required_vaccine_types_count,
+            'covered_pairs': covered_pairs,
+            'total_slots': total_slots,
+            'percentage': round(percentage, 2),
+        })
 
     def perform_create(self, serializer):
         """Set expiration_date if not provided."""

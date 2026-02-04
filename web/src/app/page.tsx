@@ -1,11 +1,10 @@
-import { Card, Col, Row, Space, Flex, Progress, Typography, Statistic } from "antd";
+import { Card, Col, Row, Space } from "antd";
 import MedicineDosageTimeline from '@/components/MedicineDosageTimeline';
 import TodaysSessionsCard from '@/components/TodaysSessionsCard';
 import InventoryStatusCard from '@/components/InventoryStatusCard';
 import MedicineAdherenceCard from '@/components/MedicineAdherenceCard';
 import SpayNeuterStatusCard from '@/components/SpayNeuterStatusCard';
-import ArrowUpOutlined from '@ant-design/icons/lib/icons/ArrowUpOutlined';
-import ArrowDownOutlined from '@ant-design/icons/lib/icons/ArrowDownOutlined';
+import VaccinationCoverageCard from '@/components/VaccinationCoverageCard';
 
 export default function FrontPage() {
   return (
@@ -23,15 +22,7 @@ export default function FrontPage() {
           </Col>
           <Col xs={24} sm={12} md={6} lg={6}>
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
-              <Card>
-              <Statistic
-                title="Vaccination Coverage"
-                value={0}
-                precision={2}
-                valueStyle={{ color: '#3f8600' }}
-                suffix="%"
-              />
-              </Card>
+              <VaccinationCoverageCard />
               <SpayNeuterStatusCard />
             </Space>
           </Col>
