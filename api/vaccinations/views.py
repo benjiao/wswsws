@@ -76,7 +76,10 @@ class VaccineDoseViewSet(viewsets.ModelViewSet):
         'patient__name', 'vaccine_type__name', 'clinic__name', 'veterinarian__name',
         'notes',
     ]
-    ordering_fields = ['dose_date', 'expiration_date', 'dose_number', 'created_at', 'updated_at']
+    ordering_fields = [
+        'dose_date', 'expiration_date', 'dose_number', 'created_at', 'updated_at',
+        'patient__name', 'vaccine_type__name',
+    ]
     ordering = ['-dose_date', 'patient__name']
 
     def get_serializer_class(self):
