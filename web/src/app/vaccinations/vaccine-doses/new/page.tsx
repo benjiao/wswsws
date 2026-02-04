@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card } from 'antd';
+import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Checkbox, message } from 'antd';
 import { useRouter } from 'next/navigation';
 import { getUserLocalDate } from '@/utils/DateUtils';
 
@@ -147,6 +147,7 @@ export default function NewVaccineDosePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
+  const [createAnother, setCreateAnother] = useState(false);
   const [clinicSearch, setClinicSearch] = useState('');
   const [veterinarianSearch, setVeterinarianSearch] = useState('');
   const [productSearch, setProductSearch] = useState('');
@@ -248,9 +249,24 @@ export default function NewVaccineDosePage() {
 
   const createMutation = useMutation({
     mutationFn: createVaccineDose,
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['vaccine_doses'] });
-      router.push('/vaccinations/vaccine-doses');
+      if (createAnother) {
+        form.resetFields(['patient']);
+        form.setFieldsValue({
+          vaccine_type: variables.vaccine_type ?? undefined,
+          dose_number: variables.dose_number ?? undefined,
+          dose_date: variables.dose_date ?? undefined,
+          expiration_date: variables.expiration_date ?? undefined,
+          clinic: variables.clinic ?? undefined,
+          veterinarian: variables.veterinarian ?? undefined,
+          vaccine_product: variables.vaccine_product ?? undefined,
+          notes: variables.notes ?? undefined,
+        });
+        message.success('Dose recorded. You can now record another dose for a different patient (dosage information kept).', 3);
+      } else {
+        router.push('/vaccinations/vaccine-doses');
+      }
     },
   });
 
@@ -416,13 +432,21 @@ export default function NewVaccineDosePage() {
           </Form.Item>
 
           <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" loading={createMutation.isPending}>
-                Record Dose
-              </Button>
-              <Button onClick={() => router.push('/vaccinations/vaccine-doses')}>
-                Cancel
-              </Button>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Checkbox
+                checked={createAnother}
+                onChange={(e) => setCreateAnother(e.target.checked)}
+              >
+                Create another vaccine for a different patient (keep dosage information)
+              </Checkbox>
+              <Space>
+                <Button type="primary" htmlType="submit" loading={createMutation.isPending}>
+                  Record Dose
+                </Button>
+                <Button onClick={() => router.push('/vaccinations/vaccine-doses')}>
+                  Cancel
+                </Button>
+              </Space>
             </Space>
           </Form.Item>
         </Form>
