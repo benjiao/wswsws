@@ -2,10 +2,11 @@ from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Max
+from django.db.models import OuterRef, Subquery, Max, F, Case, When, Value, BooleanField
 from datetime import timedelta
 from .models import VaccineType, VaccineProduct, VaccineDose
 from .serializers import VaccineTypeSerializer, VaccineProductSerializer, VaccineDoseSerializer, VaccineDoseDetailSerializer
+from .filters import VaccineDoseFilter
 
 
 class VaccineTypeViewSet(viewsets.ModelViewSet):
@@ -54,6 +55,26 @@ class VaccineProductViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+def _vaccine_dose_queryset():
+    """Base queryset for VaccineDose with is_latest annotation."""
+    latest_date_subq = VaccineDose.objects.filter(
+        patient=OuterRef('patient'),
+        vaccine_type=OuterRef('vaccine_type'),
+    ).values('patient', 'vaccine_type').annotate(
+        max_dose_date=Max('dose_date')
+    ).values('max_dose_date')[:1]
+    return VaccineDose.objects.select_related(
+        'vaccine_type', 'patient', 'clinic', 'veterinarian', 'vaccine_product'
+    ).annotate(
+        _latest_dose_date=Subquery(latest_date_subq),
+        is_latest=Case(
+            When(dose_date=F('_latest_dose_date'), then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField(),
+        ),
+    ).order_by('-dose_date', 'patient__name')
+
+
 class VaccineDoseViewSet(viewsets.ModelViewSet):
     """
     ViewSet for VaccineDose CRUD operations.
@@ -65,19 +86,20 @@ class VaccineDoseViewSet(viewsets.ModelViewSet):
     - update: PUT /api/vaccine-doses/{id}/
     - partial_update: PATCH /api/vaccine-doses/{id}/
     - destroy: DELETE /api/vaccine-doses/{id}/
+    
+    Each dose includes is_latest (bool): whether it is the latest dose for that
+    patient + vaccine type. Filter with ?is_latest=true to get only latest doses.
     """
-    queryset = VaccineDose.objects.select_related(
-        'vaccine_type', 'patient', 'clinic', 'veterinarian', 'vaccine_product'
-    ).all().order_by('-dose_date', 'patient__name')
+    queryset = _vaccine_dose_queryset()
     serializer_class = VaccineDoseSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['vaccine_type', 'patient', 'clinic', 'veterinarian', 'vaccine_product', 'dose_date']
+    filterset_class = VaccineDoseFilter
     search_fields = [
         'patient__name', 'vaccine_type__name', 'clinic__name', 'veterinarian__name',
         'notes',
     ]
     ordering_fields = [
-        'dose_date', 'expiration_date', 'dose_number', 'created_at', 'updated_at',
+        'dose_date', 'expiration_date', 'created_at', 'updated_at',
         'patient__name', 'vaccine_type__name',
     ]
     ordering = ['-dose_date', 'patient__name']
@@ -89,36 +111,12 @@ class VaccineDoseViewSet(viewsets.ModelViewSet):
         return VaccineDoseSerializer
 
     def perform_create(self, serializer):
-        """Set dose_number and expiration_date if not provided."""
+        """Set expiration_date if not provided."""
         validated_data = serializer.validated_data
-        dose_number = validated_data.get('dose_number')
         expiration_date = validated_data.get('expiration_date')
-        if dose_number is None:
-            patient = validated_data['patient']
-            vaccine_type = validated_data['vaccine_type']
-            max_dose = VaccineDose.objects.filter(
-                patient=patient,
-                vaccine_type=vaccine_type
-            ).aggregate(max_dose_number=Max('dose_number'))['max_dose_number']
-            dose_number = (max_dose or 0) + 1
         if expiration_date is None:
             vaccine_type = validated_data['vaccine_type']
             dose_date = validated_data.get('dose_date')
             if dose_date and vaccine_type.interval_days:
                 expiration_date = dose_date + timedelta(days=vaccine_type.interval_days)
-        serializer.save(dose_number=dose_number, expiration_date=expiration_date)
-
-    def perform_update(self, serializer):
-        """Auto-compute dose_number when explicitly set to null."""
-        validated_data = serializer.validated_data
-        dose_number = validated_data.get('dose_number')
-        if dose_number is None and 'dose_number' in validated_data:
-            instance = serializer.instance
-            patient = validated_data.get('patient', instance.patient)
-            vaccine_type = validated_data.get('vaccine_type', instance.vaccine_type)
-            max_dose = VaccineDose.objects.filter(
-                patient=patient,
-                vaccine_type=vaccine_type
-            ).exclude(pk=instance.pk).aggregate(max_dose_number=Max('dose_number'))['max_dose_number']
-            dose_number = (max_dose or 0) + 1
-        serializer.save(dose_number=dose_number if 'dose_number' in validated_data else serializer.instance.dose_number)
+        serializer.save(expiration_date=expiration_date)

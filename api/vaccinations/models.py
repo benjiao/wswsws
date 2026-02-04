@@ -39,7 +39,6 @@ class VaccineDose(models.Model):
     vaccine_type = models.ForeignKey(VaccineType, on_delete=models.CASCADE, related_name="doses")
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="vaccinations")
 
-    dose_number = models.PositiveIntegerField()
     dose_date = models.DateField()
     expiration_date = models.DateField(null=True, blank=True)
 
@@ -70,4 +69,4 @@ class VaccineDose(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.vaccine_type.name} - Dose {self.dose_number} - {self.patient.name} - {self.dose_date}"
+        return f"{self.vaccine_type.name} - {self.patient.name} - {self.dose_date}"

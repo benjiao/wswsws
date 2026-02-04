@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Button, Modal } from 'antd';
+import { Table, Input, Space, Spin, Alert, Button, Modal, Select, Flex } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -10,13 +10,26 @@ import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+interface VaccineType {
+  id: string;
+  name: string;
+}
+
+const fetchVaccineTypes = async (): Promise<VaccineType[]> => {
+  const response = await fetch(`${API_URL}/vaccine-types/all/`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
 interface VaccineDose {
   id: number;
   vaccine_type: string | { id: string; name: string };
   vaccine_type_name: string;
   patient: number | { id: number; name: string };
   patient_name: string;
-  dose_number: number;
   dose_date: string;
   expiration_date: string;
   clinic: number | null;
@@ -40,7 +53,10 @@ const fetchVaccineDoses = async (
   page: number = 1,
   pageSize: number = 20,
   search?: string,
-  ordering?: string
+  ordering?: string,
+  isLatest?: boolean,
+  expiresBefore?: string,
+  vaccineTypeId?: string
 ): Promise<PaginatedResponse<VaccineDose>> => {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -51,6 +67,15 @@ const fetchVaccineDoses = async (
   }
   if (ordering) {
     params.append('ordering', ordering);
+  }
+  if (isLatest !== undefined && isLatest !== null) {
+    params.append('is_latest', String(isLatest));
+  }
+  if (expiresBefore) {
+    params.append('expires_before', expiresBefore);
+  }
+  if (vaccineTypeId) {
+    params.append('vaccine_type', vaccineTypeId);
   }
 
   const response = await fetch(`${API_URL}/vaccine-doses/?${params.toString()}`, {
@@ -94,7 +119,16 @@ export default function VaccineDosesPage() {
   const [pageSize, setPageSize] = useState(20);
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
+  const [isLatest, setIsLatest] = useState<boolean>(true);
+  const [expiresBefore, setExpiresBefore] = useState<string>('');
+  const [debouncedExpiresBefore, setDebouncedExpiresBefore] = useState<string>('');
+  const [vaccineTypeId, setVaccineTypeId] = useState<string | undefined>(undefined);
   const queryClient = useQueryClient();
+
+  const { data: vaccineTypes = [] } = useQuery({
+    queryKey: ['vaccine_types_all'],
+    queryFn: fetchVaccineTypes,
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -104,13 +138,20 @@ export default function VaccineDosesPage() {
     return () => clearTimeout(timer);
   }, [searchText]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedExpiresBefore(expiresBefore);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [expiresBefore]);
+
   const ordering = useMemo(() => {
     if (!sortField) return undefined;
     const prefix = sortOrder === 'descend' ? '-' : '';
     const fieldMap: Record<string, string> = {
       patient_name: 'patient__name',
       vaccine_type_name: 'vaccine_type__name',
-      dose_number: 'dose_number',
       dose_date: 'dose_date',
       expiration_date: 'expiration_date',
     };
@@ -123,8 +164,16 @@ export default function VaccineDosesPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['vaccine_doses', currentPage, pageSize, debouncedSearchText, ordering],
-    queryFn: () => fetchVaccineDoses(currentPage, pageSize, debouncedSearchText || undefined, ordering),
+    queryKey: ['vaccine_doses', currentPage, pageSize, debouncedSearchText, ordering, isLatest, debouncedExpiresBefore || null, vaccineTypeId || null],
+    queryFn: () => fetchVaccineDoses(
+      currentPage,
+      pageSize,
+      debouncedSearchText || undefined,
+      ordering,
+      isLatest,
+      debouncedExpiresBefore || undefined,
+      vaccineTypeId
+    ),
     placeholderData: (previousData) => previousData,
   });
 
@@ -226,15 +275,6 @@ export default function VaccineDosesPage() {
         sortDirections: ['ascend', 'descend'],
       },
       {
-        title: 'Dose #',
-        dataIndex: 'dose_number',
-        key: 'dose_number',
-        align: 'center',
-        sorter: true,
-        sortOrder: sortField === 'dose_number' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'],
-      },
-      {
         title: 'Dose Date',
         dataIndex: 'dose_date',
         key: 'dose_date',
@@ -316,14 +356,47 @@ export default function VaccineDosesPage() {
         </Button>
       </Space>
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Input
-          placeholder="Search by patient, vaccine, clinic, veterinarian, or notes..."
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          style={{ maxWidth: 400 }}
-        />
+        <Flex gap="middle" wrap="wrap" align="center">
+          <Input
+            placeholder="Search by patient, vaccine, clinic, veterinarian, or notes..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{ maxWidth: 400 }}
+          />
+          <Select
+            value={vaccineTypeId ?? undefined}
+            onChange={(v) => { setVaccineTypeId(v ?? undefined); setCurrentPage(1); }}
+            placeholder="All vaccine types"
+            allowClear
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+            }
+            style={{ minWidth: 160 }}
+            options={vaccineTypes.map((vt) => ({ value: vt.id, label: vt.name }))}
+          />
+          <Select
+            value={isLatest}
+            onChange={(v) => { setIsLatest(v); setCurrentPage(1); }}
+            style={{ minWidth: 140 }}
+            options={[
+              { value: true, label: 'Latest only' },
+              { value: false, label: 'All doses' },
+            ]}
+          />
+          <Space>
+            <span>Expires before:</span>
+            <Input
+              type="date"
+              value={expiresBefore}
+              onChange={(e) => setExpiresBefore(e.target.value)}
+              allowClear
+              style={{ width: 160 }}
+            />
+          </Space>
+        </Flex>
         <Table
           dataSource={vaccineDoses}
           columns={columns}

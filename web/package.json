@@ -1,6 +1,6 @@
 {
   "name": "wswsws-web",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 --turbo",

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Checkbox, message } from 'antd';
+import { Form, Input, Select, Button, Space, Spin, Alert, Card, Checkbox, message } from 'antd';
 import { useRouter } from 'next/navigation';
 import { getUserLocalDate } from '@/utils/DateUtils';
 
@@ -117,7 +117,6 @@ const createVaccineDose = async (values: any) => {
   const payload = {
     vaccine_type: values.vaccine_type,
     patient: values.patient,
-    dose_number: values.dose_number || null,
     dose_date: values.dose_date,
     expiration_date: values.expiration_date || null,
     clinic: values.clinic ?? null,
@@ -255,7 +254,6 @@ export default function NewVaccineDosePage() {
         form.resetFields(['patient']);
         form.setFieldsValue({
           vaccine_type: variables.vaccine_type ?? undefined,
-          dose_number: variables.dose_number ?? undefined,
           dose_date: variables.dose_date ?? undefined,
           expiration_date: variables.expiration_date ?? undefined,
           clinic: variables.clinic ?? undefined,
@@ -348,14 +346,6 @@ export default function NewVaccineDosePage() {
               loading={createProductMutation.isPending}
               notFoundContent={null}
             />
-          </Form.Item>
-
-          <Form.Item
-            name="dose_number"
-            label="Dose Number (Override)"
-            tooltip="Leave blank to auto-compute"
-          >
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="Auto-compute if blank" />
           </Form.Item>
 
           <Form.Item

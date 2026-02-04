@@ -18,7 +18,7 @@ If you're using VSCode, you'll need to install `node_modules` on the host machin
 ### Backups
 Run this through the Portainer console:
 ```
-python manage.py dumpdata patients inventory treatments \
+python manage.py dumpdata patients inventory treatments clinics vaccinations \
   --exclude auth.permission \
   --exclude contenttypes \
   --exclude sessions \

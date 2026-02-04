@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card } from 'antd';
+import { Form, Input, Select, Button, Space, Spin, Alert, Card } from 'antd';
 import { useRouter, useParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -42,7 +42,6 @@ interface VaccineDose {
   vaccine_type_name?: string;
   patient: number | { id: number; name: string };
   patient_name?: string;
-  dose_number: number;
   dose_date: string;
   expiration_date: string;
   clinic: number | null;
@@ -138,7 +137,6 @@ const updateVaccineDose = async (id: string, values: any) => {
   const payload = {
     vaccine_type: values.vaccine_type,
     patient: values.patient,
-    dose_number: values.dose_number,
     dose_date: values.dose_date,
     expiration_date: values.expiration_date,
     clinic: values.clinic ?? null,
@@ -301,7 +299,6 @@ export default function EditVaccineDosePage() {
       form.setFieldsValue({
         patient: patientId || undefined,
         vaccine_type: vaccineTypeId || undefined,
-        dose_number: dose.dose_number || undefined,
         dose_date: dose.dose_date || undefined,
         expiration_date: dose.expiration_date || undefined,
         clinic: dose.clinic ?? undefined,
@@ -353,7 +350,6 @@ export default function EditVaccineDosePage() {
           initialValues={dose ? {
             patient: typeof dose.patient === 'number' ? dose.patient : dose.patient?.id,
             vaccine_type: typeof dose.vaccine_type === 'string' ? dose.vaccine_type : dose.vaccine_type?.id,
-            dose_number: dose.dose_number,
             dose_date: dose.dose_date,
             expiration_date: dose.expiration_date,
             clinic: dose.clinic ?? undefined,
@@ -422,14 +418,6 @@ export default function EditVaccineDosePage() {
               loading={createProductMutation.isPending}
               notFoundContent={null}
             />
-          </Form.Item>
-
-          <Form.Item
-            name="dose_number"
-            label="Dose Number"
-            rules={[{ required: true, message: 'Please enter the dose number' }]}
-          >
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="Dose number" />
           </Form.Item>
 
           <Form.Item

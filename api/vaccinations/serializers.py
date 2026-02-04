@@ -28,8 +28,8 @@ class VaccineDoseSerializer(serializers.ModelSerializer):
     clinic_name_display = serializers.SerializerMethodField()
     veterinarian_name_display = serializers.SerializerMethodField()
     vaccine_product_name_display = serializers.SerializerMethodField()
-    dose_number = serializers.IntegerField(required=False, allow_null=True)
     expiration_date = serializers.DateField(required=False, allow_null=True)
+    is_latest = serializers.BooleanField(read_only=True)
 
     def get_clinic_name_display(self, obj):
         return obj.clinic.name if obj.clinic_id else None
@@ -46,12 +46,12 @@ class VaccineDoseSerializer(serializers.ModelSerializer):
         model = VaccineDose
         fields = [
             'id', 'vaccine_type', 'vaccine_type_name', 'patient', 'patient_name',
-            'dose_number', 'dose_date', 'expiration_date',
+            'dose_date', 'expiration_date',
             'clinic', 'clinic_name_display', 'veterinarian', 'veterinarian_name_display',
             'vaccine_product', 'vaccine_product_name_display',
-            'notes', 'created_at', 'updated_at',
+            'notes', 'is_latest', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'is_latest', 'created_at', 'updated_at']
 
 
 class VaccineDoseDetailSerializer(VaccineDoseSerializer):
