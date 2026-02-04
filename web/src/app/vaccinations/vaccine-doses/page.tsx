@@ -68,8 +68,9 @@ const fetchVaccineDoses = async (
   if (ordering) {
     params.append('ordering', ordering);
   }
-  if (isLatest !== undefined && isLatest !== null) {
-    params.append('is_latest', String(isLatest));
+  // Only send is_latest when filtering to latest; omit when "All doses" to get both latest and non-latest
+  if (isLatest === true) {
+    params.append('is_latest', 'true');
   }
   if (expiresBefore) {
     params.append('expires_before', expiresBefore);
