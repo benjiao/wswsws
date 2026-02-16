@@ -45,6 +45,11 @@ docker buildx build \
   --push api/
 ```
 
+Or run the helper script:
+```
+./build-and-push.sh latest linux/arm64
+```
+
 ## How does it work?
 
 ## License
