@@ -1,12 +1,12 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Button, Modal, Select, Flex } from 'antd';
+import { Table, Input, Space, Spin, Alert, Button, Modal, Select, Flex, Grid } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -114,22 +114,60 @@ const formatDate = (dateString: string | null) => {
 
 export default function VaccineDosesPage() {
   const router = useRouter();
-  const [searchText, setSearchText] = useState('');
-  const [debouncedSearchText, setDebouncedSearchText] = useState('');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const [searchText, setSearchText] = useState(() => searchParams?.get('search') ?? '');
+  const [debouncedSearchText, setDebouncedSearchText] = useState(() => searchParams?.get('search') ?? '');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortField, setSortField] = useState<string | undefined>(undefined);
-  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(undefined);
-  const [isLatest, setIsLatest] = useState<boolean>(true);
-  const [expiresBefore, setExpiresBefore] = useState<string>('');
-  const [debouncedExpiresBefore, setDebouncedExpiresBefore] = useState<string>('');
-  const [vaccineTypeId, setVaccineTypeId] = useState<string | undefined>(undefined);
+  const [sortField, setSortField] = useState<string | undefined>(() => searchParams?.get('sort') ?? undefined);
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(() => {
+    const o = searchParams?.get('order');
+    return o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined;
+  });
+  const [isLatest, setIsLatest] = useState<boolean>(() => {
+    const param = searchParams?.get('is_latest');
+    if (param === 'true') return true;
+    if (param === 'false' || param === 'all') return false;
+    return true;
+  });
+  const [expiresBefore, setExpiresBefore] = useState<string>(() => searchParams?.get('expires_before') ?? '');
+  const [debouncedExpiresBefore, setDebouncedExpiresBefore] = useState<string>(() => searchParams?.get('expires_before') ?? '');
+  const [vaccineTypeId, setVaccineTypeId] = useState<string | undefined>(() => searchParams?.get('vaccine_type') ?? undefined);
   const queryClient = useQueryClient();
 
   const { data: vaccineTypes = [] } = useQuery({
     queryKey: ['vaccine_types_all'],
     queryFn: fetchVaccineTypes,
   });
+
+  // Sync filters/sort from URL when user navigates (e.g. back/forward)
+  useEffect(() => {
+    const s = searchParams?.get('sort');
+    const o = searchParams?.get('order');
+    setSortField(s ?? undefined);
+    setSortOrder(o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined);
+
+    const nextSearch = searchParams?.get('search') ?? '';
+    if (nextSearch !== searchText) setSearchText(nextSearch);
+
+    const nextIsLatestParam = searchParams?.get('is_latest');
+    const nextIsLatest =
+      nextIsLatestParam === 'true'
+        ? true
+        : nextIsLatestParam === 'false' || nextIsLatestParam === 'all'
+          ? false
+          : true;
+    if (nextIsLatest !== isLatest) setIsLatest(nextIsLatest);
+
+    const nextExpiresBefore = searchParams?.get('expires_before') ?? '';
+    if (nextExpiresBefore !== expiresBefore) setExpiresBefore(nextExpiresBefore);
+
+    const nextVaccineTypeId = searchParams?.get('vaccine_type') ?? undefined;
+    if (nextVaccineTypeId !== vaccineTypeId) setVaccineTypeId(nextVaccineTypeId);
+  }, [searchParams]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -146,6 +184,34 @@ export default function VaccineDosesPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [expiresBefore]);
+
+  // Keep filters in the URL
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    if (debouncedSearchText) {
+      params.set('search', debouncedSearchText);
+    } else {
+      params.delete('search');
+    }
+    if (isLatest) {
+      params.set('is_latest', 'true');
+    } else {
+      params.set('is_latest', 'all');
+    }
+    if (expiresBefore) {
+      params.set('expires_before', expiresBefore);
+    } else {
+      params.delete('expires_before');
+    }
+    if (vaccineTypeId) {
+      params.set('vaccine_type', vaccineTypeId);
+    } else {
+      params.delete('vaccine_type');
+    }
+    const qs = params.toString();
+    const base = pathname ?? '';
+    router.replace(qs ? `${base}?${qs}` : base, { scroll: false });
+  }, [debouncedSearchText, isLatest, expiresBefore, vaccineTypeId, pathname, router, searchParams]);
 
   const ordering = useMemo(() => {
     if (!sortField) return undefined;
@@ -191,9 +257,23 @@ export default function VaccineDosesPage() {
       setSortField(single.field as string);
       setSortOrder(single.order ?? undefined);
       setCurrentPage(1);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      params.set('sort', String(single.field));
+      if (single.order) {
+        params.set('order', single.order === 'descend' ? 'desc' : 'asc');
+      } else {
+        params.delete('order');
+      }
+      router.replace(`${pathname ?? ''}?${params.toString()}`, { scroll: false });
     } else {
       setSortField(undefined);
       setSortOrder(undefined);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      params.delete('sort');
+      params.delete('order');
+      const qs = params.toString();
+      const base = pathname ?? '';
+      router.replace(qs ? `${base}?${qs}` : base, { scroll: false });
     }
   };
 
@@ -250,6 +330,7 @@ export default function VaccineDosesPage() {
         dataIndex: 'patient_name',
         key: 'patient_name',
         sorter: true,
+        fixed: 'left',
         sortOrder: sortField === 'patient_name' ? sortOrder : undefined,
         sortDirections: ['ascend', 'descend'],
         render: (name: string, record: VaccineDose) => {
@@ -308,7 +389,6 @@ export default function VaccineDosesPage() {
       {
         title: 'Actions',
         key: 'actions',
-        fixed: 'right',
         width: 80,
         render: (_: unknown, record: VaccineDose) => (
           <Space size="small">
@@ -398,27 +478,30 @@ export default function VaccineDosesPage() {
             />
           </Space>
         </Flex>
-        <Table
-          dataSource={vaccineDoses}
-          columns={columns}
-          rowKey="id"
-          onChange={handleTableChange}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total: paginatedData?.count ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} vaccine doses`,
-            onChange: (page, newPageSize) => {
-              setCurrentPage(page);
-              if (newPageSize !== undefined && newPageSize !== pageSize) {
-                setPageSize(newPageSize);
-                setCurrentPage(1);
-              }
-            },
-          }}
-          bordered
-        />
+        <div style={{ width: '100%', overflowX: isMobile ? 'auto' : 'visible' }}>
+          <Table
+            dataSource={vaccineDoses}
+            columns={columns}
+            rowKey="id"
+            onChange={handleTableChange}
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: paginatedData?.count ?? 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} vaccine doses`,
+              onChange: (page, newPageSize) => {
+                setCurrentPage(page);
+                if (newPageSize !== undefined && newPageSize !== pageSize) {
+                  setPageSize(newPageSize);
+                  setCurrentPage(1);
+                }
+              },
+            }}
+            scroll={isMobile ? { x: 'max-content' } : undefined}
+            bordered
+          />
+        </div>
       </Space>
     </div>
   );
