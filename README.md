@@ -1,6 +1,12 @@
 # WSWSWS Cat Shelter Management Software
 [![CC BY-SA 4.0][cc-by-sa-shield]][cc-by-sa]
 
+Our homemade information system for managing our small cat shelter. We use it to keep track of vitamins, treatments, and inventory. This is still a work in progress. We have been using it since October 2025, we add more things to it as we go.
+
+![The Dashboard Page](docs/images/dashboard.png)
+
+![The Today Page](docs/images/today.png)
+
 ## Development
 ### Getting started
 1. Install Docker
