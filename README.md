@@ -56,8 +56,6 @@ Or run the helper script:
 ./build-and-push.sh latest linux/arm64
 ```
 
-## How does it work?
-
 ## License
 This work is licensed under a
 [Creative Commons Attribution-ShareAlike 4.0 International License][cc-by-sa].
