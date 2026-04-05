@@ -9,7 +9,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 interface MedicalRecord {
   id: number;
   patient_name?: string;
-  record_datetime?: string;
+  record_date?: string;
 }
 
 const fetchMedicalRecords = async (): Promise<MedicalRecord[]> => {
@@ -74,20 +74,16 @@ export default function NewFollowUpPage() {
               }
               options={records.map((r) => ({
                 value: r.id,
-                label: `${r.patient_name ?? 'Patient'} • ${r.record_datetime ?? ''}`,
+                label: `${r.patient_name ?? 'Patient'} • ${r.record_date ?? ''}`,
               }))}
             />
           </Form.Item>
           <Form.Item
-            name="follow_up_datetime"
-            label="Follow-Up Date/Time"
-            rules={[{ required: true, message: 'Please select the date/time' }]}
-            getValueFromEvent={(e) => (e?.target?.value ? `${e.target.value}:00Z` : undefined)}
-            getValueProps={(value) => ({
-              value: value ? String(value).replace('Z', '').slice(0, 16) : undefined,
-            })}
+            name="follow_up_date"
+            label="Follow-Up Date"
+            rules={[{ required: true, message: 'Please select the date' }]}
           >
-            <Input type="datetime-local" style={{ width: '100%' }} />
+            <Input type="date" style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item
             name="details"

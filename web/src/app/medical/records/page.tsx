@@ -12,7 +12,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface MedicalRecord {
   id: number;
-  record_datetime: string;
+  record_date: string;
   patient: number | { id: number; name: string };
   patient_name: string;
   veterinarian: number | null;
@@ -70,15 +70,13 @@ const fetchMedicalRecords = async (
   };
 };
 
-const formatDateTime = (dateString: string | null) => {
+const formatDate = (dateString: string | null) => {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 };
 
@@ -105,7 +103,7 @@ export default function MedicalRecordsPage() {
     const prefix = sortOrder === 'descend' ? '-' : '';
     const fieldMap: Record<string, string> = {
       patient_name: 'patient__name',
-      record_datetime: 'record_datetime',
+      record_date: 'record_date',
       clinic_name_display: 'clinic__name',
       veterinarian_name_display: 'veterinarian__name',
     };
@@ -153,7 +151,7 @@ export default function MedicalRecordsPage() {
         <div>
           <p>Are you sure you want to delete this medical record?</p>
           <p><strong>Patient:</strong> {record.patient_name}</p>
-          <p><strong>Date:</strong> {formatDateTime(record.record_datetime)}</p>
+          <p><strong>Date:</strong> {formatDate(record.record_date)}</p>
         </div>
       ),
       okText: 'Yes, Delete',
@@ -190,12 +188,12 @@ export default function MedicalRecordsPage() {
         },
       },
       {
-        title: 'Date/Time',
-        dataIndex: 'record_datetime',
-        key: 'record_datetime',
-        render: (value: string) => formatDateTime(value),
+        title: 'Date',
+        dataIndex: 'record_date',
+        key: 'record_date',
+        render: (value: string) => formatDate(value),
         sorter: true,
-        sortOrder: sortField === 'record_datetime' ? sortOrder : undefined,
+        sortOrder: sortField === 'record_date' ? sortOrder : undefined,
         sortDirections: ['ascend', 'descend'],
       },
       {

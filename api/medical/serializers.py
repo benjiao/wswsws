@@ -17,7 +17,7 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
         model = MedicalRecord
         fields = [
             'id',
-            'record_datetime',
+            'record_date',
             'patient',
             'patient_name',
             'veterinarian',
@@ -108,7 +108,7 @@ class FollowUpSerializer(serializers.ModelSerializer):
             'id',
             'medical_record',
             'patient_name',
-            'follow_up_datetime',
+            'follow_up_date',
             'details',
             'created_at',
             'updated_at',

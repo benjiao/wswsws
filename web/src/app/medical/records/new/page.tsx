@@ -68,9 +68,9 @@ export default function NewMedicalRecordPage() {
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
   const now = new Date();
-  const nowLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+  const nowLocalDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
     .toISOString()
-    .slice(0, 16);
+    .slice(0, 10);
 
   const { data: patients, isLoading: patientsLoading } = useQuery({
     queryKey: ['patients_all'],
@@ -112,7 +112,7 @@ export default function NewMedicalRecordPage() {
           layout="vertical"
           onFinish={onFinish}
           initialValues={{
-            record_datetime: `${nowLocal}:00Z`,
+            record_date: nowLocalDate,
           }}
         >
           <Form.Item
@@ -131,15 +131,11 @@ export default function NewMedicalRecordPage() {
           </Form.Item>
 
           <Form.Item
-            name="record_datetime"
-            label="Record Date/Time"
-            rules={[{ required: true, message: 'Please select the date/time' }]}
-            getValueFromEvent={(e) => (e?.target?.value ? `${e.target.value}:00Z` : undefined)}
-            getValueProps={(value) => ({
-              value: value ? String(value).replace('Z', '').slice(0, 16) : undefined,
-            })}
+            name="record_date"
+            label="Record Date"
+            rules={[{ required: true, message: 'Please select the date' }]}
           >
-            <Input type="datetime-local" style={{ width: '100%' }} />
+            <Input type="date" style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item name="clinic" label="Clinic">

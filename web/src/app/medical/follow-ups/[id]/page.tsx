@@ -10,7 +10,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 interface FollowUp {
   id: number;
   medical_record: number;
-  follow_up_datetime: string;
+  follow_up_date: string;
   details: string;
   notes: string;
 }
@@ -76,7 +76,7 @@ export default function EditFollowUpPage() {
   React.useEffect(() => {
     if (followUp) {
       form.setFieldsValue({
-        follow_up_datetime: followUp.follow_up_datetime,
+        follow_up_date: followUp.follow_up_date,
         details: followUp.details,
         notes: followUp.notes,
       });
@@ -102,15 +102,11 @@ export default function EditFollowUpPage() {
       <Card>
         <Form form={form} layout="vertical" onFinish={(values) => updateMutation.mutate(values)}>
           <Form.Item
-            name="follow_up_datetime"
-            label="Follow-Up Date/Time"
-            rules={[{ required: true, message: 'Please select the date/time' }]}
-            getValueFromEvent={(e) => (e?.target?.value ? `${e.target.value}:00Z` : undefined)}
-            getValueProps={(value) => ({
-              value: value ? String(value).replace('Z', '').slice(0, 16) : undefined,
-            })}
+            name="follow_up_date"
+            label="Follow-Up Date"
+            rules={[{ required: true, message: 'Please select the date' }]}
           >
-            <Input type="datetime-local" style={{ width: '100%' }} />
+            <Input type="date" style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item
             name="details"

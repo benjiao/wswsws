@@ -25,7 +25,7 @@ interface Veterinarian {
 
 interface MedicalRecord {
   id: number;
-  record_datetime: string;
+  record_date: string;
   patient: number | { id: number; name: string };
   patient_name?: string;
   veterinarian: number | null;
@@ -60,7 +60,7 @@ interface TestResult {
 interface FollowUp {
   id: number;
   medical_record: number;
-  follow_up_datetime: string;
+  follow_up_date: string;
   details: string;
 }
 
@@ -257,6 +257,16 @@ const formatDateTime = (value: string | null | undefined) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+  });
+};
+
+const formatDate = (value: string | null | undefined) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   });
 };
 
@@ -509,7 +519,7 @@ export default function MedicalRecordDetailPage() {
           layout="vertical"
           initialValues={{
             patient: typeof record?.patient === 'object' ? record?.patient?.id : record?.patient,
-            record_datetime: record?.record_datetime,
+            record_date: record?.record_date,
             clinic: record?.clinic ?? undefined,
             veterinarian: record?.veterinarian ?? undefined,
             details: record?.details,
@@ -532,15 +542,11 @@ export default function MedicalRecordDetailPage() {
           </Form.Item>
 
           <Form.Item
-            name="record_datetime"
-            label="Record Date/Time"
-            rules={[{ required: true, message: 'Please select the date/time' }]}
-            getValueFromEvent={(e) => (e?.target?.value ? `${e.target.value}:00Z` : undefined)}
-            getValueProps={(value) => ({
-              value: value ? String(value).replace('Z', '').slice(0, 16) : undefined,
-            })}
+            name="record_date"
+            label="Record Date"
+            rules={[{ required: true, message: 'Please select the date' }]}
           >
-            <Input type="datetime-local" style={{ width: '100%' }} />
+            <Input type="date" style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item name="clinic" label="Clinic">
@@ -1030,15 +1036,11 @@ export default function MedicalRecordDetailPage() {
                   })}
                 >
                   <Form.Item
-                    name="follow_up_datetime"
-                    label="Follow-Up Date/Time"
-                    rules={[{ required: true, message: 'Please select a follow-up date/time' }]}
-                    getValueFromEvent={(e) => (e?.target?.value ? `${e.target.value}:00Z` : undefined)}
-                    getValueProps={(value) => ({
-                      value: value ? String(value).replace('Z', '').slice(0, 16) : undefined,
-                    })}
+                    name="follow_up_date"
+                    label="Follow-Up Date"
+                    rules={[{ required: true, message: 'Please select a follow-up date' }]}
                   >
-                    <Input type="datetime-local" style={{ width: '100%' }} />
+                    <Input type="date" style={{ width: '100%' }} />
                   </Form.Item>
                   <Form.Item
                     name="details"
@@ -1063,9 +1065,9 @@ export default function MedicalRecordDetailPage() {
                       columns={[
                         {
                           title: 'Follow-Up Date',
-                          dataIndex: 'follow_up_datetime',
-                          key: 'follow_up_datetime',
-                          render: (v: string) => new Date(v).toLocaleString(),
+                          dataIndex: 'follow_up_date',
+                          key: 'follow_up_date',
+                          render: (v: string) => formatDate(v),
                         },
                         {
                           title: 'Details',

@@ -14,7 +14,7 @@ interface FollowUp {
   id: number;
   medical_record: number;
   patient_name: string;
-  follow_up_datetime: string;
+  follow_up_date: string;
   details: string;
   notes: string;
 }
@@ -59,15 +59,13 @@ const fetchFollowUps = async (
   };
 };
 
-const formatDateTime = (dateString: string | null) => {
+const formatDate = (dateString: string | null) => {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 };
 
@@ -94,7 +92,7 @@ export default function FollowUpsPage() {
     const prefix = sortOrder === 'descend' ? '-' : '';
     const fieldMap: Record<string, string> = {
       patient_name: 'medical_record__patient__name',
-      follow_up_datetime: 'follow_up_datetime',
+      follow_up_date: 'follow_up_date',
     };
     const apiField = fieldMap[sortField] ?? sortField;
     return `${prefix}${apiField}`;
@@ -136,7 +134,7 @@ export default function FollowUpsPage() {
         <div>
           <p>Are you sure you want to delete this follow-up?</p>
           <p><strong>Patient:</strong> {followUp.patient_name}</p>
-          <p><strong>Date:</strong> {formatDateTime(followUp.follow_up_datetime)}</p>
+          <p><strong>Date:</strong> {formatDate(followUp.follow_up_date)}</p>
         </div>
       ),
       okText: 'Yes, Delete',
@@ -160,11 +158,11 @@ export default function FollowUpsPage() {
       },
       {
         title: 'Follow-Up Date',
-        dataIndex: 'follow_up_datetime',
-        key: 'follow_up_datetime',
-        render: (value: string) => formatDateTime(value),
+        dataIndex: 'follow_up_date',
+        key: 'follow_up_date',
+        render: (value: string) => formatDate(value),
         sorter: true,
-        sortOrder: sortField === 'follow_up_datetime' ? sortOrder : undefined,
+        sortOrder: sortField === 'follow_up_date' ? sortOrder : undefined,
         sortDirections: ['ascend', 'descend'],
       },
       {

@@ -21,7 +21,7 @@ interface MedicalRecord {
   id: number;
   patient: number | { id: number; name: string };
   patient_name?: string;
-  record_datetime?: string;
+  record_date?: string;
 }
 
 interface HealthCondition {
@@ -303,7 +303,7 @@ export default function NewSchedulePage() {
               }
               options={filteredMedicalRecords.map((r) => ({
                 value: r.id,
-                label: `${r.patient_name ?? 'Patient'} • ${r.record_datetime ?? ''}`,
+                label: `${r.patient_name ?? 'Patient'} • ${r.record_date ?? ''}`,
               }))}
             />
           </Form.Item>

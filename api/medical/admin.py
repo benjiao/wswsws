@@ -7,18 +7,18 @@ from .models import MedicalRecord, Diagnosis, HealthCondition, TestResult, Follo
 class MedicalRecordAdmin(ModelAdmin):
     list_display = [
         'patient',
-        'record_datetime',
+        'record_date',
         'veterinarian',
         'clinic',
         'created_at',
         'updated_at',
     ]
-    list_filter = ['record_datetime', 'clinic', 'veterinarian', 'created_at', 'updated_at']
-    search_fields = ['patient__name', 'veterinarian__name', 'clinic__name', 'details', 'notes']
+    list_filter = ['record_date', 'clinic', 'veterinarian', 'created_at', 'updated_at']
+    search_fields = ['patient__name', 'veterinarian__name', 'clinic__name', 'details']
     readonly_fields = ['created_at', 'updated_at']
     autocomplete_fields = ['patient', 'veterinarian', 'clinic']
-    date_hierarchy = 'record_datetime'
-    ordering = ['-record_datetime']
+    date_hierarchy = 'record_date'
+    ordering = ['-record_date']
 
 
 @admin.register(Diagnosis)
@@ -33,7 +33,6 @@ class DiagnosisAdmin(ModelAdmin):
     search_fields = [
         'type',
         'details',
-        'notes',
         'medical_record__patient__name',
     ]
     readonly_fields = ['created_at', 'updated_at']
@@ -55,7 +54,6 @@ class HealthConditionAdmin(ModelAdmin):
     search_fields = [
         'type',
         'details',
-        'notes',
         'medical_record__patient__name',
     ]
     readonly_fields = ['created_at', 'updated_at']
@@ -76,7 +74,6 @@ class TestResultAdmin(ModelAdmin):
     search_fields = [
         'type',
         'details',
-        'notes',
         'medical_record__patient__name',
     ]
     readonly_fields = ['created_at', 'updated_at']
@@ -88,17 +85,16 @@ class TestResultAdmin(ModelAdmin):
 class FollowUpAdmin(ModelAdmin):
     list_display = [
         'medical_record',
-        'follow_up_datetime',
+        'follow_up_date',
         'created_at',
         'updated_at',
     ]
-    list_filter = ['follow_up_datetime', 'created_at', 'updated_at']
+    list_filter = ['follow_up_date', 'created_at', 'updated_at']
     search_fields = [
         'details',
-        'notes',
         'medical_record__patient__name',
     ]
     readonly_fields = ['created_at', 'updated_at']
     autocomplete_fields = ['medical_record']
-    date_hierarchy = 'follow_up_datetime'
-    ordering = ['-follow_up_datetime']
+    date_hierarchy = 'follow_up_date'
+    ordering = ['-follow_up_date']
