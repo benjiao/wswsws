@@ -1,7 +1,8 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, Button, Space, Spin, Alert, Card, Tabs, message, Checkbox, Table, AutoComplete } from 'antd';
+import { Form, Input, Select, Button, Space, Spin, Alert, Card, Tabs, message, Checkbox, Table, AutoComplete, Modal } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useRouter, useParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -124,7 +125,9 @@ const fetchDiagnosisTypes = async (): Promise<string[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   const results = data.results ?? data;
-  const types = Array.isArray(results) ? results.map((d: Diagnosis) => d.type).filter(Boolean) : [];
+  const types = Array.isArray(results)
+    ? results.map((d: Diagnosis) => d.type).filter((type): type is string => Boolean(type))
+    : [];
   return Array.from(new Set(types)).sort();
 };
 
@@ -144,7 +147,9 @@ const fetchConditionTypes = async (): Promise<string[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   const results = data.results ?? data;
-  const types = Array.isArray(results) ? results.map((c: HealthCondition) => c.type).filter(Boolean) : [];
+  const types = Array.isArray(results)
+    ? results.map((c: HealthCondition) => c.type).filter((type): type is string => Boolean(type))
+    : [];
   return Array.from(new Set(types)).sort();
 };
 
@@ -164,7 +169,9 @@ const fetchTestResultTypes = async (): Promise<string[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   const results = data.results ?? data;
-  const types = Array.isArray(results) ? results.map((t: TestResult) => t.type).filter(Boolean) : [];
+  const types = Array.isArray(results)
+    ? results.map((t: TestResult) => t.type).filter((type): type is string => Boolean(type))
+    : [];
   return Array.from(new Set(types)).sort();
 };
 
@@ -175,6 +182,61 @@ const fetchFollowUps = async (recordId: string): Promise<FollowUp[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   return data.results ?? data;
+};
+
+const deleteDiagnosis = async (id: number) => {
+  const response = await fetch(`${API_URL}/diagnoses/${id}/`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+  }
+};
+
+const deleteHealthCondition = async (id: number) => {
+  const response = await fetch(`${API_URL}/health-conditions/${id}/`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+  }
+};
+
+const deleteTestResult = async (id: number) => {
+  const response = await fetch(`${API_URL}/test-results/${id}/`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+  }
+};
+
+const deleteFollowUp = async (id: number) => {
+  const response = await fetch(`${API_URL}/follow-ups/${id}/`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+  }
+};
+
+const deleteTreatmentSchedule = async (id: number) => {
+  const response = await fetch(`${API_URL}/treatment-schedules/${id}/`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+  }
 };
 
 const fetchTreatmentSchedules = async (recordId: string): Promise<TreatmentSchedule[]> => {
@@ -385,6 +447,46 @@ export default function MedicalRecordDetailPage() {
     },
   });
 
+  const deleteDiagnosisMutation = useMutation({
+    mutationFn: deleteDiagnosis,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['diagnoses', recordId] });
+      message.success('Diagnosis deleted');
+    },
+  });
+
+  const deleteConditionMutation = useMutation({
+    mutationFn: deleteHealthCondition,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health_conditions', recordId] });
+      message.success('Health condition deleted');
+    },
+  });
+
+  const deleteTestResultMutation = useMutation({
+    mutationFn: deleteTestResult,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['test_results', recordId] });
+      message.success('Test result deleted');
+    },
+  });
+
+  const deleteFollowUpMutation = useMutation({
+    mutationFn: deleteFollowUp,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['follow_ups', recordId] });
+      message.success('Follow-up deleted');
+    },
+  });
+
+  const deleteTreatmentScheduleMutation = useMutation({
+    mutationFn: deleteTreatmentSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['treatment_schedules_by_record', recordId] });
+      message.success('Treatment schedule deleted');
+    },
+  });
+
   if (!recordId) {
     return (
       <Alert message="Invalid medical record ID" type="error" />
@@ -411,7 +513,6 @@ export default function MedicalRecordDetailPage() {
             clinic: record?.clinic ?? undefined,
             veterinarian: record?.veterinarian ?? undefined,
             details: record?.details,
-            notes: record?.notes,
           }}
           onFinish={(values) => updateMutation.mutate(values)}
         >
@@ -555,10 +656,34 @@ export default function MedicalRecordDetailPage() {
                       {
                         title: 'Actions',
                         key: 'actions',
+                        align: 'center',
+                        width: 100,
                         render: (_: unknown, row: TreatmentSchedule) => (
-                          <Button type="link" onClick={() => router.push(`/treatments/schedules/${row.id}`)}>
-                            View
-                          </Button>
+                          <Space>
+                            <Button
+                              type="text"
+                              icon={<EditOutlined />}
+                              onClick={() => router.push(`/treatments/schedules/${row.id}`)}
+                              title="Edit"
+                            />
+                            <Button
+                              type="text"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => {
+                                Modal.confirm({
+                                  title: 'Delete Treatment Schedule',
+                                  content: 'Are you sure you want to delete this treatment schedule?',
+                                  okText: 'Yes, Delete',
+                                  okType: 'danger',
+                                  cancelText: 'Cancel',
+                                  onOk: () => deleteTreatmentScheduleMutation.mutate(row.id),
+                                });
+                              }}
+                              loading={deleteTreatmentScheduleMutation.isPending}
+                              title="Delete"
+                            />
+                          </Space>
                         ),
                       },
                     ]}
@@ -621,6 +746,39 @@ export default function MedicalRecordDetailPage() {
                           dataIndex: 'details',
                           key: 'details',
                           render: (v: string | null) => v || '—',
+                        },
+                        {
+                          title: 'Actions',
+                          key: 'actions',
+                          align: 'center',
+                          width: 100,
+                          render: (_: unknown, row: Diagnosis) => (
+                            <Space>
+                              <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                onClick={() => router.push(`/medical/diagnoses/${row.id}`)}
+                                title="Edit"
+                              />
+                              <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => {
+                                  Modal.confirm({
+                                    title: 'Delete Diagnosis',
+                                    content: 'Are you sure you want to delete this diagnosis?',
+                                    okText: 'Yes, Delete',
+                                    okType: 'danger',
+                                    cancelText: 'Cancel',
+                                    onOk: () => deleteDiagnosisMutation.mutate(row.id),
+                                  });
+                                }}
+                                loading={deleteDiagnosisMutation.isPending}
+                                title="Delete"
+                              />
+                            </Space>
+                          ),
                         },
                       ]}
                     />
@@ -701,6 +859,39 @@ export default function MedicalRecordDetailPage() {
                           dataIndex: 'is_active',
                           key: 'is_active',
                           render: (v: boolean) => (v ? 'Yes' : 'No'),
+                        },
+                        {
+                          title: 'Actions',
+                          key: 'actions',
+                          align: 'center',
+                          width: 100,
+                          render: (_: unknown, row: HealthCondition) => (
+                            <Space>
+                              <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                onClick={() => router.push(`/medical/health-conditions/${row.id}`)}
+                                title="Edit"
+                              />
+                              <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => {
+                                  Modal.confirm({
+                                    title: 'Delete Health Condition',
+                                    content: 'Are you sure you want to delete this health condition?',
+                                    okText: 'Yes, Delete',
+                                    okType: 'danger',
+                                    cancelText: 'Cancel',
+                                    onOk: () => deleteConditionMutation.mutate(row.id),
+                                  });
+                                }}
+                                loading={deleteConditionMutation.isPending}
+                                title="Delete"
+                              />
+                            </Space>
+                          ),
                         },
                       ]}
                     />
@@ -785,6 +976,39 @@ export default function MedicalRecordDetailPage() {
                           key: 'details',
                           render: (v: string | null) => v || '—',
                         },
+                        {
+                          title: 'Actions',
+                          key: 'actions',
+                          align: 'center',
+                          width: 100,
+                          render: (_: unknown, row: TestResult) => (
+                            <Space>
+                              <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                onClick={() => router.push(`/medical/test-results/${row.id}`)}
+                                title="Edit"
+                              />
+                              <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => {
+                                  Modal.confirm({
+                                    title: 'Delete Test Result',
+                                    content: 'Are you sure you want to delete this test result?',
+                                    okText: 'Yes, Delete',
+                                    okType: 'danger',
+                                    cancelText: 'Cancel',
+                                    onOk: () => deleteTestResultMutation.mutate(row.id),
+                                  });
+                                }}
+                                loading={deleteTestResultMutation.isPending}
+                                title="Delete"
+                              />
+                            </Space>
+                          ),
+                        },
                       ]}
                     />
                   )}
@@ -848,6 +1072,39 @@ export default function MedicalRecordDetailPage() {
                           dataIndex: 'details',
                           key: 'details',
                           render: (v: string | null) => v || '—',
+                        },
+                        {
+                          title: 'Actions',
+                          key: 'actions',
+                          align: 'center',
+                          width: 100,
+                          render: (_: unknown, row: FollowUp) => (
+                            <Space>
+                              <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                onClick={() => router.push(`/medical/follow-ups/${row.id}`)}
+                                title="Edit"
+                              />
+                              <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => {
+                                  Modal.confirm({
+                                    title: 'Delete Follow-Up',
+                                    content: 'Are you sure you want to delete this follow-up?',
+                                    okText: 'Yes, Delete',
+                                    okType: 'danger',
+                                    cancelText: 'Cancel',
+                                    onOk: () => deleteFollowUpMutation.mutate(row.id),
+                                  });
+                                }}
+                                loading={deleteFollowUpMutation.isPending}
+                                title="Delete"
+                              />
+                            </Space>
+                          ),
                         },
                       ]}
                     />

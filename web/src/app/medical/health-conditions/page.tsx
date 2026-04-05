@@ -182,8 +182,8 @@ export default function HealthConditionsPage() {
       {
         title: 'Actions',
         key: 'actions',
-        fixed: 'right',
-        width: 80,
+        align: 'center',
+        width: 100,
         render: (_: unknown, record: HealthCondition) => (
           <Space size="small">
             <Button

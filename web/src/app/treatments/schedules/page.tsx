@@ -484,6 +484,8 @@ export default function SchedulesPage() {
     {
       title: 'Actions',
       key: 'actions',
+      align: 'center',
+      width: 100,
       // fixed: 'right',
       // width: 30,
       render: (_: any, record: TreatmentSchedule) => (

@@ -172,8 +172,8 @@ export default function DiagnosesPage() {
       {
         title: 'Actions',
         key: 'actions',
-        fixed: 'right',
-        width: 80,
+        align: 'center',
+        width: 100,
         render: (_: unknown, record: Diagnosis) => (
           <Space size="small">
             <Button

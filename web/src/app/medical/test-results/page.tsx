@@ -175,8 +175,8 @@ export default function TestResultsPage() {
       {
         title: 'Actions',
         key: 'actions',
-        fixed: 'right',
-        width: 80,
+        align: 'center',
+        width: 100,
         render: (_: unknown, record: TestResult) => (
           <Space size="small">
             <Button

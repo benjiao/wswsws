@@ -219,6 +219,8 @@ export default function NewSchedulePage() {
             3
           );
         }
+      } else if (variables.medical_record) {
+        router.push(`/medical/records/${variables.medical_record}`);
       } else if (patientIdFromUrl) {
         router.push(`/patients/${patientIdFromUrl}`);
       } else {

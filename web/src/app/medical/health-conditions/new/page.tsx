@@ -28,7 +28,9 @@ const fetchConditionTypes = async (): Promise<string[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   const results = data.results ?? data;
-  const types = Array.isArray(results) ? results.map((c: { type?: string }) => c.type).filter(Boolean) : [];
+  const types = Array.isArray(results)
+    ? results.map((c: { type?: string }) => c.type).filter((type): type is string => Boolean(type))
+    : [];
   return Array.from(new Set(types)).sort();
 };
 

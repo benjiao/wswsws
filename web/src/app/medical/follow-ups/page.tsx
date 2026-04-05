@@ -180,8 +180,8 @@ export default function FollowUpsPage() {
       {
         title: 'Actions',
         key: 'actions',
-        fixed: 'right',
-        width: 80,
+        align: 'center',
+        width: 100,
         render: (_: unknown, record: FollowUp) => (
           <Space size="small">
             <Button

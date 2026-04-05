@@ -213,8 +213,8 @@ export default function MedicalRecordsPage() {
       {
         title: 'Actions',
         key: 'actions',
-        fixed: 'right',
-        width: 80,
+        align: 'center',
+        width: 100,
         render: (_: unknown, record: MedicalRecord) => (
           <Space size="small">
             <Button

@@ -29,7 +29,9 @@ const fetchDiagnosisTypes = async (): Promise<string[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   const results = data.results ?? data;
-  const types = Array.isArray(results) ? results.map((d: { type?: string }) => d.type).filter(Boolean) : [];
+  const types = Array.isArray(results)
+    ? results.map((d: { type?: string }) => d.type).filter((type): type is string => Boolean(type))
+    : [];
   return Array.from(new Set(types)).sort();
 };
 
