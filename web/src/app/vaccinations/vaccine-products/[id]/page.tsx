@@ -124,8 +124,9 @@ export default function EditVaccineProductPage() {
 
   return (
     <div>
-      <h1>Edit Vaccine Product</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Edit Vaccine Product</h1>
         <Form
           form={form}
           layout="vertical"
@@ -185,6 +186,7 @@ export default function EditVaccineProductPage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

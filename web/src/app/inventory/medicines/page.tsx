@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select, Grid } from 'antd';
+import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select, Grid, Card } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
@@ -360,56 +360,58 @@ export default function MedicinesPage() {
 
   return (
     <div>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Medicines</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/inventory/medicines/new')}
-        >
-          Create New Medicine
-        </Button>
-      </Space>
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Space wrap>
-          <Input
-            placeholder="Search by name..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            style={{ width: 300 }}
-          />
-          <Select
-            placeholder="Filter by Stock Status"
-            allowClear
-            value={stockStatusFilter}
-            onChange={(value) => {
-              setStockStatusFilter(value);
-              setCurrentPage(1);
-            }}
-            style={{ width: 180 }}
+      <Card>
+        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h1 style={{ margin: 0 }}>Medicines</h1>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/inventory/medicines/new')}
           >
-            <Select.Option value="0">Out of Stock</Select.Option>
-            <Select.Option value="1">Low Stock</Select.Option>
-            <Select.Option value="2">In Stock</Select.Option>
-          </Select>
+            Create New Medicine
+          </Button>
         </Space>
-        <Table
-          dataSource={medicines}
-          columns={columns}
-          rowKey="id"
-          onChange={handleTableChange}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: paginatedData?.count || 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} medicines`,
-          }}
-          bordered
-        />
-      </Space>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Space wrap>
+            <Input
+              placeholder="Search by name..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              style={{ width: 300 }}
+            />
+            <Select
+              placeholder="Filter by Stock Status"
+              allowClear
+              value={stockStatusFilter}
+              onChange={(value) => {
+                setStockStatusFilter(value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 180 }}
+            >
+              <Select.Option value="0">Out of Stock</Select.Option>
+              <Select.Option value="1">Low Stock</Select.Option>
+              <Select.Option value="2">In Stock</Select.Option>
+            </Select>
+          </Space>
+          <Table
+            dataSource={medicines}
+            columns={columns}
+            rowKey="id"
+            onChange={handleTableChange}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: paginatedData?.count || 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} medicines`,
+            }}
+            bordered
+          />
+        </Space>
+      </Card>
     </div>
   );
 }

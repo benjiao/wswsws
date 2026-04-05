@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Switch } from 'antd';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { TreatmentSchedule, TreatmentInstance } from '@/types';
 import TreatmentInstancesBySchedule from '@/components/TreatmentInstancesBySchedule';
 
@@ -148,9 +148,12 @@ const updateTreatmentSchedule = async (id: string, values: any) => {
 export default function EditSchedulePage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const scheduleId = params?.id as string | undefined;
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
+  const medicalRecordIdFromUrl = searchParams?.get('medical_record');
+  const returnToMedicalRecordUrl = medicalRecordIdFromUrl ? `/medical/records/${medicalRecordIdFromUrl}` : null;
 
   const { data: schedule, isLoading: scheduleLoading } = useQuery({
     queryKey: ['treatment_schedule', scheduleId],
@@ -222,7 +225,7 @@ export default function EditSchedulePage() {
       queryClient.invalidateQueries({ queryKey: ['treatment_schedules'] });
       queryClient.invalidateQueries({ queryKey: ['treatment_schedule', scheduleId] });
       queryClient.invalidateQueries({ queryKey: ['treatment_schedule_instances', scheduleId] });
-      router.push('/treatments/schedules');
+      router.push(returnToMedicalRecordUrl ?? '/treatments/schedules');
     },
   });
 
@@ -266,7 +269,6 @@ export default function EditSchedulePage() {
 
   return (
     <div>
-      <h1>Edit Treatment Schedule</h1>
       {instances && instances.length > 0 && (
         <Card style={{ marginBottom: 24 }}>
           <h2>Treatment Instances</h2>
@@ -289,8 +291,9 @@ export default function EditSchedulePage() {
           />
         </Card>
       )}
+      <div style={{ maxWidth: 720 }}>
       <Card>
-        <h2>Details</h2>
+        <h1 style={{ marginTop: 0 }}>Edit Treatment Schedule</h1>
         <Form
           form={form}
           layout="vertical"
@@ -441,7 +444,7 @@ export default function EditSchedulePage() {
               <Button type="primary" htmlType="submit" loading={updateMutation.isPending}>
                 Update Schedule
               </Button>
-              <Button onClick={() => router.push('/treatments/schedules')}>
+              <Button onClick={() => router.push(returnToMedicalRecordUrl ?? '/treatments/schedules')}>
                 Cancel
               </Button>
             </Space>
@@ -458,6 +461,7 @@ export default function EditSchedulePage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

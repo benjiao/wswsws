@@ -76,8 +76,9 @@ export default function NewHealthConditionPage() {
 
   return (
     <div>
-      <h1>Create Health Condition</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Create Health Condition</h1>
         <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ is_active: true }}>
           <Form.Item
             name="medical_record"
@@ -141,6 +142,7 @@ export default function NewHealthConditionPage() {
           </Space>
         </Form>
       </Card>
+      </div>
     </div>
   );
 }

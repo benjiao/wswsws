@@ -1,6 +1,6 @@
 {
   "name": "wswsws-web",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 --turbo",
@@ -24,6 +24,7 @@
     "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
     "react-is": "^18.3.1",
+    "react-select": "^5.10.2",
     "recharts": "^3.2.1"
   },
   "devDependencies": {

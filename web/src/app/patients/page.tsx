@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select, Grid } from 'antd';
+import { Table, Input, Space, Spin, Alert, Tag, Button, Modal, Select, Grid, Card } from 'antd';
 import type { TableProps, ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
@@ -624,140 +624,142 @@ export default function PatientsPage() {
 
   return (
     <div>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Patients</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/patients/new')}
-        >
-          Create New Patient
-        </Button>
-      </Space>
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Space wrap>
-          <Input
-            placeholder="Search by name or color..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            style={{ width: 300 }}
-          />
-          <Select
-            placeholder="Filter by Color"
-            allowClear
-            value={colorFilter}
-            onChange={(value) => {
-              setColorFilter(value);
-              setCurrentPage(1);
-            }}
-            style={{ width: 150 }}
+      <Card>
+        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h1 style={{ margin: 0 }}>Patients</h1>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/patients/new')}
           >
-            {uniqueColors.map(color => (
-              <Select.Option key={color} value={color}>{color}</Select.Option>
-            ))}
-          </Select>
-          <Select
-            placeholder="Filter by Sex"
-            allowClear
-            value={sexFilter}
-            onChange={(value) => {
-              setSexFilter(value);
-              setCurrentPage(1);
-            }}
-            style={{ width: 130 }}
-          >
-            <Select.Option value="1">Male</Select.Option>
-            <Select.Option value="2">Female</Select.Option>
-          </Select>
-          <Select
-            placeholder="Spay/Neuter Status"
-            allowClear
-            value={spayNeuterFilter}
-            onChange={(value) => {
-              setSpayNeuterFilter(value);
-              setCurrentPage(1);
-            }}
-            style={{ width: 160 }}
-          >
-            <Select.Option value="yes">Spayed/Neutered</Select.Option>
-            <Select.Option value="no">Not Spayed/Neutered</Select.Option>
-          </Select>
-          <Select
-            placeholder="Active Treatments"
-            allowClear
-            value={activeTreatmentsFilter}
-            onChange={(value) => {
-              setActiveTreatmentsFilter(value);
-              setCurrentPage(1);
-            }}
-            style={{ width: 160 }}
-          >
-            <Select.Option value="yes">Has Active Treatments</Select.Option>
-            <Select.Option value="no">No Active Treatments</Select.Option>
-          </Select>
-          <Select
-            placeholder="Filter by Status"
-            allowClear
-            value={statusFilter}
-            onChange={(value) => {
-              setStatusFilter(value);
-              setCurrentPage(1);
-            }}
-            loading={statusesLoading}
-            showSearch
-            filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-            }
-            style={{ width: 180 }}
-            options={patientStatuses?.map((s: PatientStatus) => ({ value: String(s.id), label: s.name })) || []}
-          />
-          <Select
-            placeholder="Filter by Group"
-            allowClear
-            value={groupFilter}
-            onChange={(value) => {
-              setGroupFilter(value);
-              setCurrentPage(1);
-            }}
-            loading={groupsLoading}
-            showSearch
-            filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-            }
-            style={{ width: 180 }}
-            options={patientGroups?.map((g: PatientGroup) => ({ value: String(g.id), label: g.name })) || []}
-          />
-          <Select
-            placeholder="Status In Care"
-            allowClear
-            value={statusInCareFilter}
-            onChange={(value) => {
-              setStatusInCareFilter(value);
-              setCurrentPage(1);
-            }}
-            style={{ width: 150 }}
-          >
-            <Select.Option value="yes">Status In Care</Select.Option>
-            <Select.Option value="no">Status Not In Care</Select.Option>
-          </Select>
+            Create New Patient
+          </Button>
         </Space>
-        <Table
-          dataSource={patients}
-          columns={columns}
-          rowKey="id"
-          onChange={handleTableChange}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: paginatedData?.count || 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} patients`,
-          }}
-          bordered
-        />
-      </Space>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Space wrap>
+            <Input
+              placeholder="Search by name or color..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              style={{ width: 300 }}
+            />
+            <Select
+              placeholder="Filter by Color"
+              allowClear
+              value={colorFilter}
+              onChange={(value) => {
+                setColorFilter(value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 150 }}
+            >
+              {uniqueColors.map(color => (
+                <Select.Option key={color} value={color}>{color}</Select.Option>
+              ))}
+            </Select>
+            <Select
+              placeholder="Filter by Sex"
+              allowClear
+              value={sexFilter}
+              onChange={(value) => {
+                setSexFilter(value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 130 }}
+            >
+              <Select.Option value="1">Male</Select.Option>
+              <Select.Option value="2">Female</Select.Option>
+            </Select>
+            <Select
+              placeholder="Spay/Neuter Status"
+              allowClear
+              value={spayNeuterFilter}
+              onChange={(value) => {
+                setSpayNeuterFilter(value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 160 }}
+            >
+              <Select.Option value="yes">Spayed/Neutered</Select.Option>
+              <Select.Option value="no">Not Spayed/Neutered</Select.Option>
+            </Select>
+            <Select
+              placeholder="Active Treatments"
+              allowClear
+              value={activeTreatmentsFilter}
+              onChange={(value) => {
+                setActiveTreatmentsFilter(value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 160 }}
+            >
+              <Select.Option value="yes">Has Active Treatments</Select.Option>
+              <Select.Option value="no">No Active Treatments</Select.Option>
+            </Select>
+            <Select
+              placeholder="Filter by Status"
+              allowClear
+              value={statusFilter}
+              onChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(1);
+              }}
+              loading={statusesLoading}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              style={{ width: 180 }}
+              options={patientStatuses?.map((s: PatientStatus) => ({ value: String(s.id), label: s.name })) || []}
+            />
+            <Select
+              placeholder="Filter by Group"
+              allowClear
+              value={groupFilter}
+              onChange={(value) => {
+                setGroupFilter(value);
+                setCurrentPage(1);
+              }}
+              loading={groupsLoading}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              style={{ width: 180 }}
+              options={patientGroups?.map((g: PatientGroup) => ({ value: String(g.id), label: g.name })) || []}
+            />
+            <Select
+              placeholder="Status In Care"
+              allowClear
+              value={statusInCareFilter}
+              onChange={(value) => {
+                setStatusInCareFilter(value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 150 }}
+            >
+              <Select.Option value="yes">Status In Care</Select.Option>
+              <Select.Option value="no">Status Not In Care</Select.Option>
+            </Select>
+          </Space>
+          <Table
+            dataSource={patients}
+            columns={columns}
+            rowKey="id"
+            onChange={handleTableChange}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: paginatedData?.count || 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} patients`,
+            }}
+            bordered
+          />
+        </Space>
+      </Card>
     </div>
   );
 }

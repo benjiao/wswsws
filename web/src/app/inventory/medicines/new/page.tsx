@@ -50,8 +50,9 @@ export default function NewMedicinePage() {
 
   return (
     <div>
-      <h1>Create Medicine</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Create Medicine</h1>
         <Form
           form={form}
           layout="vertical"
@@ -118,6 +119,7 @@ export default function NewMedicinePage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

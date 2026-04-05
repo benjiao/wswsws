@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Button, Modal } from 'antd';
+import { Table, Input, Space, Spin, Alert, Button, Modal, Card } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
@@ -214,47 +214,49 @@ export default function VaccineProductsPage() {
 
   return (
     <div>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Vaccine Products</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/vaccinations/vaccine-products/new')}
-        >
-          Create New Product
-        </Button>
-      </Space>
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Input
-          placeholder="Search by product name, manufacturer, or vaccine type..."
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          style={{ maxWidth: 400 }}
-        />
-        <Table
-          dataSource={vaccineProducts}
-          columns={columns}
-          rowKey="id"
-          onChange={handleTableChange}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total: paginatedData?.count ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} products`,
-            onChange: (page, newPageSize) => {
-              setCurrentPage(page);
-              if (newPageSize !== undefined && newPageSize !== pageSize) {
-                setPageSize(newPageSize);
-                setCurrentPage(1);
-              }
-            },
-          }}
-          bordered
-        />
-      </Space>
+      <Card>
+        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h1 style={{ margin: 0 }}>Vaccine Products</h1>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/vaccinations/vaccine-products/new')}
+          >
+            Create New Product
+          </Button>
+        </Space>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Input
+            placeholder="Search by product name, manufacturer, or vaccine type..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{ maxWidth: 400 }}
+          />
+          <Table
+            dataSource={vaccineProducts}
+            columns={columns}
+            rowKey="id"
+            onChange={handleTableChange}
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: paginatedData?.count ?? 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} products`,
+              onChange: (page, newPageSize) => {
+                setCurrentPage(page);
+                if (newPageSize !== undefined && newPageSize !== pageSize) {
+                  setPageSize(newPageSize);
+                  setCurrentPage(1);
+                }
+              },
+            }}
+            bordered
+          />
+        </Space>
+      </Card>
     </div>
   );
 }

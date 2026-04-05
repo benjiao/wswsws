@@ -163,10 +163,6 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
           label: <Link href="/medical/records">Medical Records</Link>,
         },
         {
-          key: '/medical/diagnoses',
-          label: <Link href="/medical/diagnoses">Diagnoses</Link>,
-        },
-        {
           key: '/medical/health-conditions',
           label: <Link href="/medical/health-conditions">Health Conditions</Link>,
         },
@@ -353,16 +349,7 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
 
               <DevBanner showDevBanner={showDevBanner} setShowDevBanner={setShowDevBanner} />
               <Content style={{ margin: broken ? '8px' : '16px' }}>
-                <div
-                  style={{
-                    padding: 24,
-                    minHeight: 360,
-                    background: colorBgContainer,
-                    borderRadius: borderRadiusLG,
-                  }}
-                >
                   <main>{children}</main>
-                </div>
               </Content>
               <Footer style={{ textAlign: 'center' }}>
                 <div>

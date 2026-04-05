@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Button, Modal, Tag } from 'antd';
+import { Table, Input, Space, Spin, Alert, Button, Modal, Tag, Card } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -219,61 +219,63 @@ export default function HealthConditionsPage() {
 
   return (
     <div>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Health Conditions</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/medical/health-conditions/new')}
-        >
-          Create Health Condition
-        </Button>
-      </Space>
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Input
-          placeholder="Search by patient, type, details, or notes..."
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          style={{ maxWidth: 420 }}
-        />
-        <Table
-          dataSource={conditions}
-          columns={columns}
-          rowKey="id"
-          onChange={(
-            _pagination: TablePaginationConfig,
-            _filters: unknown,
-            sorter: SorterResult<HealthCondition> | SorterResult<HealthCondition>[]
-          ) => {
-            const single = Array.isArray(sorter) ? sorter[0] : sorter;
-            if (single?.field) {
-              setSortField(single.field as string);
-              setSortOrder(single.order ?? undefined);
-              setCurrentPage(1);
-            } else {
-              setSortField(undefined);
-              setSortOrder(undefined);
-            }
-          }}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total: paginatedData?.count ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} conditions`,
-            onChange: (page, newPageSize) => {
-              setCurrentPage(page);
-              if (newPageSize !== undefined && newPageSize !== pageSize) {
-                setPageSize(newPageSize);
+      <Card>
+        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h1 style={{ margin: 0 }}>Health Conditions</h1>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/medical/health-conditions/new')}
+          >
+            Create Health Condition
+          </Button>
+        </Space>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Input
+            placeholder="Search by patient, type, details, or notes..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{ maxWidth: 420 }}
+          />
+          <Table
+            dataSource={conditions}
+            columns={columns}
+            rowKey="id"
+            onChange={(
+              _pagination: TablePaginationConfig,
+              _filters: unknown,
+              sorter: SorterResult<HealthCondition> | SorterResult<HealthCondition>[]
+            ) => {
+              const single = Array.isArray(sorter) ? sorter[0] : sorter;
+              if (single?.field) {
+                setSortField(single.field as string);
+                setSortOrder(single.order ?? undefined);
                 setCurrentPage(1);
+              } else {
+                setSortField(undefined);
+                setSortOrder(undefined);
               }
-            },
-          }}
-          bordered
-        />
-      </Space>
+            }}
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: paginatedData?.count ?? 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} conditions`,
+              onChange: (page, newPageSize) => {
+                setCurrentPage(page);
+                if (newPageSize !== undefined && newPageSize !== pageSize) {
+                  setPageSize(newPageSize);
+                  setCurrentPage(1);
+                }
+              },
+            }}
+            bordered
+          />
+        </Space>
+      </Card>
     </div>
   );
 }

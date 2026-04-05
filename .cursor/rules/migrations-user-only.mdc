@@ -1,0 +1,11 @@
+---
+description: Never run migrations unless user explicitly requests
+alwaysApply: true
+---
+
+# Migration Execution Policy
+
+- Never run `makemigrations`, `migrate`, or any migration-generation command automatically.
+- Never apply database migrations automatically.
+- If schema/model changes require migrations, stop and ask the user to run them manually.
+- You may mention the exact command(s) the user should run, but do not execute them unless explicitly requested.

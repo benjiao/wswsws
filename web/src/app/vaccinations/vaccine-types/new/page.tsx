@@ -52,8 +52,9 @@ export default function NewVaccineTypePage() {
 
   return (
     <div>
-      <h1>Create Vaccine Type</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Create Vaccine Type</h1>
         <Form
           form={form}
           layout="vertical"
@@ -136,6 +137,7 @@ export default function NewVaccineTypePage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

@@ -118,8 +118,9 @@ export default function EditHealthConditionPage() {
 
   return (
     <div>
-      <h1>Edit Health Condition</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Edit Health Condition</h1>
         <Form form={form} layout="vertical" onFinish={(values) => updateMutation.mutate(values)}>
           <Form.Item
             name="type"
@@ -169,6 +170,7 @@ export default function EditHealthConditionPage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

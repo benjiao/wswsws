@@ -1,13 +1,7 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import MedicalRecord, Diagnosis, HealthCondition, TestResult, FollowUp
-from .serializers import (
-    MedicalRecordSerializer,
-    DiagnosisSerializer,
-    HealthConditionSerializer,
-    TestResultSerializer,
-    FollowUpSerializer,
-)
+from .models import MedicalRecord, HealthCondition, TestResult, FollowUp
+from .serializers import MedicalRecordSerializer, HealthConditionSerializer, TestResultSerializer, FollowUpSerializer
 
 
 class MedicalRecordViewSet(viewsets.ModelViewSet):
@@ -18,16 +12,6 @@ class MedicalRecordViewSet(viewsets.ModelViewSet):
     search_fields = ['patient__name', 'veterinarian__name', 'clinic__name', 'details']
     ordering_fields = ['record_date', 'created_at', 'updated_at', 'patient__name']
     ordering = ['-record_date']
-
-
-class DiagnosisViewSet(viewsets.ModelViewSet):
-    queryset = Diagnosis.objects.select_related('medical_record', 'medical_record__patient').all().order_by('-created_at')
-    serializer_class = DiagnosisSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['medical_record']
-    search_fields = ['type', 'details', 'medical_record__patient__name']
-    ordering_fields = ['created_at', 'updated_at', 'type']
-    ordering = ['-created_at']
 
 
 class HealthConditionViewSet(viewsets.ModelViewSet):

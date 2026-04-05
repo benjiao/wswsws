@@ -72,8 +72,9 @@ export default function NewPatientPage() {
 
   return (
     <div>
-      <h1>Create Patient</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Create Patient</h1>
         <Form
           form={form}
           layout="vertical"
@@ -156,6 +157,7 @@ export default function NewPatientPage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

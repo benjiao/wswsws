@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Button, Modal, Select, Flex, Grid } from 'antd';
+import { Table, Input, Space, Spin, Alert, Button, Modal, Select, Flex, Grid, Card } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -426,83 +426,85 @@ export default function VaccineDosesPage() {
 
   return (
     <div>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Vaccine Doses</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/vaccinations/vaccine-doses/new')}
-        >
-          Record New Dose
-        </Button>
-      </Space>
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Flex gap="middle" wrap="wrap" align="center">
-          <Input
-            placeholder="Search by patient, vaccine, clinic, veterinarian, or notes..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            style={{ maxWidth: 400 }}
-          />
-          <Select
-            value={vaccineTypeId ?? undefined}
-            onChange={(v) => { setVaccineTypeId(v ?? undefined); setCurrentPage(1); }}
-            placeholder="All vaccine types"
-            allowClear
-            showSearch
-            filterOption={(input, option) =>
-              (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-            }
-            style={{ minWidth: 160 }}
-            options={vaccineTypes.map((vt) => ({ value: vt.id, label: vt.name }))}
-          />
-          <Select
-            value={isLatest}
-            onChange={(v) => { setIsLatest(v); setCurrentPage(1); }}
-            style={{ minWidth: 140 }}
-            options={[
-              { value: true, label: 'Latest only' },
-              { value: false, label: 'All doses' },
-            ]}
-          />
-          <Space>
-            <span>Expires before:</span>
+      <Card>
+        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h1 style={{ margin: 0 }}>Vaccine Doses</h1>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/vaccinations/vaccine-doses/new')}
+          >
+            Record New Dose
+          </Button>
+        </Space>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Flex gap="middle" wrap="wrap" align="center">
             <Input
-              type="date"
-              value={expiresBefore}
-              onChange={(e) => setExpiresBefore(e.target.value)}
+              placeholder="Search by patient, vaccine, clinic, veterinarian, or notes..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               allowClear
-              style={{ width: 160 }}
+              style={{ maxWidth: 400 }}
             />
-          </Space>
-        </Flex>
-        <div style={{ width: '100%', overflowX: isMobile ? 'auto' : 'visible' }}>
-          <Table
-            dataSource={vaccineDoses}
-            columns={columns}
-            rowKey="id"
-            onChange={handleTableChange}
-            pagination={{
-              current: currentPage,
-              pageSize,
-              total: paginatedData?.count ?? 0,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} vaccine doses`,
-              onChange: (page, newPageSize) => {
-                setCurrentPage(page);
-                if (newPageSize !== undefined && newPageSize !== pageSize) {
-                  setPageSize(newPageSize);
-                  setCurrentPage(1);
-                }
-              },
-            }}
-            scroll={isMobile ? { x: 'max-content' } : undefined}
-            bordered
-          />
-        </div>
-      </Space>
+            <Select
+              value={vaccineTypeId ?? undefined}
+              onChange={(v) => { setVaccineTypeId(v ?? undefined); setCurrentPage(1); }}
+              placeholder="All vaccine types"
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+              }
+              style={{ minWidth: 160 }}
+              options={vaccineTypes.map((vt) => ({ value: vt.id, label: vt.name }))}
+            />
+            <Select
+              value={isLatest}
+              onChange={(v) => { setIsLatest(v); setCurrentPage(1); }}
+              style={{ minWidth: 140 }}
+              options={[
+                { value: true, label: 'Latest only' },
+                { value: false, label: 'All doses' },
+              ]}
+            />
+            <Space>
+              <span>Expires before:</span>
+              <Input
+                type="date"
+                value={expiresBefore}
+                onChange={(e) => setExpiresBefore(e.target.value)}
+                allowClear
+                style={{ width: 160 }}
+              />
+            </Space>
+          </Flex>
+          <div style={{ width: '100%', overflowX: isMobile ? 'auto' : 'visible' }}>
+            <Table
+              dataSource={vaccineDoses}
+              columns={columns}
+              rowKey="id"
+              onChange={handleTableChange}
+              pagination={{
+                current: currentPage,
+                pageSize,
+                total: paginatedData?.count ?? 0,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} vaccine doses`,
+                onChange: (page, newPageSize) => {
+                  setCurrentPage(page);
+                  if (newPageSize !== undefined && newPageSize !== pageSize) {
+                    setPageSize(newPageSize);
+                    setCurrentPage(1);
+                  }
+                },
+              }}
+              scroll={isMobile ? { x: 'max-content' } : undefined}
+              bordered
+            />
+          </div>
+        </Space>
+      </Card>
     </div>
   );
 }

@@ -69,8 +69,9 @@ export default function NewVeterinarianPage() {
 
   return (
     <div>
-      <h1>Add Veterinarian</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Add Veterinarian</h1>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="name"
@@ -118,6 +119,7 @@ export default function NewVeterinarianPage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

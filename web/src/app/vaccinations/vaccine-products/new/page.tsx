@@ -65,8 +65,9 @@ export default function NewVaccineProductPage() {
 
   return (
     <div>
-      <h1>Create Vaccine Product</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Create Vaccine Product</h1>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="product_name"
@@ -117,6 +118,7 @@ export default function NewVaccineProductPage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

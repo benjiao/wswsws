@@ -204,8 +204,6 @@ export default function EditPatientPage() {
 
   return (
     <div>
-      <h1>Edit Patient</h1>
-
       <Card
         title="Treatment Schedules"
         size="small"
@@ -254,6 +252,9 @@ export default function EditPatientPage() {
         )}
       </Card>
 
+      <div style={{ maxWidth: 720 }}>
+        <Card style={{ marginBottom: 24 }}>
+          <h1 style={{ marginTop: 0 }}>Edit Patient</h1>
         <Form
           form={form}
           layout="vertical"
@@ -363,6 +364,7 @@ export default function EditPatientPage() {
             </Space>
           </Form.Item>
         </Form>
+        </Card>
 
         {updateMutation.isError && (
           <Alert
@@ -373,6 +375,7 @@ export default function EditPatientPage() {
             style={{ marginTop: 16 }}
           />
         )}
+      </div>
     </div>
   );
 }

@@ -135,8 +135,9 @@ export default function EditTestResultPage() {
 
   return (
     <div>
-      <h1>Edit Test Result</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Edit Test Result</h1>
         <Form form={form} layout="vertical" onFinish={(values) => updateMutation.mutate(values)}>
           <Form.Item name="health_condition" label="Related Condition">
             <Select
@@ -190,6 +191,7 @@ export default function EditTestResultPage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Switch, Checkbox, message } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
+import CreatableSelect from 'react-select/creatable';
+import { SingleValue } from 'react-select';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -28,6 +30,11 @@ interface HealthCondition {
   id: number;
   medical_record: number;
   type: string;
+}
+
+interface SelectOption {
+  value: number;
+  label: string;
 }
 
 const fetchPatients = async (): Promise<Patient[]> => {
@@ -64,6 +71,38 @@ const fetchHealthConditions = async (): Promise<HealthCondition[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   return data.results ?? data;
+};
+
+const createPatient = async (name: string): Promise<Patient> => {
+  const response = await fetch(`${API_URL}/patients/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+  }
+  return response.json();
+};
+
+const createMedicine = async (name: string): Promise<Medicine> => {
+  const response = await fetch(`${API_URL}/medicines/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({ name, stock_status: 2 }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+  }
+  return response.json();
 };
 
 const createTreatmentSchedule = async (values: any) => {
@@ -117,6 +156,8 @@ export default function NewSchedulePage() {
   const [form] = Form.useForm();
   const [createAnother, setCreateAnother] = useState(false);
   const [createAnotherForRecord, setCreateAnotherForRecord] = useState(false);
+  const [selectedPatientOption, setSelectedPatientOption] = useState<SelectOption | null>(null);
+  const [selectedMedicineOption, setSelectedMedicineOption] = useState<SelectOption | null>(null);
   const patientIdFromUrl = searchParams?.get('patient');
   const medicalRecordIdFromUrl = searchParams?.get('medical_record');
 
@@ -131,6 +172,10 @@ export default function NewSchedulePage() {
       const id = parseInt(patientIdFromUrl, 10);
       if (!isNaN(id) && patients.some((p: Patient) => p.id === id)) {
         form.setFieldValue('patient', id);
+        const matchedPatient = patients.find((p: Patient) => p.id === id);
+        setSelectedPatientOption(
+          matchedPatient ? { value: matchedPatient.id, label: matchedPatient.name } : null
+        );
       }
     }
   }, [patientIdFromUrl, patients, form]);
@@ -150,6 +195,16 @@ export default function NewSchedulePage() {
     queryFn: fetchHealthConditions,
   });
 
+  const patientOptions = useMemo<SelectOption[]>(
+    () => patients?.map((p: Patient) => ({ value: p.id, label: p.name })) ?? [],
+    [patients]
+  );
+
+  const medicineOptions = useMemo<SelectOption[]>(
+    () => medicines?.map((m: Medicine) => ({ value: m.id, label: m.name })) ?? [],
+    [medicines]
+  );
+
   useEffect(() => {
     if (!medicalRecordIdFromUrl || !medicalRecords.length) return;
     const recordId = Number(medicalRecordIdFromUrl);
@@ -160,8 +215,12 @@ export default function NewSchedulePage() {
     const recordPatientId = typeof record.patient === 'object' ? record.patient?.id : record.patient;
     if (recordPatientId) {
       form.setFieldValue('patient', recordPatientId);
+      const matchedPatient = patients?.find((p: Patient) => p.id === recordPatientId);
+      setSelectedPatientOption(
+        matchedPatient ? { value: matchedPatient.id, label: matchedPatient.name } : null
+      );
     }
-  }, [medicalRecordIdFromUrl, medicalRecords, form]);
+  }, [medicalRecordIdFromUrl, medicalRecords, patients, form]);
 
   const selectedMedicalRecordId = Form.useWatch('medical_record', form);
   const selectedPatientId = Form.useWatch('patient', form);
@@ -207,6 +266,12 @@ export default function NewSchedulePage() {
             patient: variables.patient || undefined,
             medical_record: variables.medical_record || undefined,
           });
+          setSelectedPatientOption(
+            patientOptions.find((p) => p.value === variables.patient) ?? null
+          );
+          setSelectedMedicineOption(
+            medicineOptions.find((m) => m.value === variables.medicine) ?? null
+          );
           message.success(
             'Schedule created successfully. You can now create another schedule for the same medical record and patient.',
             3
@@ -214,6 +279,10 @@ export default function NewSchedulePage() {
         } else {
           form.resetFields(['patient', 'start_time']);
           form.setFieldsValue(dosageFields);
+          setSelectedPatientOption(null);
+          setSelectedMedicineOption(
+            medicineOptions.find((m) => m.value === variables.medicine) ?? null
+          );
           message.success(
             'Schedule created successfully. You can now create another schedule with the same dosage information.',
             3
@@ -229,8 +298,56 @@ export default function NewSchedulePage() {
     },
   });
 
+  const createPatientMutation = useMutation({
+    mutationFn: createPatient,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['patients_all'] });
+    },
+  });
+
+  const createMedicineMutation = useMutation({
+    mutationFn: createMedicine,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medicines'] });
+    },
+  });
+
+  const handleCreatePatient = async (inputValue: string) => {
+    const name = inputValue.trim();
+    if (!name) return;
+    try {
+      const data = await createPatientMutation.mutateAsync(name);
+      const option = { value: data.id, label: data.name };
+      setSelectedPatientOption(option);
+      form.setFieldValue('patient', option.value);
+      form.validateFields(['patient']).catch(() => {
+        // Validation state is rendered by Form.Item.
+      });
+    } catch {
+      // Error is surfaced by mutation state below.
+    }
+  };
+
+  const handleCreateMedicine = async (inputValue: string) => {
+    const name = inputValue.trim();
+    if (!name) return;
+    try {
+      const data = await createMedicineMutation.mutateAsync(name);
+      const option = { value: data.id, label: data.name };
+      setSelectedMedicineOption(option);
+      form.setFieldValue('medicine', option.value);
+    } catch {
+      // Error is surfaced by mutation state below.
+    }
+  };
+
   const onFinish = (values: any) => {
-    createMutation.mutate(values);
+    createMutation.mutate({
+      ...values,
+      patient: selectedPatientOption?.value,
+      medicine: selectedMedicineOption?.value ?? null,
+    });
   };
 
   // Helper function to get default start time with minutes set to 00
@@ -251,9 +368,9 @@ export default function NewSchedulePage() {
 
   return (
     <div>
-      <h1>Create Treatment Schedule</h1>
       <div style={{ maxWidth: 720 }}>
         <Card>
+          <h1 style={{ margin: 0 }}>Create Treatment Schedule</h1>
           <Form
             form={form}
             layout="vertical"
@@ -265,31 +382,51 @@ export default function NewSchedulePage() {
           >
           <Form.Item
             name="patient"
-            label="Patient"
             rules={[{ required: true, message: 'Please select a patient' }]}
+            hidden
           >
-            <Select
-              placeholder="Select a patient"
-              showSearch
-              filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-              }
-              options={patients?.map((p: Patient) => ({ value: p.id, label: p.name }))}
+            <Input />
+          </Form.Item>
+          <Form.Item name="medicine" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Patient"
+            required
+            validateStatus={form.getFieldError('patient').length > 0 ? 'error' : undefined}
+            help={form.getFieldError('patient')[0]}
+          >
+            <CreatableSelect
+              isClearable
+              placeholder="Select or create a patient"
+              options={patientOptions}
+              value={selectedPatientOption}
+              onChange={(option: SingleValue<SelectOption>) => {
+                setSelectedPatientOption(option);
+                form.setFieldValue('patient', option?.value);
+                form.validateFields(['patient']).catch(() => {
+                  // Validation state is rendered by Form.Item.
+                });
+              }}
+              onCreateOption={handleCreatePatient}
+              isLoading={createPatientMutation.isPending}
             />
           </Form.Item>
 
           <Form.Item
-            name="medicine"
             label="Medicine"
           >
-            <Select
-              placeholder="Select a medicine"
-              allowClear
-              showSearch
-              filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-              }
-              options={medicines?.map((m: Medicine) => ({ value: m.id, label: m.name }))}
+            <CreatableSelect
+              isClearable
+              placeholder="Select or create a medicine"
+              options={medicineOptions}
+              value={selectedMedicineOption}
+              onChange={(option: SingleValue<SelectOption>) => {
+                setSelectedMedicineOption(option);
+                form.setFieldValue('medicine', option?.value);
+              }}
+              onCreateOption={handleCreateMedicine}
+              isLoading={createMedicineMutation.isPending}
             />
           </Form.Item>
 
@@ -421,10 +558,18 @@ export default function NewSchedulePage() {
           </Form.Item>
           </Form>
 
-          {createMutation.isError && (
+          {(createMutation.isError || createPatientMutation.isError || createMedicineMutation.isError) && (
             <Alert
-              message="Error creating schedule"
-              description={createMutation.error instanceof Error ? createMutation.error.message : 'Unknown error'}
+              message={createMutation.isError ? 'Error creating schedule' : 'Error creating option'}
+              description={
+                createMutation.error instanceof Error
+                  ? createMutation.error.message
+                  : createPatientMutation.error instanceof Error
+                    ? createPatientMutation.error.message
+                    : createMedicineMutation.error instanceof Error
+                      ? createMedicineMutation.error.message
+                      : 'Unknown error'
+              }
               type="error"
               showIcon
               style={{ marginTop: 16 }}

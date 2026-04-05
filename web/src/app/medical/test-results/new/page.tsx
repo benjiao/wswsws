@@ -96,8 +96,9 @@ export default function NewTestResultPage() {
 
   return (
     <div>
-      <h1>Create Test Result</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Create Test Result</h1>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="medical_record"
@@ -168,6 +169,7 @@ export default function NewTestResultPage() {
           </Space>
         </Form>
       </Card>
+      </div>
     </div>
   );
 }

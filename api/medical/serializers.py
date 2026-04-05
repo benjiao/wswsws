@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MedicalRecord, Diagnosis, HealthCondition, TestResult, FollowUp
+from .models import MedicalRecord, HealthCondition, TestResult, FollowUp
 
 
 class MedicalRecordSerializer(serializers.ModelSerializer):
@@ -24,26 +24,6 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
             'veterinarian_name_display',
             'clinic',
             'clinic_name_display',
-            'details',
-            'created_at',
-            'updated_at',
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-        extra_kwargs = {
-            'details': {'required': False, 'allow_null': True, 'allow_blank': True},
-        }
-
-
-class DiagnosisSerializer(serializers.ModelSerializer):
-    patient_name = serializers.CharField(source='medical_record.patient.name', read_only=True)
-
-    class Meta:
-        model = Diagnosis
-        fields = [
-            'id',
-            'medical_record',
-            'patient_name',
-            'type',
             'details',
             'created_at',
             'updated_at',

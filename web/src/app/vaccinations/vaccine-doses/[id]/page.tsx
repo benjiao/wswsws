@@ -341,8 +341,9 @@ export default function EditVaccineDosePage() {
 
   return (
     <div>
-      <h1>Edit Vaccine Dose</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Edit Vaccine Dose</h1>
         <Form
           form={form}
           layout="vertical"
@@ -515,6 +516,7 @@ export default function EditVaccineDosePage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

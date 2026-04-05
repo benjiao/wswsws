@@ -18,14 +18,6 @@ export default function MedicalPage() {
             <Button onClick={() => router.push('/medical/records')}>View Medical Records</Button>
           </Space>
         </Card>
-        <Card title="Diagnoses">
-          <Space direction="vertical">
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/medical/diagnoses/new')}>
-              Create Diagnosis
-            </Button>
-            <Button onClick={() => router.push('/medical/diagnoses')}>View Diagnoses</Button>
-          </Space>
-        </Card>
         <Card title="Health Conditions">
           <Space direction="vertical">
             <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/medical/health-conditions/new')}>

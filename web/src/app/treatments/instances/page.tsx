@@ -116,145 +116,147 @@ export default function TreatmentInstancesPage() {
 
   return (
     <div style={{ padding: '20px' }}>
-    <h1>Treatments</h1>
+      <Card>
+        <h1 style={{ marginTop: 0 }}>Treatments</h1>
 
-    {treatmentInstances && treatmentInstances.length > 0 && (() => {
-      const pendingCount = treatmentInstances.filter((ti: any) => ti.status === 1).length;
-      const totalCount = treatmentInstances.length;
-      const percent = Math.round(((totalCount - pendingCount) / totalCount) * 100);
+        {treatmentInstances && treatmentInstances.length > 0 && (() => {
+          const pendingCount = treatmentInstances.filter((ti: any) => ti.status === 1).length;
+          const totalCount = treatmentInstances.length;
+          const percent = Math.round(((totalCount - pendingCount) / totalCount) * 100);
 
-      return (
-        <Card style={{ marginBottom: 16 }}>
-          <div style={{ marginBottom: 8 }}>
-            <strong>
-              {totalCount - pendingCount} / {totalCount} treatments completed
-            </strong>
-          </div>
-          <div>
-            <Spin spinning={false}>
-              <div style={{ width: '100%' }}>
-                <div style={{ marginBottom: 4 }}>
-                  <span>Progress</span>
-                </div>
-                <div style={{ width: '100%' }}>
-                  <div
-                    style={{
-                      background: '#f0f0f0',
-                      borderRadius: 4,
-                      height: 16,
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        background: '#52c41a',
-                        width: `${percent}%`,
-                        height: '100%',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: 0,
-                        transform: 'translateX(-50%)',
-                        fontSize: 12,
-                        color: '#222',
-                      }}
-                    >
-                      {percent}%
-                    </span>
-                  </div>
-                </div>
+          return (
+            <Card style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 8 }}>
+                <strong>
+                  {totalCount - pendingCount} / {totalCount} treatments completed
+                </strong>
               </div>
-            </Spin>
-          </div>
-        </Card>
-      );
-    })()}
+              <div>
+                <Spin spinning={false}>
+                  <div style={{ width: '100%' }}>
+                    <div style={{ marginBottom: 4 }}>
+                      <span>Progress</span>
+                    </div>
+                    <div style={{ width: '100%' }}>
+                      <div
+                        style={{
+                          background: '#f0f0f0',
+                          borderRadius: 4,
+                          height: 16,
+                          position: 'relative',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: '#52c41a',
+                            width: `${percent}%`,
+                            height: '100%',
+                            transition: 'width 0.3s',
+                          }}
+                        />
+                        <span
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: 0,
+                            transform: 'translateX(-50%)',
+                            fontSize: 12,
+                            color: '#222',
+                          }}
+                        >
+                          {percent}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Spin>
+              </div>
+            </Card>
+          );
+        })()}
 
-    <Table
-        dataSource={treatmentInstances}
-        rowKey="id"
-        pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          total: paginatedData?.count || 0,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} instances`,
-          onChange: (page, size) => {
-            setCurrentPage(page);
-            setPageSize(size);
-          },
-          onShowSizeChange: (current, size) => {
-            setCurrentPage(1);
-            setPageSize(size);
-          },
-        }}
-        size="small" 
-        style={{ marginBottom: '10px' }}
-    >
-        <Table.Column
+        <Table
+          dataSource={treatmentInstances}
+          rowKey="id"
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: paginatedData?.count || 0,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} instances`,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+            onShowSizeChange: (current, size) => {
+              setCurrentPage(1);
+              setPageSize(size);
+            },
+          }}
+          size="small"
+          style={{ marginBottom: '10px' }}
+        >
+          <Table.Column
             title="Schedule"
             dataIndex={['scheduled_time']}
             key="patient"
             render={(time: string) => formatDateTime(time)}
             responsive={['md']}
-        />
-        <Table.Column
+          />
+          <Table.Column
             title="Task"
             dataIndex={['treatment_schedule', 'patient_name']}
             key="task"
             render={(_, record: TreatmentInstance) => {
-                const schedule = record.treatment_schedule;
-                const patientId = schedule?.patient?.id;
-                const patientName = schedule?.patient_name ?? '';
-                const rest = schedule?.dosage && schedule?.unit
-                    ? ` - ${schedule.medicine_name} ${schedule.dosage} ${schedule.unit}`
-                    : ` - ${schedule?.medicine_name ?? ''}`;
-                return (
-                    <span>
-                        {patientId ? (
-                            <span
-                                onClick={() => router.push(`/patients/${patientId}`)}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                {patientName}
-                            </span>
-                        ) : (
-                            patientName
-                        )}
-                        {rest}
+              const schedule = record.treatment_schedule;
+              const patientId = schedule?.patient?.id;
+              const patientName = schedule?.patient_name ?? '';
+              const rest = schedule?.dosage && schedule?.unit
+                ? ` - ${schedule.medicine_name} ${schedule.dosage} ${schedule.unit}`
+                : ` - ${schedule?.medicine_name ?? ''}`;
+              return (
+                <span>
+                  {patientId ? (
+                    <span
+                      onClick={() => router.push(`/patients/${patientId}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {patientName}
                     </span>
-                );
+                  ) : (
+                    patientName
+                  )}
+                  {rest}
+                </span>
+              );
             }}
-        />
-        <Table.Column
+          />
+          <Table.Column
             title="Status"
             dataIndex={['status']}
             key="dosage"
             render={(_, record: TreatmentInstance) =>
-                <span>
-                    <Tag
-                        color={
-                            record.status === 1
-                                ? 'default'
-                                : record.status === 2
-                                ? 'green'
-                                : record.status === 3
-                                ? 'orange'
-                                : 'default'
-                        }
-                        key={record.status}
-                    >
-                        {record.status_display}
-                    </Tag>
-                </span>
+              <span>
+                <Tag
+                  color={
+                    record.status === 1
+                      ? 'default'
+                      : record.status === 2
+                        ? 'green'
+                        : record.status === 3
+                          ? 'orange'
+                          : 'default'
+                  }
+                  key={record.status}
+                >
+                  {record.status_display}
+                </Tag>
+              </span>
             }
-        />
-    </Table>
+          />
+        </Table>
+      </Card>
     </div>
   );
 }

@@ -98,8 +98,9 @@ export default function EditFollowUpPage() {
 
   return (
     <div>
-      <h1>Edit Follow-Up</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Edit Follow-Up</h1>
         <Form form={form} layout="vertical" onFinish={(values) => updateMutation.mutate(values)}>
           <Form.Item
             name="follow_up_date"
@@ -135,6 +136,7 @@ export default function EditFollowUpPage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

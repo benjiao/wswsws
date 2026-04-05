@@ -113,8 +113,9 @@ export default function EditClinicPage() {
 
   return (
     <div>
-      <h1>Edit Clinic</h1>
+      <div style={{ maxWidth: 720 }}>
       <Card>
+        <h1 style={{ marginTop: 0 }}>Edit Clinic</h1>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="name"
@@ -154,6 +155,7 @@ export default function EditClinicPage() {
           />
         )}
       </Card>
+      </div>
     </div>
   );
 }

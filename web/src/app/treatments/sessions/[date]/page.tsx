@@ -137,81 +137,80 @@ export default function TreatmentSessionsByDatePage() {
   };
 
   return (
-    <>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>{formatDateForDisplay(date)}</h1>
-        <Select
-          placeholder="Filter by Patient Group"
-          allowClear
-          value={selectedGroupId}
-          onChange={handleGroupChange}
-          loading={groupsLoading}
-          showSearch
-          filterOption={(input, option) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-          }
-          style={{ width: 200 }}
-          options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name })) || []}
-        />
-      </Space>
+    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Card>
+        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h1 style={{ margin: 0 }}>{formatDateForDisplay(date)}</h1>
+          <Select
+            placeholder="Filter by Patient Group"
+            allowClear
+            value={selectedGroupId}
+            onChange={handleGroupChange}
+            loading={groupsLoading}
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            style={{ width: 200 }}
+            options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name })) || []}
+          />
+        </Space>
+        <Card style={{ marginBottom: 24 }}>
+          {treatmentSessions ? (
+            (() => {
 
-      <Card style={{ marginBottom: 24 }}>
-        {treatmentSessions ? (
-          (() => {
+              const completed = treatmentSessions.reduce(
+                (sum, session) => sum + (session.completed_count ?? 0), 0
+              );
+              const total = treatmentSessions.reduce(
+                (sum, session) => sum + (session.instances_count ?? 0), 0
+              );
 
-            const completed = treatmentSessions.reduce(
-              (sum, session) => sum + (session.completed_count ?? 0), 0
-            );
-            const total = treatmentSessions.reduce(
-              (sum, session) => sum + (session.instances_count ?? 0), 0
-            );
+              const percent = total > 0 ? Math.floor((completed / total) * 100) : 0;
 
-            const percent = total > 0 ? Math.floor((completed / total) * 100) : 0;
+              return (
+                <>
+                  <div style={{ marginBottom: 8 }}>
+                    <strong>
+                      {completed} / {total} treatments completed
+                    </strong>
+                  </div>
+                  <div>
+                      <Flex gap="small" vertical>
+                        <Progress percent={percent} />
+                      </Flex>
+                  </div>
+                </>
+              );
+            })()
+          ) : (
+            <Spin />
+          )}
+        </Card>
 
-            return (
-              <>
-                <div style={{ marginBottom: 8 }}>
-                  <strong>
-                    {completed} / {total} treatments completed
-                  </strong>
-                </div>
-                <div>
-                    <Flex gap="small" vertical>
-                      <Progress percent={percent} />
-                    </Flex>
-                </div>
-              </>
-            );
-          })()
-        ) : (
-          <Spin />
-        )}
       </Card>
-
       {treatmentSessions && treatmentSessions.map(session => (
         (session.instances_count ?? 0) > 0 && (
-          <div key={session.id} style={{ marginBottom: 24 }}>
-            <h3>{session.session_type_display}</h3>
-
-                <div style={{ marginBottom: '1em' }}>
-                  <MedicinePrepTable
-                  data={session?.prep_list ?? []}
-                  loading={treatmentSessionsLoading}
-                  error={treatmentSessionsError}
-                  refetch={refetchTreatmentSessions}
-                  />
-                </div>
-              <TreatmentInstancesByPatientTable 
-                data={session?.instances ?? []}
-                loading={treatmentSessionsLoading} 
+          <Card key={session.id}>
+            <h2 style={{ marginTop: 0 }}>{session.session_type_display}</h2>
+            <div style={{ marginBottom: '1em' }}>
+              <MedicinePrepTable
+                data={session?.prep_list ?? []}
+                loading={treatmentSessionsLoading}
                 error={treatmentSessionsError}
                 refetch={refetchTreatmentSessions}
-                sectionKey={session?.session_type_display?.toLowerCase().replace(/\s+/g, '_')}
               />
-
-          </div>
+            </div>
+            <TreatmentInstancesByPatientTable
+              data={session?.instances ?? []}
+              loading={treatmentSessionsLoading}
+              error={treatmentSessionsError}
+              refetch={refetchTreatmentSessions}
+              sectionKey={session?.session_type_display?.toLowerCase().replace(/\s+/g, '_')}
+            />
+          </Card>
         )
       ))}
-    </>
+    </Space>
   );
 }

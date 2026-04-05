@@ -25,7 +25,6 @@ from treatments.views import TreatmentScheduleViewSet, TreatmentInstanceViewSet,
 from inventory.views import MedicineViewSet
 from medical.views import (
     MedicalRecordViewSet,
-    DiagnosisViewSet,
     HealthConditionViewSet,
     TestResultViewSet,
     FollowUpViewSet,
@@ -51,7 +50,6 @@ router.register(r'vaccine-types', VaccineTypeViewSet)
 router.register(r'vaccine-products', VaccineProductViewSet)
 router.register(r'vaccine-doses', VaccineDoseViewSet)
 router.register(r'medical-records', MedicalRecordViewSet)
-router.register(r'diagnoses', DiagnosisViewSet)
 router.register(r'health-conditions', HealthConditionViewSet)
 router.register(r'test-results', TestResultViewSet)
 router.register(r'follow-ups', FollowUpViewSet)

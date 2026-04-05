@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Tag, Select, Button, Modal, Switch, Grid } from 'antd';
+import { Table, Input, Space, Spin, Alert, Tag, Select, Button, Modal, Switch, Grid, Card } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useState, useMemo, useEffect } from 'react';
@@ -525,82 +525,84 @@ export default function SchedulesPage() {
 
   return (
     <div>
-      {isMobile ? (
-        <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
-          <h1 style={{ margin: '0 0 0.5rem 0' }}>Treatment Schedules</h1>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/treatments/schedules/new')}
-            style={{ width: '100%' }}
-          >
-            Create New Schedule
-          </Button>
-        </Space>
-      ) : (
-        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h1 style={{ margin: 0 }}>Treatment Schedules</h1>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/treatments/schedules/new')}
-          >
-            Create New Schedule
-          </Button>
-        </Space>
-      )}
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Space wrap>
-          <Input
-            placeholder="Search by patient, medicine, or notes..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            style={{ width: 300 }}
+      <Card>
+        {isMobile ? (
+          <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
+            <h1 style={{ margin: '0 0 0.5rem 0' }}>Treatment Schedules</h1>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => router.push('/treatments/schedules/new')}
+              style={{ width: '100%' }}
+            >
+              Create New Schedule
+            </Button>
+          </Space>
+        ) : (
+          <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h1 style={{ margin: 0 }}>Treatment Schedules</h1>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => router.push('/treatments/schedules/new')}
+            >
+              Create New Schedule
+            </Button>
+          </Space>
+        )}
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Space wrap>
+            <Input
+              placeholder="Search by patient, medicine, or notes..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              style={{ width: 300 }}
+            />
+            <Select
+              placeholder="Filter by Interval"
+              allowClear
+              value={intervalFilter}
+              onChange={(value) => {
+                setIntervalFilter(value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 180 }}
+            >
+              <Select.Option value="1">DAILY</Select.Option>
+              <Select.Option value="2">EVERY OTHER DAY</Select.Option>
+            </Select>
+            <Select
+              placeholder="Filter by Active Status"
+              allowClear
+              value={activeFilter}
+              onChange={(value) => {
+                setActiveFilter(value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 150 }}
+            >
+              <Select.Option value="active">Active</Select.Option>
+              <Select.Option value="inactive">Inactive</Select.Option>
+            </Select>
+          </Space>
+          <Table
+            dataSource={schedules}
+            columns={columns}
+            rowKey="id"
+            onChange={handleTableChange}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: paginatedData?.count || 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} schedules`,
+            }}
+            bordered
           />
-          <Select
-            placeholder="Filter by Interval"
-            allowClear
-            value={intervalFilter}
-            onChange={(value) => {
-              setIntervalFilter(value);
-              setCurrentPage(1);
-            }}
-            style={{ width: 180 }}
-          >
-            <Select.Option value="1">DAILY</Select.Option>
-            <Select.Option value="2">EVERY OTHER DAY</Select.Option>
-          </Select>
-          <Select
-            placeholder="Filter by Active Status"
-            allowClear
-            value={activeFilter}
-            onChange={(value) => {
-              setActiveFilter(value);
-              setCurrentPage(1);
-            }}
-            style={{ width: 150 }}
-          >
-            <Select.Option value="active">Active</Select.Option>
-            <Select.Option value="inactive">Inactive</Select.Option>
-          </Select>
         </Space>
-        <Table
-          dataSource={schedules}
-          columns={columns}
-          rowKey="id"
-          onChange={handleTableChange}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: paginatedData?.count || 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} schedules`,
-          }}
-          bordered
-        />
-      </Space>
+      </Card>
     </div>
   );
 }

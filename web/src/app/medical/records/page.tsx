@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Input, Space, Spin, Alert, Button, Modal } from 'antd';
+import { Table, Input, Space, Spin, Alert, Button, Modal, Card } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -173,11 +173,10 @@ export default function MedicalRecordsPage() {
         sortOrder: sortField === 'patient_name' ? sortOrder : undefined,
         sortDirections: ['ascend', 'descend'],
         render: (name: string, record: MedicalRecord) => {
-          const patientId = typeof record.patient === 'object' ? record.patient?.id : record.patient;
-          if (patientId) {
+          if (record.id) {
             return (
               <span
-                onClick={() => router.push(`/patients/${patientId}`)}
+                onClick={() => router.push(`/medical/records/${record.id}`)}
                 style={{ cursor: 'pointer' }}
               >
                 {name}
@@ -249,61 +248,63 @@ export default function MedicalRecordsPage() {
 
   return (
     <div>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Medical Records</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/medical/records/new')}
-        >
-          Create Medical Record
-        </Button>
-      </Space>
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Input
-          placeholder="Search by patient, clinic, veterinarian, or details..."
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          style={{ maxWidth: 420 }}
-        />
-        <Table
-          dataSource={records}
-          columns={columns}
-          rowKey="id"
-          onChange={(
-            _pagination: TablePaginationConfig,
-            _filters: unknown,
-            sorter: SorterResult<MedicalRecord> | SorterResult<MedicalRecord>[]
-          ) => {
-            const single = Array.isArray(sorter) ? sorter[0] : sorter;
-            if (single?.field) {
-              setSortField(single.field as string);
-              setSortOrder(single.order ?? undefined);
-              setCurrentPage(1);
-            } else {
-              setSortField(undefined);
-              setSortOrder(undefined);
-            }
-          }}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total: paginatedData?.count ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} records`,
-            onChange: (page, newPageSize) => {
-              setCurrentPage(page);
-              if (newPageSize !== undefined && newPageSize !== pageSize) {
-                setPageSize(newPageSize);
+      <Card>
+        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h1 style={{ margin: 0 }}>Medical Records</h1>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/medical/records/new')}
+          >
+            Create Medical Record
+          </Button>
+        </Space>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Input
+            placeholder="Search by patient, clinic, veterinarian, or details..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{ maxWidth: 420 }}
+          />
+          <Table
+            dataSource={records}
+            columns={columns}
+            rowKey="id"
+            onChange={(
+              _pagination: TablePaginationConfig,
+              _filters: unknown,
+              sorter: SorterResult<MedicalRecord> | SorterResult<MedicalRecord>[]
+            ) => {
+              const single = Array.isArray(sorter) ? sorter[0] : sorter;
+              if (single?.field) {
+                setSortField(single.field as string);
+                setSortOrder(single.order ?? undefined);
                 setCurrentPage(1);
+              } else {
+                setSortField(undefined);
+                setSortOrder(undefined);
               }
-            },
-          }}
-          bordered
-        />
-      </Space>
+            }}
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: paginatedData?.count ?? 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} records`,
+              onChange: (page, newPageSize) => {
+                setCurrentPage(page);
+                if (newPageSize !== undefined && newPageSize !== pageSize) {
+                  setPageSize(newPageSize);
+                  setCurrentPage(1);
+                }
+              },
+            }}
+            bordered
+          />
+        </Space>
+      </Card>
     </div>
   );
 }

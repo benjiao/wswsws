@@ -15,16 +15,6 @@ class MedicalRecord(models.Model):
     def __str__(self):
         return f"{self.patient.name} - {self.record_date}"
 
-class Diagnosis(models.Model):
-    medical_record = models.ForeignKey(MedicalRecord, on_delete=models.CASCADE, related_name='diagnoses')
-    type = models.CharField(max_length=255)
-    details = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.medical_record.patient.name} - {self.type}"
-
 class HealthCondition(models.Model):
     medical_record = models.ForeignKey(MedicalRecord, on_delete=models.CASCADE, related_name='health_conditions')
     type = models.CharField(max_length=255)
