@@ -357,7 +357,6 @@ export default function TreatmentInstancesByPatientTable({ data, loading, error,
             pagination={false}
             size="small" 
             bordered
-            style={{ marginBottom: '20px' }}
             columns={columns}
             onChange={sectionKey ? handleTableChange : undefined}
         >

@@ -155,7 +155,7 @@ export default function TreatmentSessionsByDatePage() {
             options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name })) || []}
           />
         </Space>
-        <Card style={{ marginBottom: 24 }}>
+        <Card>
           {treatmentSessions ? (
             (() => {
 
