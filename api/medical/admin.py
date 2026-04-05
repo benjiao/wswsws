@@ -1,0 +1,104 @@
+from django.contrib import admin
+from unfold.admin import ModelAdmin
+from .models import MedicalRecord, Diagnosis, HealthCondition, TestResult, FollowUp
+
+
+@admin.register(MedicalRecord)
+class MedicalRecordAdmin(ModelAdmin):
+    list_display = [
+        'patient',
+        'record_datetime',
+        'veterinarian',
+        'clinic',
+        'created_at',
+        'updated_at',
+    ]
+    list_filter = ['record_datetime', 'clinic', 'veterinarian', 'created_at', 'updated_at']
+    search_fields = ['patient__name', 'veterinarian__name', 'clinic__name', 'details', 'notes']
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['patient', 'veterinarian', 'clinic']
+    date_hierarchy = 'record_datetime'
+    ordering = ['-record_datetime']
+
+
+@admin.register(Diagnosis)
+class DiagnosisAdmin(ModelAdmin):
+    list_display = [
+        'type',
+        'medical_record',
+        'created_at',
+        'updated_at',
+    ]
+    list_filter = ['created_at', 'updated_at']
+    search_fields = [
+        'type',
+        'details',
+        'notes',
+        'medical_record__patient__name',
+    ]
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['medical_record']
+    ordering = ['-created_at']
+
+
+@admin.register(HealthCondition)
+class HealthConditionAdmin(ModelAdmin):
+    list_display = [
+        'type',
+        'medical_record',
+        'is_choronic',
+        'is_active',
+        'created_at',
+        'updated_at',
+    ]
+    list_filter = ['is_choronic', 'is_active', 'created_at', 'updated_at']
+    search_fields = [
+        'type',
+        'details',
+        'notes',
+        'medical_record__patient__name',
+    ]
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['medical_record']
+    ordering = ['-created_at']
+
+
+@admin.register(TestResult)
+class TestResultAdmin(ModelAdmin):
+    list_display = [
+        'type',
+        'medical_record',
+        'health_condition',
+        'created_at',
+        'updated_at',
+    ]
+    list_filter = ['created_at', 'updated_at']
+    search_fields = [
+        'type',
+        'details',
+        'notes',
+        'medical_record__patient__name',
+    ]
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['medical_record', 'health_condition']
+    ordering = ['-created_at']
+
+
+@admin.register(FollowUp)
+class FollowUpAdmin(ModelAdmin):
+    list_display = [
+        'medical_record',
+        'follow_up_datetime',
+        'created_at',
+        'updated_at',
+    ]
+    list_filter = ['follow_up_datetime', 'created_at', 'updated_at']
+    search_fields = [
+        'details',
+        'notes',
+        'medical_record__patient__name',
+    ]
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['medical_record']
+    date_hierarchy = 'follow_up_datetime'
+    ordering = ['-follow_up_datetime']

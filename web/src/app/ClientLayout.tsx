@@ -154,6 +154,33 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
       ],
     },
     {
+      key: '/medical',
+      icon: <MedicineBoxOutlined />,
+      label: 'Medical',
+      children: [
+        {
+          key: '/medical/records',
+          label: <Link href="/medical/records">Medical Records</Link>,
+        },
+        {
+          key: '/medical/diagnoses',
+          label: <Link href="/medical/diagnoses">Diagnoses</Link>,
+        },
+        {
+          key: '/medical/health-conditions',
+          label: <Link href="/medical/health-conditions">Health Conditions</Link>,
+        },
+        {
+          key: '/medical/test-results',
+          label: <Link href="/medical/test-results">Test Results</Link>,
+        },
+        {
+          key: '/medical/follow-ups',
+          label: <Link href="/medical/follow-ups">Follow-Ups</Link>,
+        },
+      ],
+    },
+    {
       key: '/paw-count',
       icon: <PiPawPrint />,
       label: <Link href="/paw-count">Paw Count</Link>,
@@ -183,6 +210,7 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
     if (pathname?.startsWith('/inventory')) newOpenKeys.push('/inventory');
     if (pathname?.startsWith('/vaccinations')) newOpenKeys.push('/vaccinations');
     if (pathname?.startsWith('/clinical-directory')) newOpenKeys.push('/clinical-directory');
+    if (pathname?.startsWith('/medical')) newOpenKeys.push('/medical');
     if (
       pathname &&
       (pathname.startsWith('/settings') || pathname === '/users' || pathname === '/admin')

@@ -23,6 +23,13 @@ from patients.views import PatientViewSet, PatientGroupViewSet, PatientStatusVie
 from clinics.views import ClinicViewSet, VeterinarianViewSet
 from treatments.views import TreatmentScheduleViewSet, TreatmentInstanceViewSet, TreatmentSessionViewSet
 from inventory.views import MedicineViewSet
+from medical.views import (
+    MedicalRecordViewSet,
+    DiagnosisViewSet,
+    HealthConditionViewSet,
+    TestResultViewSet,
+    FollowUpViewSet,
+)
 from vaccinations.views import VaccineTypeViewSet, VaccineProductViewSet, VaccineDoseViewSet
 
 admin.site.site_header = "wswsws admin"
@@ -43,6 +50,11 @@ router.register(r'medicines', MedicineViewSet)
 router.register(r'vaccine-types', VaccineTypeViewSet)
 router.register(r'vaccine-products', VaccineProductViewSet)
 router.register(r'vaccine-doses', VaccineDoseViewSet)
+router.register(r'medical-records', MedicalRecordViewSet)
+router.register(r'diagnoses', DiagnosisViewSet)
+router.register(r'health-conditions', HealthConditionViewSet)
+router.register(r'test-results', TestResultViewSet)
+router.register(r'follow-ups', FollowUpViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
