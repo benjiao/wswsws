@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Select, InputNumber, Button, Space, Spin, Alert, Card, Switch } from 'antd';
 import { useRouter, useParams } from 'next/navigation';
@@ -19,6 +19,19 @@ interface Medicine {
   name: string;
 }
 
+interface MedicalRecord {
+  id: number;
+  patient: number | { id: number; name: string };
+  patient_name?: string;
+  record_datetime?: string;
+}
+
+interface HealthCondition {
+  id: number;
+  medical_record: number;
+  type: string;
+}
+
 const fetchPatients = async (): Promise<Patient[]> => {
   const response = await fetch(`${API_URL}/patients/all/`, {
     headers: { 'Accept': 'application/json' },
@@ -35,6 +48,24 @@ const fetchMedicines = async (): Promise<Medicine[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   return Array.isArray(data) ? data : [];
+};
+
+const fetchMedicalRecords = async (): Promise<MedicalRecord[]> => {
+  const response = await fetch(`${API_URL}/medical-records/?page_size=200`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return data.results ?? data;
+};
+
+const fetchHealthConditions = async (): Promise<HealthCondition[]> => {
+  const response = await fetch(`${API_URL}/health-conditions/?page_size=200`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return data.results ?? data;
 };
 
 const fetchSchedule = async (id: string): Promise<TreatmentSchedule> => {
@@ -93,6 +124,8 @@ const updateTreatmentSchedule = async (id: string, values: any) => {
     unit: values.unit || 'mL',
     notes: values.notes || null,
     is_active: values.is_active !== undefined ? values.is_active : true,
+    medical_record: values.medical_record || null,
+    health_condition: values.health_condition || null,
   };
 
   const response = await fetch(`${API_URL}/treatment-schedules/${id}/`, {
@@ -134,6 +167,32 @@ export default function EditSchedulePage() {
     queryKey: ['medicines'],
     queryFn: fetchMedicines,
   });
+
+  const { data: medicalRecords = [], isLoading: recordsLoading } = useQuery({
+    queryKey: ['medical_records_all'],
+    queryFn: fetchMedicalRecords,
+  });
+
+  const { data: healthConditions = [], isLoading: conditionsLoading } = useQuery({
+    queryKey: ['health_conditions_all'],
+    queryFn: fetchHealthConditions,
+  });
+
+  const selectedMedicalRecordId = Form.useWatch('medical_record', form);
+  const selectedPatientId = Form.useWatch('patient', form);
+
+  const filteredMedicalRecords = useMemo(() => {
+    if (!selectedPatientId) return medicalRecords;
+    return medicalRecords.filter((r) => {
+      const patientId = typeof r.patient === 'object' ? r.patient?.id : r.patient;
+      return patientId === selectedPatientId;
+    });
+  }, [medicalRecords, selectedPatientId]);
+
+  const filteredHealthConditions = useMemo(() => {
+    if (!selectedMedicalRecordId) return healthConditions;
+    return healthConditions.filter((c) => c.medical_record === selectedMedicalRecordId);
+  }, [healthConditions, selectedMedicalRecordId]);
 
   const { 
     data: instances, 
@@ -180,6 +239,8 @@ export default function EditSchedulePage() {
         dosage: schedule.dosage ? parseFloat(schedule.dosage) : undefined,
         unit: schedule.unit || 'mL',
         notes: schedule.notes || undefined,
+        medical_record: schedule.medical_record || undefined,
+        health_condition: schedule.health_condition || undefined,
       });
     }
   }, [schedule, patients, medicines, form]);
@@ -188,7 +249,7 @@ export default function EditSchedulePage() {
     updateMutation.mutate(values);
   };
 
-  if (scheduleLoading || patientsLoading || medicinesLoading) {
+  if (scheduleLoading || patientsLoading || medicinesLoading || recordsLoading || conditionsLoading) {
     return <Spin size="large" />;
   }
 
@@ -247,6 +308,8 @@ export default function EditSchedulePage() {
                   unit: schedule.unit || 'mL',
                   notes: schedule.notes || undefined,
                   is_active: schedule.is_active !== undefined ? schedule.is_active : true,
+                  medical_record: schedule.medical_record || undefined,
+                  health_condition: schedule.health_condition || undefined,
                 }
               : undefined
           }
@@ -280,6 +343,33 @@ export default function EditSchedulePage() {
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
               options={medicines?.map((m: Medicine) => ({ value: m.id, label: m.name })) || []}
+            />
+          </Form.Item>
+
+          <Form.Item name="medical_record" label="Medical Record">
+            <Select
+              placeholder="Select a medical record (optional)"
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={filteredMedicalRecords.map((r) => ({
+                value: r.id,
+                label: `${r.patient_name ?? 'Patient'} • ${r.record_datetime ?? ''}`,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item name="health_condition" label="Health Condition">
+            <Select
+              placeholder="Select a health condition (optional)"
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={filteredHealthConditions.map((c) => ({ value: c.id, label: c.type }))}
             />
           </Form.Item>
 

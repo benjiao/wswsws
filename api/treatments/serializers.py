@@ -17,7 +17,8 @@ class TreatmentScheduleSerializer(serializers.ModelSerializer):
         model = TreatmentSchedule
         fields = ['id', 'patient', 'patient_name', 'medicine', 'medicine_name', 
                  'start_time', 'frequency', 'interval', 'interval_display', 'doses',
-                 'dosage', 'unit', 'notes', 'is_active', 'created_at', 'updated_at',
+                 'dosage', 'unit', 'notes', 'is_active', 'medical_record', 'health_condition',
+                 'created_at', 'updated_at',
                  'instances_count', 'pending_count', 'completed_count', 'skipped_count',
                  'last_instance']
         read_only_fields = ['created_at', 'updated_at']

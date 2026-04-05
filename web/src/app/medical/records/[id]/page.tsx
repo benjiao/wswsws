@@ -30,7 +30,6 @@ interface MedicalRecord {
   veterinarian: number | null;
   clinic: number | null;
   details: string;
-  notes: string;
 }
 
 interface Diagnosis {
@@ -62,7 +61,16 @@ interface FollowUp {
   medical_record: number;
   follow_up_datetime: string;
   details: string;
-  notes: string;
+}
+
+interface TreatmentSchedule {
+  id: number;
+  medicine_name: string;
+  dosage: string | null;
+  unit: string;
+  interval_display?: string;
+  start_time: string | null;
+  is_active?: boolean;
 }
 
 const fetchPatients = async (): Promise<Patient[]> => {
@@ -167,6 +175,27 @@ const fetchFollowUps = async (recordId: string): Promise<FollowUp[]> => {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   return data.results ?? data;
+};
+
+const fetchTreatmentSchedules = async (recordId: string): Promise<TreatmentSchedule[]> => {
+  const response = await fetch(`${API_URL}/treatment-schedules/?medical_record=${recordId}`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return data.results ?? data;
+};
+
+const formatDateTime = (value: string | null | undefined) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 const updateMedicalRecord = async (id: string, values: any) => {
@@ -302,6 +331,12 @@ export default function MedicalRecordDetailPage() {
   const { data: followUps = [], isLoading: followUpsLoading } = useQuery({
     queryKey: ['follow_ups', recordId],
     queryFn: () => fetchFollowUps(recordId!),
+    enabled: !!recordId,
+  });
+
+  const { data: treatmentSchedules = [], isLoading: schedulesLoading } = useQuery({
+    queryKey: ['treatment_schedules_by_record', recordId],
+    queryFn: () => fetchTreatmentSchedules(recordId!),
     enabled: !!recordId,
   });
 
@@ -459,6 +494,79 @@ export default function MedicalRecordDetailPage() {
 
       <Tabs
         items={[
+          {
+            key: 'treatments',
+            label: 'Treatments',
+            children: (
+              <Card>
+                <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div />
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      const patientId = typeof record?.patient === 'object' ? record?.patient?.id : record?.patient;
+                      const params = new URLSearchParams();
+                      if (recordId) params.set('medical_record', recordId);
+                      if (patientId) params.set('patient', String(patientId));
+                      router.push(`/treatments/schedules/new?${params.toString()}`);
+                    }}
+                  >
+                    Add Treatment Schedule
+                  </Button>
+                </Space>
+                {schedulesLoading && <Spin />}
+                {!schedulesLoading && treatmentSchedules.length === 0 && <div>No treatment schedules yet.</div>}
+                {treatmentSchedules.length > 0 && (
+                  <Table
+                    dataSource={treatmentSchedules}
+                    rowKey="id"
+                    pagination={false}
+                    columns={[
+                      {
+                        title: 'Medicine',
+                        dataIndex: 'medicine_name',
+                        key: 'medicine_name',
+                        render: (v: string | null) => v || '—',
+                      },
+                      {
+                        title: 'Dosage',
+                        key: 'dosage',
+                        render: (_: unknown, row: TreatmentSchedule) =>
+                          row.dosage ? `${row.dosage} ${row.unit}` : '—',
+                      },
+                      {
+                        title: 'Interval',
+                        dataIndex: 'interval_display',
+                        key: 'interval_display',
+                        render: (v: string | null) => v || '—',
+                      },
+                      {
+                        title: 'Start Time',
+                        dataIndex: 'start_time',
+                        key: 'start_time',
+                        render: (v: string | null) => formatDateTime(v),
+                      },
+                      {
+                        title: 'Active',
+                        dataIndex: 'is_active',
+                        key: 'is_active',
+                        render: (v: boolean | undefined) => (v ? 'Yes' : 'No'),
+                      },
+                      {
+                        title: 'Actions',
+                        key: 'actions',
+                        render: (_: unknown, row: TreatmentSchedule) => (
+                          <Button type="link" onClick={() => router.push(`/treatments/schedules/${row.id}`)}>
+                            View
+                          </Button>
+                        ),
+                      },
+                    ]}
+                  />
+                )}
+              </Card>
+            ),
+          },
           {
             key: 'diagnoses',
             label: 'Diagnoses',

@@ -22,10 +22,12 @@ from django.db.models import Count, Q, Max
 logger = logging.getLogger(__name__)
 
 class TreatmentScheduleViewSet(viewsets.ModelViewSet):
-    queryset = TreatmentSchedule.objects.select_related('patient', 'medicine')
+    queryset = TreatmentSchedule.objects.select_related(
+        'patient', 'medicine', 'medical_record', 'health_condition'
+    )
     serializer_class = TreatmentScheduleSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['patient', 'medicine', 'interval', 'is_active']
+    filterset_fields = ['patient', 'medicine', 'interval', 'is_active', 'medical_record', 'health_condition']
     search_fields = ['patient__name', 'medicine__name', 'notes']
     ordering_fields = [
         'start_time', 'created_at', 'patient__name', 'medicine__name',

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from medical.models import MedicalRecord, HealthCondition
 
 
 # Create your models here.
@@ -22,6 +23,10 @@ class TreatmentSchedule(models.Model):
     unit = models.CharField(max_length=50, null=True, blank=True, default="mL")
     notes = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+
+    medical_record = models.ForeignKey(MedicalRecord, on_delete=models.SET_NULL, null=True, blank=True, related_name='treatment_schedules')
+    health_condition = models.ForeignKey(HealthCondition, on_delete=models.SET_NULL, null=True, blank=True, related_name='treatment_schedules')
+
     created_at = models.DateTimeField(auto_now_add=True,)
     updated_at = models.DateTimeField(auto_now=True)
 

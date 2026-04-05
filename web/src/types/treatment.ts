@@ -33,6 +33,8 @@ export interface TreatmentSchedule {
     unit: string;
     notes?: string;
     is_active?: boolean;
+    medical_record?: number | null;
+    health_condition?: number | null;
     created_at?: string;
     updated_at?: string;
     instances_count?: number;
