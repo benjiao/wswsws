@@ -71,9 +71,18 @@ interface TreatmentInstancesByPatientTableProps {
   refetch: () => void;
   /** When set, sort is synced to URL as sort_${sectionKey} and order_${sectionKey} */
   sectionKey?: string;
+  /** Hide Schedule and Last Dose columns for grouped hour views */
+  hideScheduleAndLastDose?: boolean;
 }
 
-export default function TreatmentInstancesByPatientTable({ data, loading, error, refetch, sectionKey }: TreatmentInstancesByPatientTableProps) {
+export default function TreatmentInstancesByPatientTable({
+    data,
+    loading,
+    error,
+    refetch,
+    sectionKey,
+    hideScheduleAndLastDose = false,
+}: TreatmentInstancesByPatientTableProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -183,7 +192,7 @@ export default function TreatmentInstancesByPatientTable({ data, loading, error,
         }
     };
 
-    const columns: TableProps<TreatmentInstance>['columns'] = [
+    const allColumns: TableProps<TreatmentInstance>['columns'] = [
         {
             title: 'Schedule',
             dataIndex: 'scheduled_time',
@@ -338,6 +347,13 @@ export default function TreatmentInstancesByPatientTable({ data, loading, error,
             },
         },
     ];
+
+    const hiddenKeys = hideScheduleAndLastDose
+      ? new Set(['scheduled_time', 'last_instance'])
+      : null;
+    const columns = hiddenKeys
+      ? allColumns.filter((col) => !hiddenKeys.has(String(col?.key ?? '')))
+      : allColumns;
 
     if (loading) return <Spin size="small" />;
 

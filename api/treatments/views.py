@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Prefetch
 from datetime import datetime
 from django.db.models import Q
-from django.db.models.functions import TruncDate
+from django.db.models.functions import TruncDate, TruncHour
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession
@@ -228,7 +228,6 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
-    @action(detail=False, methods=['get'])
     def medicine_adherence(self, request):
         """
         Calculate medicine adherence, filtered by start and end date.
@@ -311,6 +310,118 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
             }
 
         return Response({'adherence': round(adherence, 2), 'daily_adherence': daily_adherence})
+
+    @action(detail=False, methods=['get'], url_path='calendar-hour-summary')
+    def calendar_hour_summary(self, request):
+        """
+        Return per-day grouped counts by exact hour for a date range.
+        Query params:
+        - start_date: YYYY-MM-DD (required)
+        - end_date: YYYY-MM-DD (required)
+        """
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        if not start_date or not end_date:
+            return Response(
+                {'error': 'start_date and end_date are required. Use YYYY-MM-DD.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {'error': 'Invalid date format. Use YYYY-MM-DD.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if start_date_obj > end_date_obj:
+            return Response(
+                {'error': 'start_date must be less than or equal to end_date.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tz = timezone.get_current_timezone()
+        summary_rows = (
+            self.get_queryset()
+            .filter(scheduled_time__date__gte=start_date_obj, scheduled_time__date__lte=end_date_obj)
+            .annotate(scheduled_date=TruncDate('scheduled_time', tzinfo=tz))
+            .annotate(scheduled_hour=TruncHour('scheduled_time', tzinfo=tz))
+            .values('scheduled_date', 'scheduled_hour')
+            .annotate(
+                count=Count('id'),
+                pending=Count('id', filter=Q(status=TreatmentInstance.STATUS_PENDING)),
+            )
+            .order_by('scheduled_date', 'scheduled_hour')
+        )
+
+        hours_by_date = {}
+        for row in summary_rows:
+            date_obj = row['scheduled_date']
+            hour_obj = row['scheduled_hour']
+            if date_obj is None or hour_obj is None:
+                continue
+            date_key = date_obj.strftime('%Y-%m-%d')
+            hour_key = hour_obj.strftime('%H:00')
+            if date_key not in hours_by_date:
+                hours_by_date[date_key] = []
+            hours_by_date[date_key].append({
+                'hour': hour_key,
+                'count': row['count'],
+                'pending': row['pending'],
+            })
+
+        return Response({'hours_by_date': hours_by_date})
+
+    @action(detail=False, methods=['get'], url_path='day-grouped')
+    def day_grouped(self, request):
+        """
+        Return treatment instances for a specific date grouped by exact hour.
+        Query params:
+        - date: YYYY-MM-DD (required)
+        """
+        date_param = request.query_params.get('date')
+        if not date_param:
+            return Response(
+                {'error': 'date is required. Use YYYY-MM-DD.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            target_date = datetime.strptime(date_param, '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {'error': 'Invalid date format. Use YYYY-MM-DD.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        instances = list(
+            self.get_queryset()
+            .filter(scheduled_time__date=target_date)
+            .order_by('scheduled_time', 'treatment_schedule__patient__name')
+        )
+        serialized_instances = TreatmentInstanceSerializer(instances, many=True).data
+
+        grouped = {}
+        for instance, serialized in zip(instances, serialized_instances):
+            local_dt = timezone.localtime(instance.scheduled_time)
+            hour_key = local_dt.strftime('%H:00')
+            if hour_key not in grouped:
+                grouped[hour_key] = []
+            grouped[hour_key].append(serialized)
+
+        groups = [
+            {'hour': hour_key, 'count': len(grouped[hour_key]), 'instances': grouped[hour_key]}
+            for hour_key in sorted(grouped.keys())
+        ]
+
+        return Response(
+            {
+                'date': target_date.strftime('%Y-%m-%d'),
+                'total_count': len(serialized_instances),
+                'groups': groups,
+            }
+        )
 
 
 # Add this new ViewSet after TreatmentInstanceViewSet
