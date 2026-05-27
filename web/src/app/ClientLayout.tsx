@@ -98,6 +98,10 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
           label: <Link href="/treatments/sessions/tomorrow">Tomorrow&apos;s Sessions</Link>,
         },
         {
+          key: '/treatments/calendar',
+          label: <Link href="/treatments/calendar">Calendar</Link>,
+        },
+        {
           key: '/treatments/schedules',
           label: <Link href="/treatments/schedules">All Schedules</Link>,
         },

@@ -1,0 +1,23 @@
+.treatments-calendar .ant-picker-calendar-date-content {
+  text-align: left;
+}
+
+.treatments-calendar-events {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.treatments-calendar-events .ant-badge {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.treatments-calendar-events .ant-badge-status-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
