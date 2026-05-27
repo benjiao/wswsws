@@ -17,6 +17,7 @@ import {
   MenuUnfoldOutlined,
   InboxOutlined,
   BankOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 import { PiPawPrint } from 'react-icons/pi';
 
@@ -81,6 +82,11 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
       label: <Link href="/">Dashboard</Link>,
     },
     {
+      key: '/calendar',
+      icon: <CalendarOutlined />,
+      label: <Link href="/calendar">Calendar</Link>,
+    },
+    {
       key: '/treatments',
       icon: <MedicineBoxOutlined />,
       label: 'Treatments',
@@ -96,10 +102,6 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
         {
           key: '/treatments/sessions/tomorrow',
           label: <Link href="/treatments/sessions/tomorrow">Tomorrow&apos;s Sessions</Link>,
-        },
-        {
-          key: '/treatments/calendar',
-          label: <Link href="/treatments/calendar">Calendar</Link>,
         },
         {
           key: '/treatments/schedules',
@@ -202,11 +204,19 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
     },
   ];
 
-  const getSelectedKeys = () => (pathname ? [pathname] : []);
+  const getSelectedKeys = () => {
+    if (!pathname) return [];
+    if (pathname.startsWith('/calendar')) return ['/calendar'];
+    return [pathname];
+  };
 
   useEffect(() => {
     const newOpenKeys: string[] = [];
-    if (pathname?.startsWith('/treatments')) newOpenKeys.push('/treatments');
+    if (
+      pathname?.startsWith('/treatments')
+    ) {
+      newOpenKeys.push('/treatments');
+    }
     if (pathname?.startsWith('/inventory')) newOpenKeys.push('/inventory');
     if (pathname?.startsWith('/vaccinations')) newOpenKeys.push('/vaccinations');
     if (pathname?.startsWith('/clinical-directory')) newOpenKeys.push('/clinical-directory');

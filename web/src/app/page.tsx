@@ -1,5 +1,6 @@
 import { Card, Col, Row, Space } from "antd";
 import MedicineDosageTimeline from '@/components/MedicineDosageTimeline';
+import TreatmentsCalendarCard from '@/components/TreatmentsCalendarCard';
 import TodaysSessionsCard from '@/components/TodaysSessionsCard';
 import InventoryStatusCard from '@/components/InventoryStatusCard';
 import MedicineAdherenceCard from '@/components/MedicineAdherenceCard';
@@ -13,6 +14,9 @@ export default function FrontPage() {
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8} lg={6}>
             <TodaysSessionsCard />
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <TreatmentsCalendarCard />
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>
             <InventoryStatusCard />

@@ -349,7 +349,10 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
             .annotate(scheduled_date=TruncDate('scheduled_time', tzinfo=tz))
             .annotate(scheduled_hour=TruncHour('scheduled_time', tzinfo=tz))
             .values('scheduled_date', 'scheduled_hour')
-            .annotate(count=Count('id'))
+            .annotate(
+                count=Count('id'),
+                pending=Count('id', filter=Q(status=TreatmentInstance.STATUS_PENDING)),
+            )
             .order_by('scheduled_date', 'scheduled_hour')
         )
 
@@ -363,7 +366,11 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
             hour_key = hour_obj.strftime('%H:00')
             if date_key not in hours_by_date:
                 hours_by_date[date_key] = []
-            hours_by_date[date_key].append({'hour': hour_key, 'count': row['count']})
+            hours_by_date[date_key].append({
+                'hour': hour_key,
+                'count': row['count'],
+                'pending': row['pending'],
+            })
 
         return Response({'hours_by_date': hours_by_date})
 

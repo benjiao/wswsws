@@ -40,7 +40,21 @@ const formatDateForDisplay = (dateStr: string) => {
   });
 };
 
-export default function TreatmentsCalendarDayPage() {
+/** API hour keys are "HH:00" (24h); display as 12-hour clock for headings */
+const formatHour12 = (hourKey: string) => {
+  const match = /^(\d{1,2}):00$/.exec(hourKey);
+  if (!match) return hourKey;
+  const hour24 = parseInt(match[1], 10);
+  if (hour24 < 0 || hour24 > 23) return hourKey;
+  const date = new Date(2000, 0, 1, hour24, 0, 0);
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+export default function CalendarDayPage() {
   const router = useRouter();
   const params = useParams();
   const date = params?.date as string | undefined;
@@ -75,7 +89,7 @@ export default function TreatmentsCalendarDayPage() {
               {formatDateForDisplay(date)}
             </Typography.Paragraph>
           </div>
-          <Button onClick={() => router.push('/treatments/calendar')}>Back to Calendar</Button>
+          <Button onClick={() => router.push('/calendar')}>Back to Calendar</Button>
         </Space>
       </Card>
 
@@ -122,7 +136,7 @@ export default function TreatmentsCalendarDayPage() {
         data.groups.map((group) => (
           <Card key={group.hour}>
             <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h2 style={{ margin: 0 }}>{group.hour}</h2>
+              <h2 style={{ margin: 0 }}>{formatHour12(group.hour)}</h2>
               <Typography.Text type="secondary">{group.count} scheduled</Typography.Text>
             </Space>
             <TreatmentInstancesByPatientTable

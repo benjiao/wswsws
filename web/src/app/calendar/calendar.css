@@ -1,0 +1,128 @@
+.treatments-calendar--desktop {
+  width: 100%;
+}
+
+.treatments-calendar--desktop .ant-picker-calendar {
+  width: 100%;
+}
+
+.treatments-calendar .ant-picker-calendar-date-content {
+  text-align: left;
+}
+
+.treatments-calendar-events {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.treatments-calendar-events .ant-badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.treatments-calendar-events .ant-badge-status-dot {
+  position: relative;
+  top: 0;
+  flex-shrink: 0;
+}
+
+.treatments-calendar-events .ant-badge-status-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Mobile compact calendar: top-aligned dates, uniform cell height */
+.treatments-calendar--mobile .ant-picker-cell {
+  vertical-align: top;
+}
+
+.treatments-calendar--mobile .ant-picker-cell-inner.ant-picker-calendar-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 3.5rem;
+  padding-top: 4px;
+}
+
+.treatments-calendar--mobile .ant-picker-calendar-date-value {
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.treatments-calendar--mobile .ant-picker-calendar-date-content {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 12px;
+  margin-top: 2px;
+  text-align: center;
+}
+
+.treatments-calendar-day-dot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 8px;
+  margin-top: 0;
+}
+
+.treatments-calendar-day-dot__marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.treatments-calendar-day-dot__marker--complete {
+  background: #52c41a;
+}
+
+/* Dashboard card: tighter than mobile full-page calendar */
+.treatments-calendar--compact .ant-picker-calendar-header {
+  padding: 4px 8px;
+}
+
+.treatments-calendar--compact .ant-picker-calendar-header .ant-picker-calendar-year-select,
+.treatments-calendar--compact .ant-picker-calendar-header .ant-picker-calendar-month-select {
+  font-size: 12px;
+}
+
+.treatments-calendar--compact .ant-picker-calendar thead th {
+  font-size: 10px;
+  padding: 2px 0;
+}
+
+.treatments-calendar--compact .ant-picker-cell-inner.ant-picker-calendar-date {
+  min-height: 2rem;
+  padding-top: 2px;
+}
+
+.treatments-calendar--compact .ant-picker-calendar-date-value {
+  font-size: 11px;
+}
+
+.treatments-calendar--compact .ant-picker-calendar-date-content {
+  min-height: 8px;
+  margin-top: 1px;
+}
+
+.treatments-calendar--compact .treatments-calendar-day-dot {
+  min-height: 6px;
+}
+
+.treatments-calendar--compact .treatments-calendar-day-dot__marker {
+  width: 6px;
+  height: 6px;
+}
