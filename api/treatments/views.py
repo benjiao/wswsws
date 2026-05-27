@@ -128,6 +128,20 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
         'updated_at',]
 
     ordering = ['scheduled_time']
+
+    def _calendar_active_filter(self, queryset, *, include_past_unfiltered: bool):
+        active_q = Q(
+            treatment_schedule__is_active=True,
+            treatment_schedule__patient__status__is_in_care=True,
+        )
+        if not include_past_unfiltered:
+            return queryset.filter(active_q)
+
+        today = timezone.localdate()
+        return queryset.filter(
+            Q(scheduled_time__date__lt=today)
+            | (Q(scheduled_time__date__gte=today) & active_q)
+        )
         
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -343,8 +357,12 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
             )
 
         tz = timezone.get_current_timezone()
+        calendar_queryset = self._calendar_active_filter(
+            self.get_queryset(),
+            include_past_unfiltered=True,
+        )
         summary_rows = (
-            self.get_queryset()
+            calendar_queryset
             .filter(scheduled_time__date__gte=start_date_obj, scheduled_time__date__lte=end_date_obj)
             .annotate(scheduled_date=TruncDate('scheduled_time', tzinfo=tz))
             .annotate(scheduled_hour=TruncHour('scheduled_time', tzinfo=tz))
@@ -396,7 +414,10 @@ class TreatmentInstanceViewSet(viewsets.ModelViewSet):
             )
 
         instances = list(
-            self.get_queryset()
+            self._calendar_active_filter(
+                self.get_queryset(),
+                include_past_unfiltered=False,
+            )
             .filter(scheduled_time__date=target_date)
             .order_by('scheduled_time', 'treatment_schedule__patient__name')
         )

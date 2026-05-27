@@ -207,6 +207,8 @@ export default function TreatmentSessionsByDatePage() {
               error={treatmentSessionsError}
               refetch={refetchTreatmentSessions}
               sectionKey={session?.session_type_display?.toLowerCase().replace(/\s+/g, '_')}
+              defaultSortField="scheduled_time"
+              defaultSortOrder="ascend"
             />
           </Card>
         )

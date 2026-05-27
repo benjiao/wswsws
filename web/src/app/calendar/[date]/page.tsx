@@ -146,6 +146,9 @@ export default function CalendarDayPage() {
               refetch={refetch}
               sectionKey={`calendar_${date}_${group.hour.replace(':', '')}`}
               hideScheduleAndLastDose
+              patientColumnWidth={200}
+              defaultSortField="medicine_name"
+              defaultSortOrder="ascend"
             />
           </Card>
         ))}

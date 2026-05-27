@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Spin, Alert, Table, Tag } from 'antd';
+import { Spin, Alert, Table, Tag, Grid } from 'antd';
 import type { TableProps } from 'antd';
 import { TreatmentInstance } from '@/types';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -73,6 +73,11 @@ interface TreatmentInstancesByPatientTableProps {
   sectionKey?: string;
   /** Hide Schedule and Last Dose columns for grouped hour views */
   hideScheduleAndLastDose?: boolean;
+  /** Fixed Patient column width (e.g. calendar day hour tables) */
+  patientColumnWidth?: number;
+  /** Default sort when no URL sort params (requires sectionKey) */
+  defaultSortField?: string;
+  defaultSortOrder?: 'ascend' | 'descend';
 }
 
 export default function TreatmentInstancesByPatientTable({
@@ -82,11 +87,18 @@ export default function TreatmentInstancesByPatientTable({
     refetch,
     sectionKey,
     hideScheduleAndLastDose = false,
+    patientColumnWidth,
+    defaultSortField,
+    defaultSortOrder = 'ascend',
 }: TreatmentInstancesByPatientTableProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const [loadingInstanceId, setLoadingInstanceId] = useState<number | null>(null);
+    const screens = Grid.useBreakpoint();
+    const isMobile = screens.md === false;
+    const effectivePatientColumnWidth =
+      patientColumnWidth != null ? (isMobile ? 100 : patientColumnWidth) : undefined;
 
     const normalizeSortField = (param: string | null): string | undefined => {
       if (!param) return undefined;
@@ -96,19 +108,35 @@ export default function TreatmentInstancesByPatientTable({
     const sortParam = sectionKey ? searchParams?.get(`sort_${sectionKey}`) : null;
     const orderParam = sectionKey ? searchParams?.get(`order_${sectionKey}`) : null;
     const [sortField, setSortField] = useState<string | undefined>(() =>
-      sectionKey && sortParam ? normalizeSortField(sortParam) : undefined
+      sectionKey && sortParam
+        ? normalizeSortField(sortParam)
+        : sectionKey && defaultSortField
+          ? defaultSortField
+          : undefined
     );
     const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>(() =>
-      sectionKey && orderParam ? (orderParam === 'desc' ? 'descend' : 'ascend') : undefined
+      sectionKey && orderParam
+        ? orderParam === 'desc'
+          ? 'descend'
+          : 'ascend'
+        : sectionKey && defaultSortField
+          ? defaultSortOrder
+          : undefined
     );
+
+    const resolvedSortField = sortField ?? (sectionKey ? defaultSortField : undefined);
+    const resolvedSortOrder =
+      sortOrder ?? (sectionKey && defaultSortField ? defaultSortOrder : undefined);
 
     useEffect(() => {
       if (!sectionKey) return;
       const s = searchParams?.get(`sort_${sectionKey}`);
       const o = searchParams?.get(`order_${sectionKey}`);
-      setSortField(normalizeSortField(s ?? null) ?? undefined);
-      setSortOrder(o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : undefined);
-    }, [sectionKey, searchParams]);
+      setSortField(normalizeSortField(s ?? null) ?? defaultSortField ?? undefined);
+      setSortOrder(
+        o === 'desc' ? 'descend' : o === 'asc' ? 'ascend' : defaultSortField ? defaultSortOrder : undefined
+      );
+    }, [sectionKey, searchParams, defaultSortField, defaultSortOrder]);
 
     const handleTableChange: TableProps<TreatmentInstance>['onChange'] = (pagination, filters, sorter: any) => {
       if (!sectionKey) return;
@@ -126,8 +154,8 @@ export default function TreatmentInstancesByPatientTable({
         params.set(`sort_${sectionKey}`, fieldStr);
         params.set(`order_${sectionKey}`, order === 'descend' ? 'desc' : 'asc');
       } else {
-        setSortField(undefined);
-        setSortOrder(undefined);
+        setSortField(defaultSortField);
+        setSortOrder(defaultSortField ? defaultSortOrder : undefined);
         params.delete(`sort_${sectionKey}`);
         params.delete(`order_${sectionKey}`);
       }
@@ -159,12 +187,12 @@ export default function TreatmentInstancesByPatientTable({
 
     const sortedData = useMemo(() => {
       const list = data ?? [];
-      if (!sectionKey || !sortField || !sortOrder) return list;
+      if (!sectionKey || !resolvedSortField || !resolvedSortOrder) return list;
       return [...list].sort((a, b) => {
-        const cmp = sortCompare(a, b, sortField);
-        return sortOrder === 'descend' ? -cmp : cmp;
+        const cmp = sortCompare(a, b, resolvedSortField);
+        return resolvedSortOrder === 'descend' ? -cmp : cmp;
       });
-    }, [data, sectionKey, sortField, sortOrder]);
+    }, [data, sectionKey, resolvedSortField, resolvedSortOrder]);
 
     const updateTreatmentStatus = async (instanceId: number, newStatus: number) => {
         setLoadingInstanceId(instanceId);
@@ -203,7 +231,7 @@ export default function TreatmentInstancesByPatientTable({
             sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
                 (a.scheduled_time ? new Date(a.scheduled_time).getTime() : Infinity) -
                 (b.scheduled_time ? new Date(b.scheduled_time).getTime() : Infinity),
-            sortOrder: sectionKey && sortField === 'scheduled_time' ? sortOrder : undefined,
+            sortOrder: sectionKey && resolvedSortField === 'scheduled_time' ? resolvedSortOrder : undefined,
             sortDirections: ['ascend', 'descend'],
             defaultSortOrder: 'ascend',
         },
@@ -211,9 +239,12 @@ export default function TreatmentInstancesByPatientTable({
             title: 'Patient',
             dataIndex: ['treatment_schedule', 'patient_name'],
             key: 'patient_name',
+            ...(effectivePatientColumnWidth != null
+              ? { width: effectivePatientColumnWidth, ellipsis: true }
+              : {}),
             sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
                 (a.treatment_schedule?.patient_name || '').localeCompare(b.treatment_schedule?.patient_name || ''),
-            sortOrder: sectionKey && sortField === 'patient_name' ? sortOrder : undefined,
+            sortOrder: sectionKey && resolvedSortField === 'patient_name' ? resolvedSortOrder : undefined,
             sortDirections: ['ascend', 'descend'],
             render: (_: any, record: TreatmentInstance) => {
                 const patient = record.treatment_schedule?.patient;
@@ -242,8 +273,9 @@ export default function TreatmentInstancesByPatientTable({
             key: 'medicine_name',
             sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
                 (a.treatment_schedule?.medicine_name || '').localeCompare(b.treatment_schedule?.medicine_name || ''),
-            sortOrder: sectionKey && sortField === 'medicine_name' ? sortOrder : undefined,
+            sortOrder: sectionKey && resolvedSortField === 'medicine_name' ? resolvedSortOrder : undefined,
             sortDirections: ['ascend', 'descend'],
+            defaultSortOrder: defaultSortField === 'medicine_name' ? defaultSortOrder : undefined,
             render:  (_: any, record: TreatmentInstance) => {
                 const scheduleId = record.treatment_schedule?.id;
                 return (
@@ -292,7 +324,7 @@ export default function TreatmentInstancesByPatientTable({
                 const bTime = b.treatment_schedule?.last_instance ? new Date(b.treatment_schedule.last_instance).getTime() : 0;
                 return aTime - bTime;
             },
-            sortOrder: sectionKey && sortField === 'last_instance' ? sortOrder : undefined,
+            sortOrder: sectionKey && resolvedSortField === 'last_instance' ? resolvedSortOrder : undefined,
             sortDirections: ['ascend', 'descend'],
         },
         {
@@ -304,7 +336,7 @@ export default function TreatmentInstancesByPatientTable({
             align: 'center',
             sorter: (a: TreatmentInstance, b: TreatmentInstance) =>
                 (a.status ?? 0) - (b.status ?? 0),
-            sortOrder: sectionKey && sortField === 'status' ? sortOrder : undefined,
+            sortOrder: sectionKey && resolvedSortField === 'status' ? resolvedSortOrder : undefined,
             sortDirections: ['ascend', 'descend'],
             render: (_: any, record: TreatmentInstance) => {
                 const isLoading = loadingInstanceId === record.id;
@@ -371,8 +403,9 @@ export default function TreatmentInstancesByPatientTable({
             dataSource={sectionKey ? sortedData : (data ?? [])}
             rowKey="id"
             pagination={false}
-            size="small" 
+            size="small"
             bordered
+            tableLayout={effectivePatientColumnWidth != null ? 'fixed' : undefined}
             columns={columns}
             onChange={sectionKey ? handleTableChange : undefined}
         >
