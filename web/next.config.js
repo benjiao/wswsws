@@ -3,6 +3,7 @@ const nextConfig = {
   output: "standalone",
 
   transpilePackages: [
+    "react-select",
     // antd & deps
     "@ant-design",
     "@rc-component",
