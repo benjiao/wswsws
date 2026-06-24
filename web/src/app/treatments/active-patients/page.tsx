@@ -15,10 +15,13 @@ import {
   Descriptions,
   Input,
   Tooltip,
+  Select,
+  Dropdown,
 } from 'antd';
-import { PlusOutlined, StopOutlined, EditOutlined, SearchOutlined, WarningOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import type { MenuProps } from 'antd';
+import { PlusOutlined, StopOutlined, EditOutlined, SearchOutlined, WarningOutlined, DeleteOutlined, MoreOutlined, SortAscendingOutlined, SortDescendingOutlined } from '@ant-design/icons';
+import { useMemo, useState, useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { TreatmentSchedule } from '@/types';
 
@@ -63,7 +66,25 @@ const deactivateSchedule = async (scheduleId: number): Promise<void> => {
   }
 };
 
+const deleteSchedule = async (scheduleId: number): Promise<void> => {
+  const response = await fetch(`${API_URL}/treatment-schedules/${scheduleId}/`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} - ${text}`);
+  }
+};
+
 const MS_PER_DAY = 86_400_000;
+
+const calcLastDoseDate = (s: TreatmentSchedule): string | null => {
+  if (s.doses == null || s.frequency == null || s.frequency <= 0) return null;
+  const start = new Date(s.start_time).getTime();
+  const ms = ((s.doses - 1) * (s.interval ?? 1) / s.frequency) * MS_PER_DAY;
+  return new Date(start + ms).toISOString();
+};
 
 function getConflictingIds(schedules: TreatmentSchedule[]): Set<number> {
   const conflicts = new Set<number>();
@@ -105,11 +126,15 @@ function ScheduleCards({
   schedules,
   onDeactivate,
   isDeactivating,
+  onDelete,
+  isDeleting,
   conflictIds,
 }: {
   schedules: TreatmentSchedule[];
   onDeactivate: (schedule: TreatmentSchedule) => void;
   isDeactivating: boolean;
+  onDelete: (schedule: TreatmentSchedule) => void;
+  isDeleting: boolean;
   conflictIds: Set<number>;
 }) {
   const router = useRouter();
@@ -150,6 +175,9 @@ function ScheduleCards({
                   <Descriptions.Item label={<span style={{ color: '#888' }}>Start</span>}>
                     {formatDateTime(schedule.start_time ?? null)}
                   </Descriptions.Item>
+                  <Descriptions.Item label={<span style={{ color: '#888' }}>End</span>}>
+                    {formatDateTime(calcLastDoseDate(schedule))}
+                  </Descriptions.Item>
                   {total > 0 && (
                     <Descriptions.Item label={<span style={{ color: '#888' }}>Progress</span>}>
                       <Space size={4}>
@@ -161,24 +189,35 @@ function ScheduleCards({
                   )}
                 </Descriptions>
               </Space>
-              <Space direction="vertical" size={2}>
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                  size="small"
-                  title="Edit"
-                  onClick={() => router.push(`/treatments/schedules/${schedule.id}`)}
-                />
-                <Button
-                  type="text"
-                  danger
-                  icon={<StopOutlined />}
-                  size="small"
-                  title="Deactivate"
-                  loading={isDeactivating}
-                  onClick={() => onDeactivate(schedule)}
-                />
-              </Space>
+              <Dropdown
+                trigger={['click']}
+                menu={{
+                  items: [
+                    {
+                      key: 'edit',
+                      icon: <EditOutlined />,
+                      label: 'Edit',
+                      onClick: () => router.push(`/treatments/schedules/${schedule.id}`),
+                    },
+                    {
+                      key: 'deactivate',
+                      icon: <StopOutlined />,
+                      label: 'Deactivate',
+                      danger: true,
+                      onClick: () => onDeactivate(schedule),
+                    },
+                    {
+                      key: 'delete',
+                      icon: <DeleteOutlined />,
+                      label: 'Delete',
+                      danger: true,
+                      onClick: () => onDelete(schedule),
+                    },
+                  ] satisfies MenuProps['items'],
+                }}
+              >
+                <Button type="text" icon={<MoreOutlined />} size="small" />
+              </Dropdown>
             </div>
           </Card>
         );
@@ -189,8 +228,26 @@ function ScheduleCards({
 
 export default function ActivePatientsPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+
+  const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
+  const [sortBy, setSortBy] = useState<'name' | 'count'>(() =>
+    searchParams.get('sort') === 'count' ? 'count' : 'name'
+  );
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(() =>
+    searchParams.get('dir') === 'desc' ? 'desc' : 'asc'
+  );
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (search) params.set('q', search);
+    if (sortBy !== 'name') params.set('sort', sortBy);
+    if (sortDir !== 'asc') params.set('dir', sortDir);
+    const qs = params.toString();
+    router.replace(pathname + (qs ? `?${qs}` : ''), { scroll: false });
+  }, [search, sortBy, sortDir, pathname, router]);
 
   const { data: schedules, isLoading, error } = useQuery({
     queryKey: ['active_treatment_schedules'],
@@ -205,6 +262,19 @@ export default function ActivePatientsPage() {
     onError: (err) => {
       Modal.error({
         title: 'Error deactivating schedule',
+        content: err instanceof Error ? err.message : 'Unknown error',
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active_treatment_schedules'] });
+    },
+    onError: (err) => {
+      Modal.error({
+        title: 'Error deleting schedule',
         content: err instanceof Error ? err.message : 'Unknown error',
       });
     },
@@ -235,17 +305,42 @@ export default function ActivePatientsPage() {
 
   const filteredGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return patientGroups;
-    return patientGroups.flatMap((group) => {
-      const nameMatch = group.name.toLowerCase().includes(q);
-      if (nameMatch) return [group];
-      const matchingSchedules = group.schedules.filter((s) =>
-        (s.medicine_name ?? '').toLowerCase().includes(q)
-      );
-      if (matchingSchedules.length === 0) return [];
-      return [{ ...group, schedules: matchingSchedules }];
+    const filtered = q
+      ? patientGroups.flatMap((group) => {
+          const nameMatch = group.name.toLowerCase().includes(q);
+          if (nameMatch) return [group];
+          const matchingSchedules = group.schedules.filter((s) =>
+            (s.medicine_name ?? '').toLowerCase().includes(q)
+          );
+          if (matchingSchedules.length === 0) return [];
+          return [{ ...group, schedules: matchingSchedules }];
+        })
+      : patientGroups;
+
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...filtered].sort((a, b) =>
+      sortBy === 'count'
+        ? dir * (a.schedules.length - b.schedules.length)
+        : dir * a.name.localeCompare(b.name)
+    );
+  }, [patientGroups, search, sortBy, sortDir]);
+
+  const handleDelete = (schedule: TreatmentSchedule) => {
+    Modal.confirm({
+      title: 'Delete Schedule',
+      content: (
+        <div>
+          <p>Permanently delete this treatment schedule?</p>
+          <p><strong>Medicine:</strong> {schedule.medicine_name || 'N/A'}</p>
+          <p>This cannot be undone. All history for this schedule will be lost.</p>
+        </div>
+      ),
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => deleteMutation.mutate(schedule.id),
     });
-  }, [patientGroups, search]);
+  };
 
   const handleDeactivate = (schedule: TreatmentSchedule) => {
     Modal.confirm({
@@ -284,14 +379,30 @@ export default function ActivePatientsPage() {
         <p style={{ color: '#888', marginTop: 4 }}>
           {patientGroups.length} patient{patientGroups.length !== 1 ? 's' : ''} with active schedules
         </p>
-        <Input
-          placeholder="Search by patient or medicine name"
-          prefix={<SearchOutlined style={{ color: '#bbb' }} />}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          allowClear
-          style={{ maxWidth: 400, marginTop: 12 }}
-        />
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <Input
+            placeholder="Search by patient or medicine name"
+            prefix={<SearchOutlined style={{ color: '#bbb' }} />}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            allowClear
+            style={{ flex: 1 }}
+          />
+          <Select
+            value={sortBy}
+            onChange={setSortBy}
+            style={{ width: 200, flexShrink: 0 }}
+            options={[
+              { value: 'name', label: 'Sort by patient name' },
+              { value: 'count', label: 'Sort by treatment count' },
+            ]}
+          />
+          <Button
+            icon={sortDir === 'asc' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
+            onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+            title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
+          />
+        </div>
       </div>
 
       {filteredGroups.length === 0 ? (
@@ -324,6 +435,8 @@ export default function ActivePatientsPage() {
                   schedules={group.schedules}
                   onDeactivate={handleDeactivate}
                   isDeactivating={deactivateMutation.isPending}
+                  onDelete={handleDelete}
+                  isDeleting={deleteMutation.isPending}
                   conflictIds={getConflictingIds(group.schedules)}
                 />
               </Card>
