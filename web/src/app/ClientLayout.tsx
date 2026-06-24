@@ -107,6 +107,10 @@ export default function ClientLayout({ children }: React.PropsWithChildren) {
           key: '/treatments/schedules',
           label: <Link href="/treatments/schedules">All Schedules</Link>,
         },
+        {
+          key: '/treatments/batches',
+          label: <Link href="/treatments/batches">Schedule Batches</Link>,
+        },
       ],
     },
     {

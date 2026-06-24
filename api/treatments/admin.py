@@ -4,7 +4,7 @@ from unfold.admin import ModelAdmin
 from datetime import datetime, timedelta
 
 # Register your models here.
-from .models import TreatmentSchedule, TreatmentSession, TreatmentInstance
+from .models import TreatmentSchedule, TreatmentSession, TreatmentInstance, ScheduleBatch
 from unfold.contrib.filters.admin import RangeDateFilter, RangeDateTimeFilter
 
 class UniqueHourFilter(SimpleListFilter):
@@ -56,6 +56,18 @@ class TreatmentSessionFilter(SimpleListFilter):
         if self.value():
             return queryset.filter(treatment_session_id=self.value())
         return queryset
+
+@admin.register(ScheduleBatch)
+class ScheduleBatchAdmin(ModelAdmin):
+    def schedules_count(self, obj):
+        return obj.schedules.count()
+    schedules_count.short_description = "Schedules"
+
+    list_display = ['id', 'name', 'schedules_count', 'created_at']
+    search_fields = ['name', 'notes']
+    ordering = ['-created_at']
+    list_per_page = 25
+
 
 @admin.register(TreatmentSession)
 class TreatmentSessionAdmin(ModelAdmin):    # show useful columns in the changelist

@@ -94,7 +94,7 @@ class PatientViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def all(self, request):
         """Get all patients without pagination (for dropdowns/selects)"""
-        patients = self.queryset.all()
+        patients = self.get_queryset()
         serializer = PatientListSerializer(patients, many=True)
         return Response(serializer.data)
     

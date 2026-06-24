@@ -7,11 +7,12 @@ from django.db.models import Q
 from django.db.models.functions import TruncDate, TruncHour
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession
+from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession, ScheduleBatch
 from .serializers import (
     TreatmentScheduleSerializer, TreatmentScheduleDetailSerializer,
     TreatmentInstanceSerializer, TreatmentInstanceDetailSerializer,
-    TreatmentSessionSerializer, TreatmentSessionDetailSerializer
+    TreatmentSessionSerializer, TreatmentSessionDetailSerializer,
+    ScheduleBatchSerializer,
 )
 
 from .tasks import generate_treatment_instances
@@ -27,7 +28,7 @@ class TreatmentScheduleViewSet(viewsets.ModelViewSet):
     )
     serializer_class = TreatmentScheduleSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['patient', 'medicine', 'interval', 'is_active', 'medical_record', 'health_condition']
+    filterset_fields = ['patient', 'medicine', 'interval', 'is_active', 'medical_record', 'health_condition', 'batch']
     search_fields = ['patient__name', 'medicine__name', 'notes']
     ordering_fields = [
         'start_time', 'created_at', 'patient__name', 'medicine__name',
@@ -662,3 +663,11 @@ class TreatmentSessionViewSet(viewsets.ModelViewSet):
             'start_time': timezone.datetime.strptime(times['start_time'], '%H:%M').time(),
             'end_time': timezone.datetime.strptime(times['end_time'], '%H:%M').time(),
         }
+
+
+class ScheduleBatchViewSet(viewsets.ModelViewSet):
+    queryset = ScheduleBatch.objects.all().order_by('-created_at')
+    serializer_class = ScheduleBatchSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'notes']
+    ordering_fields = ['name', 'created_at']

@@ -1,6 +1,15 @@
 import { PrepListItem } from './prep_list';
 
 
+export interface ScheduleBatch {
+    id: number;
+    name: string | null;
+    notes: string | null;
+    schedules_count: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface TreatmentSchedule {
     id: number;
     patient: {
@@ -35,6 +44,8 @@ export interface TreatmentSchedule {
     is_active?: boolean;
     medical_record?: number | null;
     health_condition?: number | null;
+    batch?: number | null;
+    batch_name?: string | null;
     created_at?: string;
     updated_at?: string;
     instances_count?: number;

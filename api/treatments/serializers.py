@@ -1,27 +1,45 @@
 from rest_framework import serializers
-from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession
+from .models import TreatmentSchedule, TreatmentInstance, TreatmentSession, ScheduleBatch
 from patients.serializers import PatientSerializer
 from inventory.serializers import MedicineSerializer
+
+
+class ScheduleBatchSerializer(serializers.ModelSerializer):
+    schedules_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ScheduleBatch
+        fields = ['id', 'name', 'notes', 'schedules_count', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+    def get_schedules_count(self, obj):
+        return obj.schedules.count()
+
 
 class TreatmentScheduleSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='patient.name', read_only=True)
     medicine_name = serializers.CharField(source='medicine.name', read_only=True)
     interval_display = serializers.CharField(source='get_interval_display', read_only=True)
+    batch_name = serializers.SerializerMethodField()
     instances_count = serializers.SerializerMethodField()
     pending_count = serializers.SerializerMethodField()
     completed_count = serializers.SerializerMethodField()
     skipped_count = serializers.SerializerMethodField()
     last_instance = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = TreatmentSchedule
-        fields = ['id', 'patient', 'patient_name', 'medicine', 'medicine_name', 
+        fields = ['id', 'patient', 'patient_name', 'medicine', 'medicine_name',
                  'start_time', 'frequency', 'interval', 'interval_display', 'doses',
                  'dosage', 'unit', 'notes', 'is_active', 'medical_record', 'health_condition',
+                 'batch', 'batch_name',
                  'created_at', 'updated_at',
                  'instances_count', 'pending_count', 'completed_count', 'skipped_count',
                  'last_instance']
         read_only_fields = ['created_at', 'updated_at']
+
+    def get_batch_name(self, obj):
+        return str(obj.batch) if obj.batch else None
     
     def get_instances_count(self, obj):
         return obj.instances.count()

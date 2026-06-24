@@ -4,7 +4,19 @@ from django.conf import settings
 from medical.models import MedicalRecord, HealthCondition
 
 
-# Create your models here.
+class ScheduleBatch(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name or f"Batch #{self.id}"
+
+    class Meta:
+        verbose_name_plural = "Schedule Batches"
+
+
 class TreatmentSchedule(models.Model):
     INTERVAL_DAILY = 1
     INTERVAL_EVERY_OTHER_DAY = 2
@@ -26,6 +38,7 @@ class TreatmentSchedule(models.Model):
 
     medical_record = models.ForeignKey(MedicalRecord, on_delete=models.SET_NULL, null=True, blank=True, related_name='treatment_schedules')
     health_condition = models.ForeignKey(HealthCondition, on_delete=models.SET_NULL, null=True, blank=True, related_name='treatment_schedules')
+    batch = models.ForeignKey(ScheduleBatch, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedules')
 
     created_at = models.DateTimeField(auto_now_add=True,)
     updated_at = models.DateTimeField(auto_now=True)

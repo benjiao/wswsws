@@ -537,17 +537,32 @@ export default function SchedulesPage() {
             >
               Create New Schedule
             </Button>
+            <Button
+              icon={<PlusOutlined />}
+              onClick={() => router.push('/treatments/schedules/batch-new')}
+              style={{ width: '100%' }}
+            >
+              Batch Schedule
+            </Button>
           </Space>
         ) : (
           <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
             <h1 style={{ margin: 0 }}>Treatment Schedules</h1>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => router.push('/treatments/schedules/new')}
-            >
-              Create New Schedule
-            </Button>
+            <Space>
+              <Button
+                icon={<PlusOutlined />}
+                onClick={() => router.push('/treatments/schedules/batch-new')}
+              >
+                Batch Schedule
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => router.push('/treatments/schedules/new')}
+              >
+                Create New Schedule
+              </Button>
+            </Space>
           </Space>
         )}
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
