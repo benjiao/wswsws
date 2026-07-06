@@ -30,6 +30,13 @@ class PatientViewSet(viewsets.ModelViewSet):
     ]
     ordering = ['name']
     
+    def perform_create(self, serializer):
+        if serializer.validated_data.get('status') is None:
+            active_status = PatientStatus.objects.filter(name='Active').first()
+            serializer.save(status=active_status)
+        else:
+            serializer.save()
+
     def get_serializer_class(self):
         """Use lighter serializer for list view"""
         if self.action == 'list':

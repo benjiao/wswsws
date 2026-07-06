@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Form, Input, Select, Button, Space, Spin, Alert, Card } from 'antd';
 import { useRouter } from 'next/navigation';
@@ -12,8 +13,22 @@ interface PatientGroup {
   description?: string;
 }
 
+interface PatientStatus {
+  id: number;
+  name: string;
+}
+
 const fetchPatientGroups = async (): Promise<PatientGroup[]> => {
   const response = await fetch(`${API_URL}/patient-groups/all/`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
+const fetchPatientStatuses = async (): Promise<PatientStatus[]> => {
+  const response = await fetch(`${API_URL}/patient-statuses/all/`, {
     headers: { 'Accept': 'application/json' },
   });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -29,6 +44,7 @@ const createPatient = async (values: any) => {
     color: values.color || null,
     sex: values.sex || null,
     group_id: values.group_id || null,
+    status_id: values.status_id || null,
   };
 
   const response = await fetch(`${API_URL}/patients/`, {
@@ -57,6 +73,18 @@ export default function NewPatientPage() {
     queryKey: ['patient_groups'],
     queryFn: fetchPatientGroups,
   });
+
+  const { data: patientStatuses, isLoading: statusesLoading } = useQuery({
+    queryKey: ['patient_statuses'],
+    queryFn: fetchPatientStatuses,
+  });
+
+  useEffect(() => {
+    if (patientStatuses) {
+      const active = patientStatuses.find((s) => s.name === 'Active');
+      if (active) form.setFieldValue('status_id', active.id);
+    }
+  }, [patientStatuses, form]);
 
   const createMutation = useMutation({
     mutationFn: createPatient,
@@ -132,6 +160,18 @@ export default function NewPatientPage() {
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
               options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="status_id"
+            label="Status"
+          >
+            <Select
+              placeholder="Select a status"
+              allowClear
+              loading={statusesLoading}
+              options={patientStatuses?.map((s: PatientStatus) => ({ value: s.id, label: s.name }))}
             />
           </Form.Item>
 

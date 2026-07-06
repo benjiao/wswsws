@@ -16,6 +16,11 @@ interface PatientGroup {
   description?: string;
 }
 
+interface PatientStatus {
+  id: number;
+  name: string;
+}
+
 interface Patient {
   id: number;
   name: string;
@@ -28,10 +33,20 @@ interface Patient {
   spay_neuter_date: string | null;
   spay_neuter_clinic: string | null;
   group: PatientGroup | null;
+  status: PatientStatus | null;
 }
 
 const fetchPatientGroups = async (): Promise<PatientGroup[]> => {
   const response = await fetch(`${API_URL}/patient-groups/all/`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
+const fetchPatientStatuses = async (): Promise<PatientStatus[]> => {
+  const response = await fetch(`${API_URL}/patient-statuses/all/`, {
     headers: { 'Accept': 'application/json' },
   });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -58,6 +73,7 @@ const updatePatient = async (id: string, values: any) => {
     spay_neuter_date: values.spay_neuter_date || null,
     spay_neuter_clinic: values.spay_neuter_clinic || null,
     group_id: values.group_id || null,
+    status_id: values.status_id || null,
   };
 
   const response = await fetch(`${API_URL}/patients/${id}/`, {
@@ -107,6 +123,11 @@ export default function EditPatientPage() {
   const { data: patientGroups, isLoading: groupsLoading } = useQuery({
     queryKey: ['patient_groups'],
     queryFn: fetchPatientGroups,
+  });
+
+  const { data: patientStatuses, isLoading: statusesLoading } = useQuery({
+    queryKey: ['patient_statuses'],
+    queryFn: fetchPatientStatuses,
   });
 
     // Extract and validate patientId
@@ -179,6 +200,7 @@ export default function EditPatientPage() {
         spay_neuter_date: patient.spay_neuter_date || undefined,
         spay_neuter_clinic: patient.spay_neuter_clinic || undefined,
         group_id: patient.group?.id || undefined,
+        status_id: patient.status?.id || undefined,
       });
     }
   }, [patient, form]);
@@ -308,7 +330,6 @@ export default function EditPatientPage() {
             <Form.Item
               name="group_id"
               label="Patient Group"
-              style={{ marginBottom: 0 }}
             >
               <Select
                 placeholder="Select a patient group"
@@ -319,6 +340,19 @@ export default function EditPatientPage() {
                   (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }
                 options={patientGroups?.map((g: PatientGroup) => ({ value: g.id, label: g.name }))}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="status_id"
+              label="Status"
+              style={{ marginBottom: 0 }}
+            >
+              <Select
+                placeholder="Select a status"
+                allowClear
+                loading={statusesLoading}
+                options={patientStatuses?.map((s: PatientStatus) => ({ value: s.id, label: s.name }))}
               />
             </Form.Item>
           </Card>
