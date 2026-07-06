@@ -30,6 +30,7 @@ from medical.views import (
     FollowUpViewSet,
 )
 from vaccinations.views import VaccineTypeViewSet, VaccineProductViewSet, VaccineDoseViewSet
+from dashboard.views import DatabaseExportView, DatabaseRestoreView, database_tools_view, database_export_download
 
 admin.site.site_header = "wswsws admin"
 admin.site.site_title = "wswsws admin"
@@ -58,5 +59,9 @@ router.register(r'follow-ups', FollowUpViewSet)
 urlpatterns = [
     path('api/', include(router.urls)),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/admin/database-tools/', database_tools_view, name='admin-db-tools'),
+    path('api/admin/database-tools/export/', database_export_download, name='admin-db-export'),
     path('api/admin/', admin.site.urls),
+    path('api/admin-tools/export/', DatabaseExportView.as_view(), name='db-export'),
+    path('api/admin-tools/restore/', DatabaseRestoreView.as_view(), name='db-restore'),
 ]

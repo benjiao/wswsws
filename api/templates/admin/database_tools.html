@@ -1,0 +1,49 @@
+{% extends 'admin/base.html' %}
+{% load i18n unfold %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block title %}Database Tools | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    {% component "unfold/components/container.html" %}
+
+        {% url 'admin-db-export' as export_url %}
+
+        {% trans "Export Database" as export_title %}
+        {% component "unfold/components/card.html" with class="mb-8" title=export_title %}
+            {% component "unfold/components/text.html" %}
+                Download a full JSON backup of all application data. Excludes auth permissions, content types, and sessions.
+            {% endcomponent %}
+            <div class="mt-6">
+                {% component "unfold/components/button.html" with href=export_url %}
+                    Download Backup
+                {% endcomponent %}
+            </div>
+        {% endcomponent %}
+
+        {% trans "Restore Database" as restore_title %}
+        {% component "unfold/components/card.html" with title=restore_title %}
+            {% component "unfold/components/text.html" %}
+                <span class="text-red-500 font-semibold">Warning:</span>
+                This will permanently erase all current data and replace it with the contents of the backup file. This action cannot be undone.
+            {% endcomponent %}
+            <form method="post" enctype="multipart/form-data" class="mt-6 flex flex-col gap-4"
+                  onsubmit="return confirm('Are you sure? This will erase all current data and cannot be undone.')">
+                {% csrf_token %}
+                <input type="file" name="backup" accept=".json" required
+                       class="block text-sm text-font-default-light dark:text-font-default-dark">
+                <div>
+                    {% component "unfold/components/button.html" with submit=True class="bg-red-600 border-transparent hover:bg-red-700" %}
+                        Restore from Backup
+                    {% endcomponent %}
+                </div>
+            </form>
+        {% endcomponent %}
+
+    {% endcomponent %}
+{% endblock %}

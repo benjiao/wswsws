@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -189,6 +190,163 @@ UNFOLD = {
     "SITE_TITLE": "Wswsws Admin Site",
     "SITE_HEADER": "Admin",
     "DASHBOARD_CALLBACK": "dashboard.views.dashboard_callback",
+    "SIDEBAR": {
+        "navigation": [
+            {
+                "title": "Dashboard",
+                "items": [
+                    {
+                        "title": "Dashboard",
+                        "icon": "home",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": "Patients",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Patients",
+                        "icon": "pets",
+                        "link": reverse_lazy("admin:patients_patient_changelist"),
+                    },
+                    {
+                        "title": "Patient Groups",
+                        "icon": "group",
+                        "link": reverse_lazy("admin:patients_patientgroup_changelist"),
+                    },
+                    {
+                        "title": "Patient Statuses",
+                        "icon": "label",
+                        "link": reverse_lazy("admin:patients_patientstatus_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Treatments",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Treatment Schedules",
+                        "icon": "schedule",
+                        "link": reverse_lazy("admin:treatments_treatmentschedule_changelist"),
+                    },
+                    {
+                        "title": "Treatment Instances",
+                        "icon": "medication",
+                        "link": reverse_lazy("admin:treatments_treatmentinstance_changelist"),
+                    },
+                    {
+                        "title": "Treatment Sessions",
+                        "icon": "event",
+                        "link": reverse_lazy("admin:treatments_treatmentsession_changelist"),
+                    },
+                    {
+                        "title": "Schedule Batches",
+                        "icon": "playlist_add",
+                        "link": reverse_lazy("admin:treatments_schedulebatch_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Medical",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Medical Records",
+                        "icon": "medical_information",
+                        "link": reverse_lazy("admin:medical_medicalrecord_changelist"),
+                    },
+                    {
+                        "title": "Health Conditions",
+                        "icon": "health_and_safety",
+                        "link": reverse_lazy("admin:medical_healthcondition_changelist"),
+                    },
+                    {
+                        "title": "Test Results",
+                        "icon": "science",
+                        "link": reverse_lazy("admin:medical_testresult_changelist"),
+                    },
+                    {
+                        "title": "Follow-ups",
+                        "icon": "event_available",
+                        "link": reverse_lazy("admin:medical_followup_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Vaccinations",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Vaccine Doses",
+                        "icon": "vaccines",
+                        "link": reverse_lazy("admin:vaccinations_vaccinedose_changelist"),
+                    },
+                    {
+                        "title": "Vaccine Types",
+                        "icon": "category",
+                        "link": reverse_lazy("admin:vaccinations_vaccinetype_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Inventory",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Medicines",
+                        "icon": "inventory",
+                        "link": reverse_lazy("admin:inventory_medicine_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Clinical Directory",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Clinics",
+                        "icon": "local_hospital",
+                        "link": reverse_lazy("admin:clinics_clinic_changelist"),
+                    },
+                    {
+                        "title": "Veterinarians",
+                        "icon": "stethoscope",
+                        "link": reverse_lazy("admin:clinics_veterinarian_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Administration",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": "Groups",
+                        "icon": "group",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Database",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Database Tools",
+                        "icon": "database",
+                        "link": reverse_lazy("admin-db-tools"),
+                    },
+                ],
+            },
+        ],
+    },
 }
 
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')

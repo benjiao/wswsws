@@ -86,6 +86,18 @@
         {% endcomponent %}
 
 
+        {% component "unfold/components/flex.html" with class="gap-8 mb-8" %}
+            {% trans "Database Tools" as title %}
+            {% component "unfold/components/card.html" with title=title %}
+                {% component "unfold/components/text.html" %}
+                    Export a backup or restore the database from a previous backup.
+                {% endcomponent %}
+                <a href="{% url 'admin-db-tools' %}" class="mt-4 inline-block text-sm font-medium underline">
+                    Go to Database Tools &rarr;
+                </a>
+            {% endcomponent %}
+        {% endcomponent %}
+
         {% component "unfold/components/flex.html" with class="gap-8 mb-8 flex-col lg:flex-row" %}
             {% if out_of_stock_medicines %}
                 {% component "unfold/components/card.html" with col=1 class="lg:w-1/4" title="⚠️ Out of Stock" %}

@@ -1,10 +1,23 @@
-from django.shortcuts import render
-
+import io
+import os
 import random
+import tempfile
 import json
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import admin, messages
+from django.core.management import call_command
+from django.http import FileResponse
+from django.shortcuts import redirect, render
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils import timezone
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAdminUser
 
 from treatments.models import TreatmentSchedule
 from treatments.models import TreatmentInstance
@@ -194,3 +207,113 @@ def dashboard_callback(request, context):
     )
 
     return context
+
+
+class DatabaseExportView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'wswsws_{timestamp}.json'
+        buffer = io.StringIO()
+        try:
+            call_command(
+                'dumpdata',
+                exclude=['contenttypes', 'auth.permission', 'admin.logentry', 'sessions'],
+                indent=2,
+                stdout=buffer,
+            )
+        except Exception as e:
+            return Response({'error': f'Export failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        buffer.seek(0)
+        response = FileResponse(io.BytesIO(buffer.getvalue().encode('utf-8')), as_attachment=True, filename=filename)
+        response['Content-Type'] = 'application/json'
+        return response
+
+
+class DatabaseRestoreView(APIView):
+    permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser]
+
+    def post(self, request, *args, **kwargs):
+        if 'backup' not in request.FILES:
+            return Response(
+                {'error': 'No backup file provided. Expected a multipart field named "backup".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        content = request.FILES['backup'].read()
+        try:
+            json.loads(content)
+        except json.JSONDecodeError as e:
+            return Response({'error': f'Invalid JSON: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(mode='wb', suffix='.json', delete=False) as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+            call_command('flush', interactive=False)
+            call_command('loaddata', tmp_path)
+            return Response({'status': 'success', 'message': 'Database restored successfully.'})
+        except Exception as e:
+            return Response({'error': f'Restore failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        finally:
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+
+
+@staff_member_required
+def database_tools_view(request):
+    if request.method == 'POST':
+        if 'backup' not in request.FILES:
+            messages.error(request, 'No backup file provided.')
+            return redirect('admin-db-tools')
+        content = request.FILES['backup'].read()
+        try:
+            json.loads(content)
+        except json.JSONDecodeError as e:
+            messages.error(request, f'Invalid JSON: {e}')
+            return redirect('admin-db-tools')
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(mode='wb', suffix='.json', delete=False) as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+            call_command('flush', interactive=False)
+            call_command('loaddata', tmp_path)
+            messages.success(request, 'Database restored successfully.')
+        except Exception as e:
+            messages.error(request, f'Restore failed: {e}')
+        finally:
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+        return redirect('admin-db-tools')
+    context = {
+        **admin.site.each_context(request),
+        'title': 'Database Tools',
+        'subtitle': 'Export & Restore',
+    }
+    return render(request, 'admin/database_tools.html', context)
+
+
+@staff_member_required
+def database_export_download(request):
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'wswsws_{timestamp}.json'
+    buffer = io.StringIO()
+    call_command(
+        'dumpdata',
+        exclude=['contenttypes', 'auth.permission', 'admin.logentry', 'sessions'],
+        indent=2,
+        stdout=buffer,
+    )
+    buffer.seek(0)
+    response = FileResponse(io.BytesIO(buffer.getvalue().encode('utf-8')), as_attachment=True, filename=filename)
+    response['Content-Type'] = 'application/json'
+    return response

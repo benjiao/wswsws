@@ -425,10 +425,9 @@ export default function ActivePatientsPage() {
                     type="primary"
                     size="small"
                     icon={<PlusOutlined />}
+                    title="Add Schedule"
                     onClick={() => router.push(`/treatments/schedules/new?patient=${group.id}`)}
-                  >
-                    Add Schedule
-                  </Button>
+                  />
                 }
               >
                 <ScheduleCards
